@@ -1,0 +1,76 @@
+
+    
+{{> user-header}}
+
+    <div class="page-content d-flex align-items-center">
+
+        <div class="container d-flex justify-content-center">
+
+            <div class="col-12 col-sm-10 col-md-8 col-lg-7 col-xl-6 col-xxl-5">
+
+                <div class="auth-card">
+
+                    <div class="logo-area">
+
+
+                    </div>
+                    <h3 class="auth-title">CREATE AN ACCOUNT</h3>
+                    <h5 class="auth-title">Welcome to TechTrove</h5>
+
+                    
+
+                    
+
+                    <!-- Signup-Form -->
+                    <form action="/user/register" method="POST">
+                        <div class="mb-2 mt-5">
+                            <input type="text" class="form-control auth-input" id="name" name="name" placeholder="Enter your name" value="{{name}}">
+                            {{#if errors.name}}
+                                <span class="error">{{errors.name.msg}}</span>
+                            {{/if}}
+                        </div >
+                        <div class="mb-2">
+                            <input type="email" class="form-control auth-input" id="email" name="email" placeholder="Enter your email" value="{{email}}">
+                            {{#if errors.email}}
+                                <span class="error">{{errors.email.msg}}</span>
+                            {{/if}}
+                        </div>
+                        <div class="mb-2">
+                            <input type="password" class="form-control auth-input" id="password" name="password" placeholder="Enter your password" value="{{password}}">
+                            {{#if errors.password}}
+                                <span class="error">{{errors.password.msg}}</span>
+                            {{/if}}
+                        </div>
+                        <div class="mb-2">
+                            <input type="password"class="form-control auth-input" id="confirmPassword" name="confirmPassword" placeholder="Confirm password">
+                            {{#if errors.confirmPassword}}
+                                <span class="error">{{errors.confirmPassword.msg}}</span>
+                            {{/if}}
+                        </div>
+                        <div class="mb-2">
+                            <input type="text" class="form-control auth-input" id="phone" name="phone" placeholder="Enter your phone number" value="{{phone}}">
+                            {{#if errors.phone}}
+                                <span class="error">{{errors.phone.msg}}</span>
+                            {{/if}}
+                        </div>
+                        <div class="mb-2">
+                            {{#if error}}
+                                <span class="error">{{error}}</span>
+                            {{/if}}
+                        </div>
+                        <button class="btn auth-btn mt-2 mb-4" type="submit">Sign Up</button>
+                    </form>
+                    <hr class="separator">
+
+                     <a class="btn service-btn mt-5 mb-3" href="/auth/google" class="google-signin"><i class="fab fa-google service-icon"></i>
+                     Sign in with Google</a>
+
+
+                    <p class="text mb-4">Already Have An Account? <a href="/user/login" class="text-link">Login</a></p>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+

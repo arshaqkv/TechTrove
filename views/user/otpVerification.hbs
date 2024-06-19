@@ -1,0 +1,261 @@
+
+    <div class="page-content d-flex align-items-center mt-5">
+        <div class="container d-flex justify-content-center">
+            <div class="col-12 col-sm-10 col-md-8 col-lg-7 col-xl-6 col-xxl-5">
+                <div class="auth-card">
+                    <div class="logo-area">
+                        <!-- Logo can be added here -->
+                    </div>
+                    <h5 class="auth-title">OTP has been sent to {{email}}</h5>
+                    
+                    <div class="mb-2 mt-5">
+                        <!-- Verify OTP Form -->
+                        <form action="/user/verify-otp" method="POST" onsubmit="combineOtpValues()">
+                            <input type="hidden" name="email" value="{{email}}">
+                            <input type="hidden" name="name" value="{{name}}">
+                            <input type="hidden" name="password" value="{{password}}">
+                            <input type="hidden" name="phone" value="{{phone}}">
+                            <input type="hidden" id="otp" name="otp">
+                            <div class="otp-input">
+                                    <input type="text" maxlength="1" class="otp-box" required>
+                                    <input type="text" maxlength="1" class="otp-box" required>
+                                    <input type="text" maxlength="1" class="otp-box" required>
+                                    <input type="text" maxlength="1" class="otp-box" required>
+                                    <input type="text" maxlength="1" class="otp-box" required>
+                                    <input type="text" maxlength="1" class="otp-box" required>
+                            </div>
+                            <button class="btn auth-btn mt-2 mb-4" id="validate-otp" type="submit">Verify OTP</button>
+                        </form>
+                        
+                        <form action="/user/resend-otp" method="POST" onsubmit="handleResendOtp()">
+                            <input type="hidden" name="email" value="{{email}}">
+                            <input type="hidden" name="name" value="{{name}}">
+                            <input type="hidden" name="password" value="{{password}}">
+                            <input type="hidden" name="phone" value="{{phone}}">
+                            <button class="btn auth-btn mt-2 mb-4" id="resend-otp" type="submit" disabled>Resend OTP</button>
+                        </form>
+                        <button id="go-home" class="btn auth-btn mt-2 mb-4 hidden" onclick="window.location.href='/user/register'">Go Back</button>
+                        <div class="timer d-flex justify-content-between">
+                            <span id="resend-otp-timer"></span>
+                            <span id="otp-expire-timer"></span>
+                        </div>
+                        
+                        {{#if error}}
+                            <div class="alert alert-danger">{{error}}</div>
+                        {{/if}}
+                        {{#if success}}
+                            <div class="alert alert-success">{{success}}</div>
+                            <script>
+                                setTimeout(function() {
+                                    window.location.href = '/user/login';
+                                }, 900); // Redirect to login after 1 seconds
+                            </script>
+                        {{/if}}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+
+        const otpInputs = document.querySelectorAll('.otp-box');
+        otpInputs.forEach((input, index) => {
+        input.addEventListener('input', () => {
+                if (input.value.length === 1 && index < otpInputs.length - 1) {
+                    otpInputs[index + 1].focus();
+                }
+                if (input.value.length === 0 && index > 0) {
+                    otpInputs[index - 1].focus();
+                }
+            });
+        });
+
+        const combineOtpValues = ()=>{
+            let otpValue = ''
+            otpInputs.forEach(input =>{
+                otpValue += input.value
+            })
+            document.getElementById('otp').value = otpValue;
+        }
+
+        const resendDuration = 60 * 1000; // 60 seconds for resend OTP
+        const expireDuration = 5 * 60 * 1000; // 2 minutes for OTP expiration
+
+        function startResendTimer() {
+            let resendEndTime = parseInt(localStorage.getItem('resendEndTime'));
+            if (!resendEndTime) {
+                resendEndTime = Date.now() + resendDuration;
+                localStorage.setItem('resendEndTime', resendEndTime);
+            }
+            updateResendTimer(resendEndTime);
+        }
+
+        function startExpireTimer() {
+            let expireEndTime = parseInt(localStorage.getItem('expireEndTime'));
+            if (!expireEndTime) {
+                expireEndTime = Date.now() + expireDuration;
+                localStorage.setItem('expireEndTime', expireEndTime);
+            }
+            updateExpireTimer(expireEndTime);
+        }
+
+        function updateResendTimer(resendEndTime) {
+            const resendTimer = setInterval(() => {
+                const now = Date.now();
+                const timeLeft = resendEndTime - now;
+
+                if (timeLeft <= 0) {
+                    clearInterval(resendTimer);
+                    document.getElementById("resend-otp").disabled = false;
+                    document.getElementById("resend-otp-timer").innerText = '';
+                    localStorage.removeItem('resendEndTime');
+                } else {
+                    document.getElementById("resend-otp").disabled = true;
+                    document.getElementById("resend-otp-timer").innerText = `Resend OTP in ${Math.floor(timeLeft / 1000)}s`;
+                }
+            }, 1000);
+        }
+
+        function updateExpireTimer(expireEndTime) {
+            const expireTimer = setInterval(() => {
+                const now = Date.now();
+                const timeLeft = expireEndTime - now;
+
+                if (timeLeft <= 0) {
+                    clearInterval(expireTimer);
+                    document.getElementById("otp-expire-timer").innerText = 'OTP has expired';
+                    document.getElementById("validate-otp").disabled = true;
+                    document.getElementById("validate-otp").classList.add('hidden');
+                    document.getElementById("resend-otp").classList.add('hidden');
+                    document.getElementById("go-home").classList.remove('hidden');
+                    localStorage.removeItem('expireEndTime');
+                } else {
+                    let minutes = Math.floor(timeLeft / 60000);
+                    let seconds = Math.floor((timeLeft % 60000) / 1000);
+                    document.getElementById("otp-expire-timer").innerText = `OTP will expire in ${minutes}:${seconds < 10 ? '0' + seconds : seconds}`;
+                }
+            }, 1000);
+        }
+
+
+        document.addEventListener('DOMContentLoaded', (event) => {
+            startResendTimer();
+            startExpireTimer();
+        });
+
+        function handleResendOtp() {
+            const resendEndTime = Date.now() + resendDuration;
+            localStorage.setItem('resendEndTime', resendEndTime);
+            updateResendTimer(resendEndTime);
+        }
+    </script>
+
+
+    {{!-- <script>
+
+        
+        const verifyOtpForm = document.getElementById('verifyOtpForm')
+        const validateBtn = document.getElementById('validate-btn');
+        // Example AJAX request in script.js
+        verifyOtpForm.addEventListener('submit', (event) => {
+            event.preventDefault()
+            const otp = Array.from(otpInputs).map(input => input.value).join('');
+            const userId = document.querySelector('input[name="user_id"]').value;
+            console.log(otp)
+            fetch('/user/verify-otp', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: new URLSearchParams({ 
+                    user_id: userId, 
+                    otp: otp
+                }) // Update email dynamically as required
+            })
+            .then(response => {
+                if (response.ok) {
+                    alert("Otp verified");
+                } else {
+                    alert(data.error);
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        });
+         
+        document.addEventListener('DOMContentLoaded', function() {
+            let resendButton = document.getElementById('resendOtp');
+            let timerElement = document.getElementById('resendTimer');
+            let expiryElement = document.getElementById('expiryTimer');
+            let email = '{{email}}';
+            let error = '{{error}}';
+            let resendInterval;
+            let expiryInterval;
+
+            // Initialize countdown timer when the page loads, if email exists and there are no errors
+            if (resendButton && email && !error) {
+                initializeResendTimer();
+                initializeExpiryTimer();
+            } else {
+                clearInterval(resendInterval);
+                clearInterval(expiryInterval);
+                resendButton.disabled = false;
+            }
+
+            function initializeResendTimer() {
+                let countdown = 60; // 60 seconds countdown for resend button
+                resendButton.disabled = true; // Disable the button initially
+
+                resendInterval = setInterval(() => {
+                    countdown--;
+                    timerElement.textContent = `Resend OTP in ${countdown} seconds`;
+                    if (countdown <= 0) {
+                        clearInterval(resendInterval);
+                        resendButton.disabled = false;
+                        timerElement.textContent = '';
+                    }
+                }, 1000);
+            }
+
+            function initializeExpiryTimer() {
+                let countdown = 300; // 5 minutes countdown for OTP expiry
+
+                expiryInterval = setInterval(() => {
+                    countdown--;
+                    let minutes = Math.floor(countdown / 60);
+                    let seconds = countdown % 60;
+                    expiryElement.textContent = `OTP will expire in ${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+                    if (countdown <= 0) {
+                        clearInterval(expiryInterval);
+                        expiryElement.textContent = 'OTP has expired';
+                    }
+                }, 1000);
+            }
+
+            // Event listener for "Resend OTP" button
+            if (resendButton) {
+                resendButton.addEventListener('click', function(event) {
+                    event.preventDefault();
+
+                    // Fetch request to resend OTP
+                    fetch('/user/resend-otp', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                        },
+                        body: new URLSearchParams({
+                            email: email
+                        })
+                    }).then(response => {
+                        if (response.ok) {
+                            resendButton.disabled = true;
+                            initializeResendTimer(); // Restart the timer
+                        } else {
+                            alert("Failed to resend OTP. Please try again.");
+                        }
+                    }).catch(error => console.error('Error:', error));
+                });
+            }
+        });
+    </script> --}}
+

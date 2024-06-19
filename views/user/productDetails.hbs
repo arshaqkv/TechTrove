@@ -1,0 +1,120 @@
+{{> user-header}}
+<div class="container mt-5">
+    <div class="row">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                {{#each breadcrumbs}}
+                    {{#if @last}}
+                        <li class="breadcrumb-item active" aria-current="page">{{this.name}}</li>
+                    {{else}}
+                        <li class="breadcrumb-item"><a href="{{this.url}}">{{this.name}}</a></li>
+                    {{/if}}
+                {{/each}}
+            </ol>
+        </nav>
+        <!-- Product Images and Thumbnails -->
+        <div class="col-md-6">
+            <div id="product-images">
+                <div id="img-container" class="main-img mb-3 img-container">
+                    <img id="main-image" src="{{product.images.[0]}}" alt="Main Product Image" class="img-fluid zoomable">
+                </div>
+                <div class="thumbnail-images d-flex justify-content-between">
+                    <button class="btn btn-outline-light btn-sm">&lt;</button>
+                    {{#each product.images}}
+                        <img src="{{this}}" alt="Thumbnail" class="img-thumbnail prod-sec-img thumbnail">
+                    {{/each}}
+                    <button class="btn btn-outline-light btn-sm">&gt;</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Product Details -->
+        <div class="col-md-6">
+            <h1 class="product-title">{{product.title}}</h1>
+            <div class="rating">
+                <span class="badge bg-warning text-dark">4.7 Star Rating</span> 
+                <span class="text-muted">(10 User feedback)</span>
+            </div>
+            <h4 class="product-price mt-3">
+                {{product.price}} <span class="text-muted"><s>₹1,20,000</s></span> <span class="badge bg-danger">25% OFF</span>
+            </h4>
+            <ul class="list-unstyled mt-3">
+                <li><strong>Brand:</strong> {{product.brand}}</li>
+                <li><strong>Category:</strong> {{product.category.title}}</li>
+                <li><strong>Availability:</strong> 
+                {{#if (eq product.stock_count 0)}}
+                    <span class="text-danger">Out of Stock</span></li>
+                {{else}}
+                    <span class="text-success">In Stock</span></li>
+                {{/if}}
+                
+            </ul>
+            
+            <!-- Product Options -->
+            <form action="/cart/add/{{product.id}}" method="POST">
+                <div class="form-group mt-3">
+                    <label for="memory">Memory</label>
+                    <select class="form-control" id="memory" name="memory">
+                        <option>16 GB Unified Memory</option>
+                        <option>32 GB Unified Memory</option>
+                    </select>
+                </div>
+                <div class="form-group mt-3">
+                    <label for="size">Size</label>
+                    <select class="form-control" id="size" name="size">
+                        <option>14-inch Liquid Retina XDR Display</option>
+                        <option>16-inch Liquid Retina XDR Display</option>
+                    </select>
+                </div>
+                <div class="form-group mt-3">
+                    <label for="storage">Storage</label>
+                    <select class="form-control" id="storage" name="storage">
+                        <option>1TB SSD Storage</option>
+                        <option>2TB SSD Storage</option>
+                    </select>
+                </div>
+                
+                <!-- Add to Cart and Buy Now Buttons -->
+                <div class="mt-4 d-flex align-items-center">
+                    <button type="button" class="btn btn-outline-secondary me-2">-</button>
+                    <input type="number" name="quantity" value="1" min="1" class="form-control text-center" style="width: 60px;">
+                    <button type="button" class="btn btn-outline-secondary ms-2">+</button>
+                    <button type="submit" class="btn btn-primary ms-3">Add To Cart</button>
+                </div>
+                <button type="submit" class="btn btn-success mt-3">Buy Now</button>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Description and Reviews -->
+    <div class="mt-5">
+        <ul class="nav nav-tabs" id="myTab" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="description-tab" data-bs-toggle="tab" data-bs-target="#description" type="button" role="tab" aria-controls="description" aria-selected="true">Description</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="review-tab" data-bs-toggle="tab" data-bs-target="#review" type="button" role="tab" aria-controls="review" aria-selected="false">Review</button>
+            </li>
+        </ul>
+        <div class="tab-content mt-3" id="myTabContent">
+            <div class="tab-pane fade show active" id="description" role="tabpanel" aria-labelledby="description-tab">
+                <h4>Description</h4>
+                <p>{{product.description}}</p>
+            </div>
+            <div class="tab-pane fade" id="review" role="tabpanel" aria-labelledby="review-tab">
+                <h4>Review</h4>
+                <p>No reviews yet.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div>
+    {{> footer}}
+</div>
+
+<script src="/js/productDetails.js"></script>
+
+
+

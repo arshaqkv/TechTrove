@@ -1,0 +1,49 @@
+{{> user-header}}
+
+    <div class="page-content d-flex align-items-center">
+
+        <div class="container d-flex justify-content-center">
+
+            <div class="col-12 col-sm-10 col-md-8 col-lg-7 col-xl-6 col-xxl-5">
+
+                <div class="auth-card">
+
+                    <div class="logo-area">
+
+                        <!-- Light-Theming Logo: -->
+                        {{!-- <img id="header_logo" class="logo" src="assets/img/logo.png" /> --}}
+
+                    </div>
+                    
+                    <h3 class="auth-title">TECHTROVE ADMIN</h3>
+                    <h5 class="auth-title">Sign in</h5>
+                                  
+                    <!-- Login-Form -->
+                    <form action="/user/admin" method="POST">
+                        <div class="mb-2 mt-5">
+                            <input type="email" class="form-control auth-input" id="email" name="email" placeholder="Enter your email" value="{{email}}">
+                            {{#if errors.email}}
+                                <span class="error">{{errors.email.msg}}</span>
+                            {{/if}}
+                        </div>
+                        <div class="mb-2">
+                            <input type="password" class="form-control auth-input" id="password" name="password" placeholder="Enter your password" value="{{password}}">
+                            {{#if errors.password}}
+                                <span class="error">{{errors.password.msg}}</span>
+                            {{/if}}
+                        </div>
+                       
+                        <div class="mb-2">
+                            {{#if error}}
+                                <span class="error">{{error}}</span>
+                            {{/if}}
+                        </div>
+                        <button class="btn auth-btn mt-2 mb-4" type="submit">Login</button>
+                    </form>
+                    <hr class="separator">
+
+                </div>
+            </div>
+        </div>
+    </div>
+

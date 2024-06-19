@@ -1,0 +1,51 @@
+{{> admin-header}}
+    
+    <div class="content">
+        <div class="container mt-5">
+            <h2>User Management</h2>
+            <table class="table table-bordered table-hover">
+                <thead class="thead-light">
+                    <tr>
+                        <th scope="col">Name</th>
+                        <th scope="col">Email</th>
+                        <th scope="col">Phone No</th>
+                        <th scope="col">Status</th>
+                        <th scope="col">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{#each user}}
+                    <tr>
+                        <td>{{this.name}}</td>
+                        <td>{{this.email}}</td>
+                        <td>{{this.phone}}</td>
+                        <td>
+                            {{#if this.isBlocked}}
+                            <span class="badge bg-danger">Blocked</span>
+                            {{else}}
+                            <span class="badge bg-success">Active</span>
+                            {{/if}}
+                        </td>
+                        
+                        <td>
+                            {{#if this.isBlocked}}
+                            <form action="/admin/unblock-user/{{this._id}}" method="POST" class="d-inline">
+                                <button type="submit" class="btn btn-warning btn-sm">Unblock</button>
+                            </form>
+                            {{else}}
+                            <form action="/admin/block-user/{{this._id}}" method="POST" class="d-inline">
+                                <button type="submit" class="btn bg-danger btn-sm">Block</button>
+                            </form>
+                            {{/if}}
+                        </td>
+                    </tr>
+                    {{/each}}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+</body>
+</html>
