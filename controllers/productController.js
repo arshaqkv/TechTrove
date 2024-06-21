@@ -4,6 +4,7 @@ const asyncHandler = require('express-async-handler')
 const slugify = require('slugify')
 const validateMongoDbId = require('../utils/validateMongodbID')
 
+
 //create product page
 const loadCreateProduct = asyncHandler( async(req,res) =>{
     try {
@@ -82,7 +83,7 @@ const getProduct = asyncHandler(async (req,res) =>{
         });
 
         const breadcrumbs = [
-            { name: 'Home', url: '/'},
+            { name: 'Home', url: '/dashboard'},  
             { name: product.title, url: `/product/${id}`}
         ]
         

@@ -19,7 +19,9 @@ const { createUser,
         verifyOtp,
         loadUpdateUser,
         loadPassword,
-        updatePassword
+        updatePassword,
+        loadUserCart,
+        userCart
     } = require('../controllers/userController')
 const { validateSignup, validateLogin, validatePassword }  = require('../middlewares/validation')
 const { authMiddleware, isAdmin } = require('../middlewares/authMiddleware')
@@ -47,14 +49,13 @@ router.get('/profile/edit-user', authMiddleware, loadUpdateUser)
 router.put('/profile/update-user', authMiddleware, updateAUser)
 router.get('/profile/change-password', authMiddleware, loadPassword)
 router.put('/update-password', validatePassword,authMiddleware, updatePassword)
+router.get('/cart', authMiddleware, loadUserCart)
+router.post('/cart', authMiddleware, userCart)
 
-router.use(noCache())
-
-
-// router.post('/block-user', )
 router.post('/admin/block-user/:id', authMiddleware, isAdmin, blockUser)
 router.post('/admin/unblock-user/:id', authMiddleware, isAdmin, unBlockUser)
 
+router.use(noCache())
 
 
 module.exports = router 

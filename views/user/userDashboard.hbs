@@ -1,38 +1,75 @@
-
 {{> user-header}}
-    {{!-- You are in dashboard
-    
-    {{#if user}}
-        <h1>Welcome, {{user.name}}!</h1>
-        <a href="/user/logout">Logout</a>
-    {{else}}
-        <p>You are not logged in. Please <a href="/user/login">login</a>.</p>
-    {{/if}} --}}
-
 <div class="container mt-5">
     <div class="row">
         <!-- Sidebar for Category and Price Range -->
         <div class="col-md-3">
-            <h5 class="mb-4">CATEGORY</h5>
-            <div class="list-group">
-                <a href="#" class="list-group-item list-group-item-action active">Smartphone</a>
-                <a href="#" class="list-group-item list-group-item-action">Foldable Phone</a>
-                <a href="#" class="list-group-item list-group-item-action">Gaming Phone</a>
+            <h5 class="mb-4">CATEGORIES</h5>
+            <div id="categoryFilter">
+                {{#each categories}}
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" value="{{this.title}}" id="category-{{this._id}}" name="category">
+                    <label class="form-check-label" for="category-{{this._id}}">
+                        {{this.title}}
+                    </label>
+                </div>
+                {{/each}}
+            </div>
+
+            <h5 class="mt-4 mb-4">BRANDS</h5>
+            <div id="brandFilter">
+                
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" value="Apple" id="brand-apple" name="brand">
+                    <label class="form-check-label" for="brand-apple">
+                        Apple
+                    </label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" value="Samsung" id="brand-samsung" name="brand">
+                    <label class="form-check-label" for="brand-samsung">
+                        Samsung
+                    </label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" value="Lenovo" id="brand-lenovo" name="brand">
+                    <label class="form-check-label" for="brand-lenovo">
+                        Lenovo
+                    </label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" value="Huawei" id="brand-huawei" name="brand">
+                    <label class="form-check-label" for="brand-huawei">
+                        Huawei
+                    </label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" value="Oneplus" id="brand-oneplus" name="brand">
+                    <label class="form-check-label" for="brand-oneplus">
+                        Oneplus
+                    </label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" value="Oppo" id="brand-oppo" name="brand">
+                    <label class="form-check-label" for="brand-oppo">
+                        Oppo
+                    </label>
+                </div>
+                
             </div>
 
             <h5 class="mt-4 mb-3">PRICE RANGE</h5>
-            <input type="range" class="form-range" id="priceRange" min="0" max="50000" step="5000">
+            <input type="range" class="form-range" id="priceRange" min="0" max="50000" step="5000" onchange="updatePriceRange()">
             <div class="d-flex justify-content-between">
-                <span>₹0</span>
-                <span>₹50,000</span>
+                <span>Rs.0</span>
+                <span>Rs.50,000</span>
             </div>
-            <ul class="list-unstyled mt-3">
+            <ul class="list-unstyled mt-3" id="priceFilter">
                 <li><input type="radio" name="price" value="all" checked> All Price</li>
-                <li><input type="radio" name="price" value="10000"> Under 10,000₹</li>
-                <li><input type="radio" name="price" value="20000"> 10,000₹ - 20,000₹</li>
-                <li><input type="radio" name="price" value="30000"> 20,000₹ - 30,000₹</li>
-                <li><input type="radio" name="price" value="40000"> 30,000₹ - 40,000₹</li>
-                <li><input type="radio" name="price" value="50000"> 40,000₹ - 50,000₹</li>
+                <li><input type="radio" name="price" value="10000"> Under Rs.10,000</li>
+                <li><input type="radio" name="price" value="20000"> Rs.10,000 - Rs.20,000</li>
+                <li><input type="radio" name="price" value="30000"> Rs.20,000 - Rs.30,000</li>
+                <li><input type="radio" name="price" value="40000"> Rs.30,000 - Rs.40,000</li>
+                <li><input type="radio" name="price" value="50000"> Rs.40,000 - Rs.50,000</li>
             </ul>
         </div>
 
@@ -40,40 +77,144 @@
         <div class="col-md-9">
             <div class="d-flex justify-content-between mb-4">
                 <div>
-                    <input type="text" class="form-control" placeholder="Search...">
+                    <input type="text" class="form-control" id="searchInput" placeholder="Search...">
                 </div>
                 <div>
-                    <select class="form-select">
-                        <option value="popular">Sort By: Popular</option>
-                        <option value="price-asc">Price: Low to High</option>
-                        <option value="price-desc">Price: High to Low</option>
-                        <option value="rating">Rating</option>
+                    <select class="form-select" id="sortSelect">
+                        <option value="popular">Sort By: Popularity</option>
+                        <option value="price-asc">Sort By: Price: Low to High</option>
+                        <option value="price-desc">Sort By: Price: High to Low</option>
+                        <option value="rating">Sort By: Average Ratings</option>
+                        <option value="featured">Sort By: Featured</option>
+                        <option value="new-arrivals">Sort By: New Arrivals</option>
+                        <option value="a-z">Sort By: Name: A - Z</option>
+                        <option value="z-a">Sort By: Name: Z - A</option>
                     </select>
                 </div>
             </div>
 
-            <div class="row">
-                {{#each product}}
-                <div class="col-md-4 mb-4">
-                    <div class="card">
-                        <img src="{{this.images.[0]}}" class="card-img-top" alt="{{this.title}}">
-                        <div class="card-body">
-                            <h5 class="card-title">{{this.title}}</h5>
-                            <p class="card-text">
-                                <span class="text-warning">{{this.rating}} ★</span>
-                                <br>
-                                <span class="text-muted"><s>{{this.originalPrice}}</s></span>
-                                <span class="text-primary">₹{{this.price}}</span>
-                            </p>
-                            <a href="product/{{this.id}}" class="btn btn-primary">Buy Product</a>
+            <div class="row" id="productList">
+                {{#if products.length}}
+                    {{#each products}}
+                    <div class="col-md-4 mb-4">
+                        <div class="card">
+                            <img src="{{this.images.[0]}}" class="card-img-top" alt="{{this.title}}">
+                            <div class="card-body">
+                                <h5 class="card-title">{{this.brand}}</h5>
+                                <p class="card-text">
+                                    <span class="text-warning">{{this.rating}} ★</span>
+                                    <span class="text-muted">{{this.title}}</span>
+                                    {{!-- <span class="text-muted">{{this.category.title}}</span> --}}
+                                    <span class="text-muted"><s>{{this.originalPrice}}</s></span>
+                                    <span class="text-dark fw-bold">Rs.{{this.price}}</span>
+                                </p>
+                                <a href="/product/{{this._id}}" class="btn btn-primary">Buy Product</a>
+                            </div>
                         </div>
                     </div>
-                </div>
-                {{/each}}
+                    {{/each}}
+                {{else}}
+                    <div class="col-12 text-center">
+                        <h4>No products found.</h4>
+                    </div>
+                {{/if}}
             </div>
         </div>
     </div>
 </div>
 {{> footer}}
 
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Get references to the DOM elements
+        const categoryFilter = document.getElementById('categoryFilter');
+        const brandFilter = document.getElementById('brandFilter');
+        const priceFilter = document.getElementById('priceFilter');
+        const sortSelect = document.getElementById('sortSelect');
+        const searchInput = document.getElementById('searchInput');
 
+        let debounceTimer;
+        const debounce = (func, delay) => {
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(func, delay);
+        };
+
+
+        // Add event listener for category filter change
+        categoryFilter.addEventListener('change', updateFilters);
+        // Add event listener for brand filter change
+        brandFilter.addEventListener('change', updateFilters);
+        // Add event listener for price filter change
+        priceFilter.addEventListener('change', updateFilters);
+        // Add event listener for sort option change
+        sortSelect.addEventListener('change', updateFilters);
+        // Add event listener for search input change
+        searchInput.addEventListener('input', function() {
+        debounce(updateFilters, 700); // Adjust delay (in milliseconds) as needed
+        });
+
+        
+        // Function to update filters and construct URL parameters
+        function updateFilters() {
+            // Get selected categories (all checked checkboxes)
+            const selectedCategories = Array.from(categoryFilter.querySelectorAll('input[name="category"]:checked')).map(checkbox => checkbox.value);
+            const selectedBrands = Array.from(brandFilter.querySelectorAll('input[name="brand"]:checked')).map(checkbox => checkbox.value);
+            const selectedPrice = priceFilter.querySelector('input[name="price"]:checked').value;
+            const selectedSort = sortSelect.value;
+            const searchTerm = searchInput.value;
+
+            // Construct URL parameters based on current filters
+            const params = new URLSearchParams();
+            if (selectedCategories.length) params.append('filter[category]', selectedCategories.join(','));
+            if (selectedBrands.length) params.append('filter[brand]', selectedBrands.join(','));
+            if (selectedPrice !== 'all') params.append('filter[price]', selectedPrice);
+            if (searchTerm) params.append('filter[search]', searchTerm);
+            if (selectedSort) params.append('sort', selectedSort);
+
+            // Update the page URL with the constructed parameters
+            window.location.search = params.toString();
+        }
+
+        // Function to handle price range change and update filters
+        function updatePriceRange() {
+            updateFilters();
+        }
+
+        // Function to set the filter state from URL parameters
+        function setFiltersFromURL() {
+            const params = new URLSearchParams(window.location.search);
+
+            // Set category checkboxes
+            const categories = params.get('filter[category]')?.split(',') || [];
+            categories.forEach(category => {
+                const checkbox = categoryFilter.querySelector(`input[name="category"][value="${category}"]`);
+                if (checkbox) checkbox.checked = true;
+            });
+
+             // Set brand checkboxes
+            const brands = params.get('filter[brand]')?.split(',') || [];
+            brands.forEach(brand => {
+                const checkbox = brandFilter.querySelector(`input[name="brand"][value="${brand}"]`);
+                if (checkbox) checkbox.checked = true;
+            });
+
+            // Set price filter
+            const price = params.get('filter[price]');
+            if (price) {
+                const priceRadio = priceFilter.querySelector(`input[name="price"][value="${price}"]`);  
+                if (priceRadio) priceRadio.checked = true; 
+            } 
+
+            // Set sort option
+            const sort = params.get('sort');
+            if (sort) sortSelect.value = sort;
+
+            // Set search input
+            const search = params.get('filter[search]');
+            if (search) searchInput.value = search;
+        }
+
+        // Set the filter state from the URL parameters on page load
+        setFiltersFromURL();
+    });
+</script>

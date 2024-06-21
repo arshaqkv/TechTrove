@@ -32,13 +32,13 @@ let userSchema = new Schema({
         type: Boolean,
         default: false
     },
-    address: {
+    defaultAddress: {
         type: Schema.Types.ObjectId,
         ref: "Address"
     },
     cart: {
-        type: Array,
-        dafault: []
+        type: Schema.Types.ObjectId,
+        ref: "Cart"
     },
     wishlist: {
         type: Schema.Types.ObjectId,

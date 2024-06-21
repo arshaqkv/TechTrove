@@ -11,6 +11,7 @@ const { createProduct,
 const router = express.Router()
 const { authMiddleware, isAdmin } = require('../middlewares/authMiddleware')
 const { uploadImg, productImgResize } = require('../middlewares/uploadImages')
+const incrementPopularity = require('../middlewares/incrementPopularity')
 
 router.get('/add', authMiddleware, isAdmin, loadCreateProduct)
 router.post('/add', uploadImg.array('images', 5), createProduct) 
@@ -20,6 +21,6 @@ router.get('/edit/:id', authMiddleware, isAdmin, loadUpdateProduct)
 router.put('/update/:id', uploadImg.array('images', 5),  updateProduct)
 router.post('/delete/:id', authMiddleware, isAdmin, deleteProduct)
 router.put('/rating/:id', authMiddleware,rating)  
-router.get('/:id', authMiddleware, getProduct) 
+router.get('/:id', authMiddleware, incrementPopularity,getProduct) 
  
 module.exports = router

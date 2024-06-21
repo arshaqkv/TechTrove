@@ -8,30 +8,85 @@ const Otp = require('../models/otpModel')
 const mailer = require('../helpers/nodemailer')
 const { oneMinuteExpiry, fiveMinuteExpiry } = require('../helpers/otpValidate')
 const Product = require('../models/productModel')
+const Category = require('../models/categoryModel')
+const Cart = require('../models/cartModel')
 
 //home page
-const loadDashboard =  asyncHandler(async (req, res) => {
+const loadDashboard = asyncHandler(async (req, res) => {
+    const filterParams = req.query.filter || {};
+    const sortParam = req.query.sort || '';
+
+    const filter = { isDeleted: false };
+
+    if (filterParams.category) {
+        const category = await Category.findOne({ title: filterParams.category, isDeleted: false }).exec();
+        filter.category = category ? category._id : null;
+    }
+
+    if (filterParams.brand) {
+        filter.brand = { $in: filterParams.brand.split(',') };
+    }
+
+    if (filterParams.price) {
+        const price = parseInt(filterParams.price);
+        filter.price = { $lte: price };
+    }
+
+    if (filterParams.search) {
+        filter.title = { $regex: filterParams.search, $options: 'i' };
+    }
+
+    let sort = {};
+
+    switch (sortParam) {
+        case 'price-asc':
+            sort.price = 1;
+            break;
+        case 'price-desc':
+            sort.price = -1;
+            break;
+        case 'rating':
+            sort.rating = -1;
+            break;
+        case 'featured':
+            sort.featured = -1; 
+            break;
+        case 'new-arrivals':
+            sort.createdAt = -1; 
+            break;
+        case 'a-z':
+            sort.title = 1;
+            break;
+        case 'z-a':
+            sort.title = -1;
+            break;
+        default:
+            sort.popularity = -1; 
+            break;
+    }
+
     try {
-        const product = await Product.find({isDeleted: false}).populate('category').exec()
-        product.forEach(product => {
-            // Adjust the path if necessary
+        const [products, categories] = await Promise.all([
+            Product.find(filter).populate('category').sort(sort).exec(),
+            Category.find({ isDeleted: false }).exec()
+        ]);
+
+        products.forEach(product => {
             if (product.images && Array.isArray(product.images)) {
-                product.images = product.images.map(img => img.replace(/\\/g, '/').replace(/public/g, '')) // Replace backslashes with forward slashes
+                product.images = product.images.map(img => img.replace(/\\/g, '/').replace(/public/g, '')); // Replace backslashes with forward slashes
             }
         });
+
         
-        if(req.user){ 
-            const user = JSON.parse(JSON.stringify(req.user))
-            console.log(user)
-            return res.render('userDashboard', {user,product})
-        }else{
-            return res.redirect('/login')
-        }
+            const user = JSON.parse(JSON.stringify(req.user));
+           
+            return res.render('userDashboard', { user, products, categories });
         
     } catch (error) {
-        throw new Error(error)
+        throw new Error(error);
     }
 });
+
 
 
 // Registration page
@@ -103,13 +158,6 @@ const resendOtp = asyncHandler(async (req,res) =>{
 
 })
 
-const loadVerifyOtp = asyncHandler(async (req, res) => {
-    try {
-        return res.render('otpVerification');
-    } catch (error) {
-         throw new Error(error)
-    }
-}) 
 
 const verifyOtp = asyncHandler(async (req, res) =>{ 
     try {
@@ -138,15 +186,9 @@ const verifyOtp = asyncHandler(async (req, res) =>{
 const userLogin =  asyncHandler(async (req, res) => {
     
     try {
-        
-        if(req.user){
-            return res.status(201).redirect('/dashboard')
-        }else{
-            res.render('login', { errors: {} });
-        }
-        
+        res.render('login', { errors: {} });
     } catch (error) {
-         throw new Error(error)
+         console.log(error)
     }
 })  
 
@@ -334,26 +376,123 @@ const getAUser = asyncHandler(async (req,res) =>{
     const { _id } = req.user
     validateMongoDbId(_id)
     try{
-        const user = await User.findById(_id)
+        const user = await User.findById(_id).populate('defaultAddress').exec()
+        console.log(user)
         res.status(200).render('profile.hbs', {user})
     }catch(error){
         throw new Error(error)
     }
 })
 
+
 //cart
-const userCart = asyncHandler(async (req,res) =>{
-    const { cart } = req.body
-    const { _id } = req.user
+const userCart = asyncHandler(async (req, res) => {
+    const { cart } = req.body;
+    const { _id } = req.user;
+
+    validateMongoDbId(_id);
+
+    try {
+        const user = await User.findById(_id);
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        let cartToUpdate = await Cart.findOne({ orderby: user._id });
+
+        if (cartToUpdate) {
+            // Cart exists for the user, update it
+            for (let i = 0; i < cart.length; i++) {
+                const { product: productId, count } = cart[i];
+                const index = cartToUpdate.products.findIndex(p => p.product.equals(productId));
+
+                if (index !== -1) {
+                    // Product already exists in the cart, update count
+                    cartToUpdate.products[index].count += count;
+                } else {
+                    // Product doesn't exist in cart, add it
+                    let getPrice = await Product.findById(productId).select('price').exec();
+
+                    if (getPrice) {
+                        cartToUpdate.products.push({
+                            product: productId,
+                            count: count,
+                            price: getPrice.price
+                        });
+                    } else {
+                        return res.status(404).json({ message: 'Product not found' });
+                    }
+                }
+            }
+
+            // Recalculate cart total
+            cartToUpdate.cartTotal = 0;
+            for (let i = 0; i < cartToUpdate.products.length; i++) {
+                cartToUpdate.cartTotal += cartToUpdate.products[i].price * cartToUpdate.products[i].count;
+            }
+
+            await cartToUpdate.save();
+            return res.status(200).redirect('/cart')
+        } else {
+            // No cart exists for the user, create a new one
+            let products = [];
+            let cartTotal = 0;
+
+            for (let i = 0; i < cart.length; i++) {
+                const { product: productId, count } = cart[i];
+                let getPrice = await Product.findById(productId).select('price').exec();
+
+                if (getPrice) {
+                    products.push({
+                        product: productId,
+                        count: count,
+                        price: getPrice.price
+                    });
+                    cartTotal += getPrice.price * count;
+                } else {
+                    return res.status(404).json({ message: 'Product not found' });
+                }
+            }
+
+            const newCart = await Cart.create({
+                products,
+                cartTotal,
+                orderby: user._id
+            });
+
+            return res.status(201).redirect('/cart');
+        }
+    } catch (error) {
+        console.error(error);
+        
+    }
+});
+
+
+//load user cart
+const loadUserCart = asyncHandler(async (req,res) =>{
+    const user = req.user
+    const { _id } = user
     validateMongoDbId(_id)
     try {
-        const user = User.findById(_id)
-        const alreadyExistCart = await Cart.findOne({ orderby: user._id })
+        const cart = await Cart.findOne({ orderby: _id }).populate({
+            path: 'products.product',
+             // Specify the fields you want to populate
+        }).exec();
         
+        cart.products.forEach(productItem => {
+            let product = productItem.product;
+            if (product.images && Array.isArray(product.images)) {
+                product.images = product.images.map(img => img.replace(/\\/g, '/').replace(/public/g, '')); // Replace backslashes with forward slashes
+            }
+        });
+        res.render('cart', { cart, user })
     } catch (error) {
         console.log(error)
     }
 })
+
+
 
 //Delete a user
 const deleteAUser = asyncHandler(async (req,res) =>{
@@ -417,11 +556,12 @@ module.exports = {
     blockUser,
     unBlockUser,
     resendOtp,
-    // loadVerifyOtp,
     verifyOtp,
     loginAdmin,
     loadLoginAdmin,
     loadAdminDashboard,
     loadPassword,
-    updatePassword
+    updatePassword,
+    loadUserCart,
+    userCart
 } 

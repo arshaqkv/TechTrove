@@ -7,16 +7,20 @@ const {
     updateAddress, 
     deleteAddress, 
     getAddress, 
-    getAllAddress
+    getAllAddress,
+    defaultAddress
  } = require('../controllers/addressController')
 const { authMiddleware } = require('../middlewares/authMiddleware')
 
+router.get('/all', authMiddleware, getAllAddress)
+router.put('/default/:id', authMiddleware, defaultAddress)
 router.get('/add', authMiddleware, loadCreateAddress)
 router.post('/add', createAddress)
 router.get('/edit/:id', authMiddleware, loadUpdateAddress)
-router.put('/update/:id', updateAddress) 
-router.put('/delete/:id', deleteAddress)
+router.put('/update/:id', updateAddress)  
+router.delete('/delete/:id', deleteAddress)
 router.get('/:id', authMiddleware, getAddress)
-router.get('/all', authMiddleware, getAllAddress)
+
+
 
 module.exports = router

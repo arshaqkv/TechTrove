@@ -12,6 +12,18 @@
    background: linear-gradient(0, rgb(230, 230, 230), white);
    margin-bottom: 2rem;
 } */
+/* *****************input number************** */
+
+/* Chrome, Safari, Edge, Opera */
+input[type='number']::-webkit-inner-spin-button,
+input[type='number']::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+
+
+/* *****************header************** */
 header {
   background: #fff;
   padding: 20px 0;
@@ -310,4 +322,40 @@ footer .subscribe button {
 }
 .btn i {
   margin-right: 5px;
+}
+/* ***********delete alert*************** */
+.confirmation-modal h2 {
+  margin-top: 0;
+}
+
+.confirmation-modal .buttons {
+  text-align: center;
+  margin-top: 20px;
+}
+
+.confirmation-modal .buttons button {
+  margin: 0 10px;
+}
+
+.modal-overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+}
+.confirmation-modal {
+  display: none;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  z-index: 1001;
+  text-align: center;
 }

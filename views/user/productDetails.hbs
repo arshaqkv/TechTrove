@@ -51,8 +51,8 @@
             </ul>
             
             <!-- Product Options -->
-            <form action="/cart/add/{{product.id}}" method="POST">
-                <div class="form-group mt-3">
+            <form  id="cartForm" method="POST">
+                {{!-- <div class="form-group mt-3">
                     <label for="memory">Memory</label>
                     <select class="form-control" id="memory" name="memory">
                         <option>16 GB Unified Memory</option>
@@ -72,17 +72,20 @@
                         <option>1TB SSD Storage</option>
                         <option>2TB SSD Storage</option>
                     </select>
-                </div>
+                </div> --}}
                 
                 <!-- Add to Cart and Buy Now Buttons -->
-                <div class="mt-4 d-flex align-items-center">
-                    <button type="button" class="btn btn-outline-secondary me-2">-</button>
-                    <input type="number" name="quantity" value="1" min="1" class="form-control text-center" style="width: 60px;">
-                    <button type="button" class="btn btn-outline-secondary ms-2">+</button>
-                    <button type="submit" class="btn btn-primary ms-3">Add To Cart</button>
+            
+                    <div class="mt-4 d-flex align-items-center">
+                    <button type="button" class="btn btn-outline-secondary me-2" id="decrementBtn">-</button>
+                    <input type="number" name="count" value="1" min="1" class="form-control text-center" style="width: 60px;" id="countInput">
+                    <button type="button" class="btn btn-outline-secondary ms-2" id="incrementBtn">+</button>
+                    <input type="hidden" name="productId" value="{{product._id}}" id="productId">
+                    <input type="hidden" name="price" value="{{product.price}}" id="priceInput">
+                    <button type="button" class="btn btn-primary ms-3" id="submitBtn">Add To Cart</button>
                 </div>
-                <button type="submit" class="btn btn-success mt-3">Buy Now</button>
-            </form>
+            </form> 
+            <button type="submit" class="btn btn-success mt-3">Wishlist</button>
         </div>
     </div>
     
@@ -110,9 +113,9 @@
 </div>
 
 
-<div>
+
     {{> footer}}
-</div>
+
 
 <script src="/js/productDetails.js"></script>
 

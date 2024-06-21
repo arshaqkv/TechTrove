@@ -674,3 +674,12 @@ body{
         z-index: 1001;
         text-align: center;
     }
+
+/* *****************input number************** */
+
+/* Chrome, Safari, Edge, Opera */
+input[type='number']::-webkit-inner-spin-button,
+input[type='number']::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}

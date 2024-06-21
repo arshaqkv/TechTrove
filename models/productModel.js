@@ -53,10 +53,19 @@ let productSchema = new Schema({
             postedBy: {type: Schema.Types.ObjectId, ref: "User"}
         }
     ],
-    totalRating: {
+    totalRating: {  
+        type: Number,
+        default: 0
+    },
+    featured: {
+        type: Boolean,
+        default: false
+    },
+    popularity: {
         type: Number,
         default: 0
     }
+
 },
 {
     timestamps: true
