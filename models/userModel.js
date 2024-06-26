@@ -40,11 +40,15 @@ let userSchema = new Schema({
         type: Schema.Types.ObjectId,
         ref: "Cart"
     },
-    wishlist: {
+    wishlist: [{
         type: Schema.Types.ObjectId,
-        ref: "wishlist"
-    } 
-});
+        ref: "Product"
+    }]
+    },
+    {
+        timestamps: true
+    }
+);
     
 
 userSchema.pre('save', async function(next) {

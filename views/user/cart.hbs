@@ -1,57 +1,146 @@
 {{> user-header}}
-  
 
-  <div class="container cart-container">
-    <h1 class="my-4">Cart</h1>
-    <div class="row">
-      <div class="col-md-8">
-        {{#each cart.products}}
-        <div class="card cart-item">
-          <div class="card-body d-flex">
-            <img src="{{this.product.images.[0]}}" class="img-fluid" style="max-width: 70px; height:70px" alt="Product Image">
-            <div class="ml-3">
+<div class="container cart-container">
+  {{#if cart.products.length}}
+  <h1 class="my-4">Cart</h1>
+  <div class="row">
+    <div class="col-md-8">
+      {{#each cart.products}}
+      <div class="card cart-item" data-product-id="{{this.product._id}}">
+        <div class="card-body d-flex  d-flex align-items-center justify-content-between">
+          <img src="{{this.product.images.[0]}}" class="img-fluid" style="max-width: 70px; height:70px" alt="Product Image">
+          <div class="ml-3">
+            <div>
               <h5 class="card-title">{{this.product.brand}}</h5>
-              <p class="card-text">{{this.product.title}}</p>
-              <p class="text-success">{{#if this.product.stock_count}}In Stock{{else}}Out of Stock{{/if}}</p>
-              <div class="d-flex align-items-center">
-                <button class="btn btn-outline-secondary btn-sm">-</button>
-                <span class="mx-2">{{this.count}}</span>
-                <button class="btn btn-outline-secondary btn-sm">+</button>
-                <button class="btn btn-outline-danger btn-sm ml-3"><i class="fas fa-trash"></i></button>
-              </div>
+            <p class="card-text">{{this.product.title}}</p>
+            {{!-- <p class="text-success">{{#if this.product.stock_count}}In Stock{{else}}Out of Stock{{/if}}</p> --}}
             </div>
-            <div class="ml-auto">
-              <p class="text-right"><strong>Sub Total: Rs.{{this.price}}</strong></p>
+            <div class="d-flex align-items-center">
+              <button class="btn btn-outline-secondary btn-sm" onclick="decreaseQuantity('{{this.product._id}}')">-</button>
+              <input type="number" class="form-control count-input mx-2" style="width: 50px; text-align:center" value="{{this.count}}" min="1" max="10" data-product-id="{{this.product._id}}" readonly>
+              <button class="btn btn-outline-secondary btn-sm" onclick="increaseQuantity('{{this.product._id}}')">+</button>
+              <button class="btn btn-outline-danger btn-sm ms-3" onclick="removeCartItem('{{this.product._id}}')"><i class="fas fa-trash"></i></button>
             </div>
           </div>
+          <div class="ml-auto">
+            <p class="text-right"><strong>{{this.count}}</strong> x Rs.{{this.product.price}}</p>
+          </div>
         </div>
-        {{/each}}
       </div>
-      <div class="col-md-4">
-        <div class="order-summary">
-          <h5>Order Summary</h5>
-          <p>Price:</p>
-          <p>Discount: $31.9</p>
-          <p>Shipping: Free</p>
-          <p>Coupon Applied: $0.00</p>
-          <hr>
-          <h5>Total:Rs.{{cart.cartTotal}}</h5>
-          <p>Estimated Delivery by <strong>30 June, 2024</strong></p>
-          <div class="form-group">
-            <input type="text" class="form-control" placeholder="Coupon Code">
-            <button class="btn btn-outline-secondary btn-block mt-2">Apply</button>
-          </div>
-          <button class="btn btn-primary btn-block">Proceed to Checkout</button>
+      {{/each}}
+    </div>
+    <div class="col-md-4">
+      <div class="order-summary">
+        <h5>Order Summary</h5>
+        <p>Price:</p>
+        <p>Discount: Rs.0</p>
+        <p>Shipping: Free</p>
+        <p>Coupon Applied: $0.00</p>
+        <hr>
+        <h5>Total: Rs.{{cart.cartTotal}}</h5>
+        <p>Estimated Delivery by <strong>30 June, 2024</strong></p>
+        <div class="form-group">
+          <input type="text" class="form-control" placeholder="Coupon Code">
+          <button class="btn btn-outline-secondary btn-block mt-2">Apply</button>
         </div>
+        <a href="/user/checkout" class="btn btn-primary btn-block mt-3">Proceed to Checkout</a>
       </div>
     </div>
   </div>
+</div>
 
-<style>
-    .cart-container { padding: 20px; }
-    .order-summary { background: #f8f9fa; padding: 20px; border-radius: 5px; }
-    .order-summary h5 { font-weight: bold; }
-    .order-summary p { margin: 0; }
-    .cart-item { margin-bottom: 20px; }
-  </style>
 {{> footer}}
+
+{{else}}
+      <div class="container">
+        
+        <div class="d-flex justify-content-center align-items-center" style="height:80vh;">
+        <div class="">
+            <div class=" card col-md d-flex justify-content-center align-items-center" style="height: 200px;">
+          <h4>Hey, it feels so light!</h4>
+          <p>There's nothing in your cart, Let's add something</p>
+          <a href="/product/wishlist" class="btn btn-outline-danger btn-lg">ADD ITEMS FROM WISHLIST</a>
+        </div>
+        </div>
+    </div>
+        
+      </div>
+{{/if}}
+
+<script src="/js/cart.js"></script>
+  {{!-- document.addEventListener('DOMContentLoaded', function () {
+  async function updateCart(productId, newQuantity) {
+    try {
+      const response = await fetch('/cart/update', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ productId, newQuantity }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        document.querySelector('.order-summary h5:last-of-type').textContent = `Total: Rs.${data.cartTotal}`;
+        const cartItem = document.querySelector(`.cart-item[data-product-id="${productId}"]`);
+        cartItem.querySelector('.text-right strong').textContent = `Sub Total: Rs.${data.subTotal}`;
+      } else {
+        console.error('Failed to update cart');
+      }
+    } catch (error) {
+      console.error('Error:', error);
+    }
+  }
+
+  window.decreaseQuantity = async function (productId) {
+    const cartItem = document.querySelector(`.cart-item[data-product-id="${productId}"]`);
+    const inputField = cartItem.querySelector('.count-input');
+    let quantity = parseInt(inputField.value);
+
+    if (quantity > 1) {
+      quantity -= 1;
+      inputField.value = quantity;
+      await updateCart(productId, quantity);
+    }
+  };
+
+  window.increaseQuantity = async function (productId) {
+    const cartItem = document.querySelector(`.cart-item[data-product-id="${productId}"]`);
+    const inputField = cartItem.querySelector('.count-input');
+    let quantity = parseInt(inputField.value);
+
+    quantity += 1;
+    inputField.value = quantity;
+    await updateCart(productId, quantity);
+  };
+
+   window.removeCartItem = async function (productId) {
+    try {
+      const response = await fetch('/cart/remove', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ productId }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        document.querySelector('.order-summary h5:last-of-type').textContent = `Total: Rs.${data.cartTotal}`;
+        const cartItem = document.querySelector(`.cart-item[data-product-id="${productId}"]`);
+        cartItem.remove();
+        location.reload()
+      } else {
+        const error = await response.json();
+        alert(error.message);
+      }
+    } catch (error) {
+      console.error('Error:', error);
+    }
+  };
+
+});
+
+</script> --}}
+
+

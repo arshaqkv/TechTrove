@@ -29,9 +29,22 @@ const auth = require('./routes/auth');
 const productRouter = require('./routes/productRoute')
 const categoryRouter = require('./routes/categoryRoute');
 const addressRouter = require('./routes/addressRoute')
+const coupenRouter = require('./routes/coupenRoute')
 
-hbs.handlebars.registerHelper('eq', function(a, b) {
-    return a == b;
+hbs.handlebars.registerHelper('ne', function(a, b) {
+    return a != b;
+});
+
+
+hbs.handlebars.registerHelper('statusClass', function(status) {
+    switch (status) {
+      case 'Order Placed': return 'badge-success';
+      case 'Processing': return 'badge-warning';
+      case 'Dispatched': return 'badge-info';
+      case 'Delivered': return 'badge-primary';
+      case 'Cancelled': return 'badge-danger';
+      default: return 'badge-secondary';
+    }
 });
 
 app.use(methodOverride('_method'))
@@ -73,6 +86,7 @@ app.use('/product', productRouter)
 app.use('/auth', auth);
 app.use('/prod/category', categoryRouter)
 app.use('/address', addressRouter)
+app.use('/coupen', coupenRouter)
 
 app.use(notFound)
 app.use(errorHandler)

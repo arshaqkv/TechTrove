@@ -1,7 +1,6 @@
 const express = require('express');
 const passport = require('passport');
 const { generateToken } = require('../config/jwToken')
-const Product = require('../models/productModel')
 const router = express.Router();
 
 router.get('/google', passport.authenticate('google', {

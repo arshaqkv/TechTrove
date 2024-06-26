@@ -14,8 +14,9 @@ const loadCreateAddress = asyncHandler(async (req,res) =>{
 const createAddress = asyncHandler(async (req,res) =>{
     try {
         const newAddress = await Address.create(req.body)
-        res.status(201).redirect('/address/all')
-    } catch (error) {
+        // res.status(201).redirect('/address/all') 
+        res.json(newAddress)
+    } catch (error) { 
         throw new Error(error)
     } 
 })
@@ -36,7 +37,7 @@ const updateAddress = asyncHandler(async (req,res) =>{
         const updatedAddress = await Address.findByIdAndUpdate(id, req.body, {
             new: true
         })
-        res.status(201).redirect('/address/all')
+        res.json(updatedAddress)
     } catch (error) {
         throw new Error(error)
     } 
@@ -45,8 +46,8 @@ const updateAddress = asyncHandler(async (req,res) =>{
 const deleteAddress = asyncHandler(async (req,res) =>{
     const { id } = req.params
     try {
-        const deletedAddress = await Address.findOneAndDelete(id)
-        res.status(201).redirect('/address/all')
+        const deletedAddress = await Address.findByIdAndDelete(id)
+        res.status(200).json({ success: true, message: 'Address deleted successfully' });
     } catch (error) {
         throw new Error(error)
     } 

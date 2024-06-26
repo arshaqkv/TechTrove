@@ -21,7 +21,15 @@ const { createUser,
         loadPassword,
         updatePassword,
         loadUserCart,
-        userCart
+        userCart,
+        updateCart,
+        removeCartItem,
+        loadCreateOrder,
+        createOrder,
+        getOrder,
+        updateOrderStatus,
+        cancelOrder,
+        getAllOrders
     } = require('../controllers/userController')
 const { validateSignup, validateLogin, validatePassword }  = require('../middlewares/validation')
 const { authMiddleware, isAdmin } = require('../middlewares/authMiddleware')
@@ -51,6 +59,14 @@ router.get('/profile/change-password', authMiddleware, loadPassword)
 router.put('/update-password', validatePassword,authMiddleware, updatePassword)
 router.get('/cart', authMiddleware, loadUserCart)
 router.post('/cart', authMiddleware, userCart)
+router.put('/cart/update', authMiddleware, updateCart)
+router.put('/cart/remove', authMiddleware, removeCartItem) 
+router.get('/checkout', authMiddleware, loadCreateOrder)
+router.post('/checkout', authMiddleware, createOrder)
+router.get('/get-orders', authMiddleware, getOrder)
+router.put('/order/update-order/:id', authMiddleware, updateOrderStatus)
+router.put('/order/cancel-order/:id', authMiddleware, cancelOrder)
+router.get('/order/all-orders', authMiddleware, isAdmin, getAllOrders)
 
 router.post('/admin/block-user/:id', authMiddleware, isAdmin, blockUser)
 router.post('/admin/unblock-user/:id', authMiddleware, isAdmin, unBlockUser)

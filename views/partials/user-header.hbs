@@ -1,7 +1,7 @@
 <nav class="navbar navbar-expand-lg navbar-light bg-light">
     <div class="container d-flex justify-content-around mt-2">
         <div class="logoDiv">
-            <a href="/dashboard" class="logo">
+            <a href="/dashboard" class="logo" style="text-decoration: none;">
                 <i class='bx bx-code-alt'></i>
                 <div class="logo-name"><span>Tech</span>Trove</div>
             </a>
@@ -13,9 +13,10 @@
            
         </div>
         <div class="d-flex align-items-center">
-                <a class="text-dark me-2" href="#"><i class="fas fa-heart"></i></a>
-                <a href="/user/cart" class="text-dark me-2"><i class="fas fa-shopping-cart"></i></a>
-
+                {{#if user}}
+                <a class="text-dark me-2" href="/product/wishlist"><i class="fas fa-heart"></i></a>
+                <a href="/user/cart" class="text-dark me-2"><i class="fas fa-shopping-cart"></i>{{#if cart.products.length}}{{cart.products.length}}{{/if}}</a>
+                {{/if}}
                 <div class="dropdown">
                     <a href="#" class="d-block link-dark text-decoration-none dropdown-toggle" id="dropdownUser1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                         <i class="fas fa-user"></i>
@@ -26,7 +27,7 @@
                             <span class="dropdown-item-text text-muted small">{{user.email}}</span>
                             <div class="dropdown-divider"></div>
                             <a class="dropdown-item" href="/user/profile"><i class="fas fa-user"></i> Profile</a>
-                            <a class="dropdown-item" href="#"><i class="fas fa-box"></i> Orders</a>
+                            <a class="dropdown-item" href="/user/get-orders"><i class="fas fa-box"></i> Orders</a>
                             <a class="dropdown-item" href="/user/cart"><i class="fas fa-shopping-cart"></i> Cart</a>
                             <a class="dropdown-item" href="#"><i class="fas fa-heart"></i> Wishlist</a>
                             <a class="dropdown-item" href="/user/logout"><i class="fas fa-sign-out-alt"></i> Logout</a>

@@ -10,6 +10,8 @@ const { oneMinuteExpiry, fiveMinuteExpiry } = require('../helpers/otpValidate')
 const Product = require('../models/productModel')
 const Category = require('../models/categoryModel')
 const Cart = require('../models/cartModel')
+const Address = require('../models/addressModel')
+const Order = require('../models/orderModel')
 
 //home page
 const loadDashboard = asyncHandler(async (req, res) => {
@@ -78,7 +80,7 @@ const loadDashboard = asyncHandler(async (req, res) => {
         });
 
         
-            const user = JSON.parse(JSON.stringify(req.user));
+            const user = req.user
            
             return res.render('userDashboard', { user, products, categories });
         
@@ -284,24 +286,23 @@ const logout = asyncHandler(async (req, res) =>{
 
 
 const loadUpdateUser = asyncHandler(async (req,res) =>{
-    const { id } = req.query
+    const { _id } = req.user
     try {
-        const user = await User.findById(id)
+        const user = await User.findById(_id)
         res.render('updateUser', { user })
     } catch (error) {
         console.log(error)
     }
-
+ 
 })
  
 //Update a user
 const updateAUser = asyncHandler(async (req,res) =>{
-    console.log(req.user)
-    const { _id } = req.user
+    const user = req.user
+    const { _id } = user
     validateMongoDbId(_id)
-    console.log(id)
     try {
-        const updatedUser = await User.findByIdAndUpdate({id:_id}, 
+        const updatedUser = await User.findByIdAndUpdate(_id, 
             req.body,
             {
                 new: true
@@ -376,9 +377,9 @@ const getAUser = asyncHandler(async (req,res) =>{
     const { _id } = req.user
     validateMongoDbId(_id)
     try{
+        const order = await Order.find({orderby: _id})
         const user = await User.findById(_id).populate('defaultAddress').exec()
-        console.log(user)
-        res.status(200).render('profile.hbs', {user})
+        res.status(200).render('profile.hbs', {user,order})
     }catch(error){
         throw new Error(error)
     }
@@ -412,7 +413,7 @@ const userCart = asyncHandler(async (req, res) => {
                 } else {
                     // Product doesn't exist in cart, add it
                     let getPrice = await Product.findById(productId).select('price').exec();
-
+ 
                     if (getPrice) {
                         cartToUpdate.products.push({
                             product: productId,
@@ -427,12 +428,17 @@ const userCart = asyncHandler(async (req, res) => {
 
             // Recalculate cart total
             cartToUpdate.cartTotal = 0;
-            for (let i = 0; i < cartToUpdate.products.length; i++) {
-                cartToUpdate.cartTotal += cartToUpdate.products[i].price * cartToUpdate.products[i].count;
-            }
+            const individualTotals = cartToUpdate.products.map(product => {
+                const total = product.price * product.count;
+                cartToUpdate.cartTotal += total;
+                return { productId: product.product._id, total };
+            });
 
             await cartToUpdate.save();
-            return res.status(200).redirect('/cart')
+            return res.status(200).json({
+                cartTotal: cartToUpdate.cartTotal,
+                individualTotals
+            });
         } else {
             // No cart exists for the user, create a new one
             let products = [];
@@ -492,7 +498,211 @@ const loadUserCart = asyncHandler(async (req,res) =>{
     }
 })
 
+//decrease quantity of products in cart
+const updateCart = asyncHandler(async (req, res) => {
+    const { productId, newQuantity } = req.body;
+    const { _id } = req.user;
 
+    validateMongoDbId(_id);
+
+    try {
+        const cart = await Cart.findOne({ orderby: _id }).populate('products.product').exec();
+
+        if (!cart) {
+            return res.status(404).json({ message: 'Cart not found' });
+        }
+
+        const itemIndex = cart.products.findIndex(p => p.product._id.toString() === productId);
+
+        if (itemIndex === -1) {
+            return res.status(404).json({ message: 'Product not found in cart' });
+        }
+
+        if (newQuantity <= 0) {
+            // Remove the product if newQuantity is 0
+            cart.products.splice(itemIndex, 1);
+        } else {
+            cart.products[itemIndex].count = newQuantity;
+        }
+
+        // Recalculate cart total
+        const updatedCartTotal = cart.products.reduce((total, product) => total + product.count * product.price, 0);
+
+        const updatedCart = await Cart.findOneAndUpdate(
+            { orderby: _id },
+            {
+                $set: {
+                    products: cart.products,
+                    cartTotal: updatedCartTotal
+                }
+            },
+            { new: true }
+        ).populate('products.product').exec();
+
+        const subTotal = updatedCart.products.find(p => p.product._id.toString() === productId)?.count * updatedCart.products.find(p => p.product._id.toString() === productId)?.price || 0;
+
+        res.status(200).json({
+            cartTotal: updatedCart.cartTotal,
+            count: cart.products[itemIndex].count
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Internal Server Error' });
+    }
+});
+
+
+//remove item form cart
+const removeCartItem = asyncHandler(async (req,res) =>{
+    const { productId } = req.body
+    const { _id } = req.user
+    validateMongoDbId(_id)
+    try {
+        const cart = await Cart.findOne({ orderby: _id}).populate('products.product').exec()
+        if(cart){
+            const itemIndex = cart.products.findIndex(p=> p.product._id.toString() === productId);
+            if (itemIndex !== -1) {
+                cart.products.splice(itemIndex, 1);
+
+                // Recalculate cart total
+                cart.cartTotal = cart.products.reduce((acc, item) => acc + item.price * item.count, 0);
+
+                await cart.save();
+                return res.status(200).json(cart);
+            } else {
+                return res.status(404).json({ message: 'Product not found in cart' });
+            }
+        } else {
+            return res.status(404).json({ message: 'Cart not found' });
+        }  
+        
+    } catch (error) {
+        console.log(error) 
+    }
+})
+
+
+
+const createOrder = asyncHandler(async (req,res) =>{
+    const { _id } = req.user
+    validateMongoDbId(_id)
+    const { paymentIntent } = req.body
+    try {
+        const cart = await Cart.findOne({ orderby: _id }).populate('products.product');
+    if (!cart) {
+      return res.status(404).json({ success: false, message: 'Cart not found' });
+    }
+    
+    const totalPrice = cart.cartTotal;
+
+    const order = new Order({
+      products: cart.products, 
+      totalPrice: totalPrice,
+      paymentIntent: paymentIntent,
+      orderby: _id
+    });
+    await order.save();
+    // clear the cart after order creation
+    cart.products = [];
+    await cart.save();
+
+    res.status(201).json({ success: true, orderId: order._id });
+    } catch (error) {
+        console.log(error)
+    }
+
+})
+
+const loadCreateOrder = asyncHandler(async (req,res) =>{
+    const user = req.user
+    try {
+        const cart = await Cart.findOne({ orderby: user._id }).populate({
+            path: 'products.product', 
+             // Specify the fields you want to populate
+        }).exec();
+        
+        cart.products.forEach(productItem => {
+            let product = productItem.product;
+            if (product.images && Array.isArray(product.images)) {
+                product.images = product.images.map(img => img.replace(/\\/g, '/').replace(/public/g, '')); // Replace backslashes with forward slashes
+            }
+        });
+        const address = await Address.find({user: user._id})
+        res.render('checkout', { user,cart,address }) 
+    } catch (error) {
+        console.log(error);
+    }
+})
+
+const getOrder = asyncHandler(async (req,res) =>{
+    const user = req.user
+    const { _id } = user
+    validateMongoDbId(_id)
+    try {
+        const userOrders = await Order.find({ orderby: _id }).populate('products.product').exec()
+        console.log(userOrders)
+        userOrders.forEach(order => {
+            order.products.forEach(productItem => {
+                let product = productItem.product;
+                if (product.images && Array.isArray(product.images)) {
+                    product.images = product.images.map(img => img.replace(/\\/g, '/').replace(/public/g, ''));
+                }
+            });
+        });
+        
+        res.render('product-orders', { user,orders: userOrders})
+    } catch (error) {
+        console.log(error)
+    }
+})
+
+const updateOrderStatus = asyncHandler(async (req,res) =>{
+    const { status } = req.body  
+    const { id } = req.params
+    validateMongoDbId(id)
+    try {
+        const updateOrderStatus = await Order.findByIdAndUpdate(id,
+            { orderStatus : status},
+            { new: true }
+        )
+    } catch (error) {
+        console.log(error)
+    }
+})
+
+const cancelOrder = asyncHandler(async (req,res) =>{
+    const { id } = req.params;
+    validateMongoDbId( id );
+    try {
+        // Update the order status to 'Cancelled'
+        const order = await Order.findByIdAndUpdate(id,  
+            { orderStatus: 'Cancelled' },
+            { new: true }
+        );
+        res.status(200).json({ success: true, message: 'Order cancelled successfully' });
+      } catch (error) {
+        res.status(500).json({ success: false, message: 'Server error' });
+      }
+})
+
+const getAllOrders = asyncHandler( async(req,res) =>{
+    const user = req.user
+    try {
+        const orders = await Order.find().populate('orderby').populate('products.product').exec()
+        console.log(orders)
+        orders.forEach(order => {
+            order.products.forEach(productItem => {
+                let product = productItem.product;
+                if (product.images && Array.isArray(product.images)) {
+                    product.images = product.images.map(img => img.replace(/\\/g, '/').replace(/public/g, ''));
+                }
+            });
+        });
+        res.render('view-orders', { orders, user})
+    } catch (error) {
+        console.log(error)
+    }
+})
 
 //Delete a user
 const deleteAUser = asyncHandler(async (req,res) =>{
@@ -563,5 +773,13 @@ module.exports = {
     loadPassword,
     updatePassword,
     loadUserCart,
-    userCart
+    userCart,
+    updateCart,
+    removeCartItem,
+    createOrder,
+    loadCreateOrder,
+    getOrder,
+    updateOrderStatus,
+    cancelOrder,
+    getAllOrders
 } 

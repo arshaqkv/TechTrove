@@ -5,7 +5,9 @@
   padding: 0;
   box-sizing: border-box;
   font-family: 'Poppins', sans-serif;
+  
 }
+
 
 /* navbar */
 /* .navbar {
@@ -59,6 +61,8 @@ header .user-actions a img {
 header .mobile-menu-icon {
   display: none;
 }
+
+
 
 /* ***************Logo************** */
 
@@ -305,7 +309,7 @@ footer .subscribe button {
   border-radius: 10px;
 }
 .list-group-item.active {
-  background-color: #000000;
+  background-color: hsl(0, 0%, 0%);
   border-color: #093146;
 }
 .list-group-item i {
@@ -359,3 +363,11 @@ footer .subscribe button {
   z-index: 1001;
   text-align: center;
 }
+
+/* *********cart********** */
+.cart-container { padding: 20px; }
+  .order-summary { background: #f8f9fa; padding: 20px; border-radius: 5px; }
+  .order-summary h5 { font-weight: bold; }
+  .order-summary p { margin: 0; }
+  .cart-item { margin-bottom: 20px; }
+

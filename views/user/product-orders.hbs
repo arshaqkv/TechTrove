@@ -1,0 +1,107 @@
+{{> user-header}}
+
+<div class="container mt-5 mb-5">
+  <div class="row">
+    <div class="col-12">
+      <h2>Orders <span class="text-muted">{{orders.length}} ITEMS</span></h2>
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h4 class="card-title">Order History</h4>
+        <div>
+          <button class="btn btn-outline-secondary">Select Date</button>
+          <button class="btn btn-outline-secondary">Filters</button>
+        </div>
+      </div>
+      {{#if orders.length}}
+      <div class="table-responsive">
+        <table class="table table-hover">
+          <thead>
+            <tr>
+              <th>Order ID</th>
+              <th>Products</th>
+              <th>Total</th>
+              <th>Status</th>
+              <th>Date</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            
+            {{#each orders}}
+            <tr>
+              <td>#{{this._id}}</td>
+              <td>
+                {{#each this.products}}
+                  <div class="d-flex align-items-center">
+                    <img class="img-thumbnail" src="{{this.product.images.[0]}}" alt="" style="width: 50px;">
+                    <div class="ms-1">{{this.count}} x </div>
+                    <div class="ms-2">{{this.product.title}}</div>
+                  </div>
+                {{/each}}
+              </td>
+              <td>{{this.totalPrice}}/-</td>
+              <td id="order-status-{{this._id}}">
+                <span class="badge {{statusClass this.orderStatus}}">{{this.orderStatus}}</span>
+              </td>
+              <td>{{this.createdAtFormatted}}</td>
+              <td>
+                <button class="btn btn-outline-secondary btn-sm" onclick="viewOrder('{{this._id}}')">View</button>
+                {{#if (ne this.orderStatus 'Cancelled')}}
+                <button class="btn btn-outline-warning btn-sm" onclick="cancelOrder('{{this._id}}')">Cancel</button>
+                {{/if}}
+              </td>
+            </tr>
+            {{/each}}
+          </tbody>
+          </table>
+      </div>
+      
+      <nav aria-label="Page navigation">
+        <ul class="pagination">
+          {{#each pagination}}
+          <li class="page-item {{#if this.active}}active{{/if}}">
+            <a class="page-link" href="?page={{this.page}}">{{this.page}}</a>
+          </li>
+          {{/each}}
+        </ul>
+        {{else}}
+            <div class="container" >
+              <div class=" card col-md-8 d-flex justify-content-center align-items-center m-auto" style="height: 200px;">
+                  <p>There's no order history</p>
+                  <a href="/user/dashboard" class="btn btn-warning">Buy Items</a>
+              </div>
+            </div>
+          {{/if}}
+      </nav>
+    </div>
+  </div>
+</div>
+
+{{> footer}}
+
+<script>
+    
+    async function cancelOrder(orderId) {
+    try {
+        const response = await fetch(`/order/cancel-order/${orderId}`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+        alert('Order cancelled successfully');
+        // Optionally, update the UI to reflect the order status change
+        document.getElementById(`order-status-${orderId}`).innerText = 'Cancelled';
+        location.reload()
+        } else {
+        alert('Failed to cancel the order: ' + data.message);
+        }
+    } catch (error) {
+        console.error('Error cancelling order:', error);
+        alert('An error occurred while cancelling the order');
+    }
+}
+</script>

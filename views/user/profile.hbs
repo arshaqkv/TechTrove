@@ -8,11 +8,12 @@
       <div class="card">
         <div class="card-body">
           <h4 class="card-title">Hello, {{user.name}}</h4>
-          <p>From your account dashboard, you can easily check & view your <a href="#">Recent Orders</a>, manage your <a href="#">Shipping and Billing Addresses</a> and edit your <a href="#">Password</a> and <a href="#">Account Details</a>.</p>
+          <p>From your account dashboard, you can easily check & view your <a href="/user/get-orders">Recent Orders</a>, manage your <a href="/address/all">Shipping and Billing Addresses</a> 
+          and edit your <a href="/profile/change-password">Password</a> and <a href="#">Account Details</a>.</p>
           <div class="row">
             <div class="col-md-4">
               <div class="alert alert-primary text-center">
-                <strong>{{user.totalOrders}}</strong><br>Total Orders
+                <strong>{{order.length}}</strong><br>Total Orders
               </div>
             </div>
             <div class="col-md-4">
@@ -33,15 +34,15 @@
               <p><i class="fas fa-map-marker-alt"></i> Location: {{user.defaultAddress.city}}</p>
               <p><i class="fas fa-envelope"></i> Email: <a href="mailto:{{user.email}}">{{user.email}}</a></p>
               <p><i class="fas fa-phone"></i> Phone: <a href="tel:{{user.phone}}">{{user.phone}}</a></p>
-              <a href="/profile/edit-user?id={{user._id}}" class="btn btn-warning mt-3"><i class="fas fa-edit"></i> Edit Account</a>
+              <a href="/profile/edit-user" class="btn btn-warning mt-3"><i class="fas fa-edit"></i> Edit Account</a>
             </div>
             <div class="col-md-6 mb-5">
               <h5>Default Address</h5>
+              <p>{{user.defaultAddress.name}}</p>
+              <p><i class="fas fa-phone"></i> Phone: <a href="tel:{{user.defaultAddress.phone}}">{{user.defaultAddress.phone}}</a></p>
               <p>{{user.defaultAddress.addressLine1}}</p>
               <p>{{user.defaultAddress.addressLine2}}</p>
               <p>Pin: {{user.defaultAddress.pinCode}}</p>
-              <p><i class="fas fa-phone"></i> Phone: <a href="tel:{{user.phone}}">{{user.phone}}</a></p>
-              <p><i class="fas fa-envelope"></i> Email: <a href="mailto:{{user.email}}">{{user.email}}</a></p>
               <a href="/address/all" class="btn btn-secondary mt-3"><i class="fas fa-map-marker-alt "></i> Change Address</a>
             </div>
           </div>

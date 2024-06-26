@@ -1,0 +1,195 @@
+{{> user-header}}
+
+<div class="container cart-container">
+  <h1 class="my-4">Checkout</h1>
+  <div class="row">
+    <div class="col-md-8">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h4 class="card-title">Saved Address</h4>
+        <button class="btn btn-primary" id="addAddressBtn">Add Address</button>
+      </div>
+      <div id="addressList">
+        {{#each address}}
+          {{#if this.default}}
+            <span class="badge text-danger">Default</span>
+          {{/if}}
+          <div class="card mb-3">
+            <div class="card-body">
+              <div class="d-flex justify-content-between align-items-center">
+                <div>
+                  <input type="radio" name="defaultAddress" id="{{this._id}}" {{#if this.default}}checked{{/if}}>
+                  <label for="{{this._id}}">
+                    <strong>{{name}}, {{phone}}</strong><br>
+                    {{addressLine1}}, <br>{{addressLine2}}, <br>{{city}}, {{state}} - {{pinCode}}<br>
+                  </label>
+                </div>
+                <div>
+                  <button class="btn btn-outline-secondary btn-sm" onclick="editAddress('{{this._id}}')"><i class="fas fa-edit"></i></button>
+                  <button class="btn btn-outline-danger btn-sm" onclick="deleteAddress('{{this._id}}')"><i class="fas fa-trash"></i></button>
+                </div>
+              </div>
+            </div>
+          </div>
+        {{/each}}
+      </div>
+      <div class="container mt-5">
+        <h4>Payment Option</h4>
+        <div class="payment-option">
+          <div>
+            <i class="fas fa-money-bill-wave"></i>
+            <p>Cash on Delivery</p>
+            <input type="radio" name="paymentMethod" value="cod" checked>
+          </div>
+          <div>
+            <i class="fas fa-credit-card"></i>
+            <p>Razorpay</p>
+            <input type="radio" name="paymentMethod" value="razorpay">
+          </div>
+          <div>
+            <i class="fas fa-wallet"></i>
+            <p>My Wallet</p>
+            <input type="radio" name="paymentMethod" value="wallet">
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4 card">
+      <div class="order-summary">
+        {{#each cart.products}}
+          <div class="cart-item" data-product-id="{{this.product._id}}">
+            <div class="card-body d-flex align-items-center ">
+              <img src="{{this.product.images.[0]}}" class="img-fluid" style="max-width: 50px; height:50px" alt="Product Image">
+              <div class="ms-3">
+                <p class="card-text">{{this.product.title}}</p>
+                <p class="text-right">{{this.count}} x <strong>Rs.{{this.product.price}}</strong></p>
+              </div>
+            </div>
+          </div>
+        {{/each}}
+        <h5>Order Summary</h5>
+        <p>Price: Rs.{{cart.cartTotal}}</p>
+        <p>Discount: Rs.0</p>
+        <p>Shipping: Free</p>
+        <p>Coupon Applied: $0.00</p>
+        <hr>
+        <h5>Total: Rs.{{cart.cartTotal}}</h5>
+        <p>Estimated Delivery by <strong>30 June, 2024</strong></p>
+        <div class="form-group">
+          <input type="text" class="form-control" placeholder="Coupon Code">
+          <button class="btn btn-outline-secondary btn-block mt-2">Apply</button>
+        </div>
+        <button class="btn btn-primary btn-block mt-3 mb-5" onclick="proceedToCheckout()">Place Order</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+{{> footer}}
+
+<script>
+  document.getElementById('addAddressBtn').addEventListener('click', function() {
+    window.location.href = '/address/add?originPage=checkout';
+  });
+
+  document.querySelectorAll('input[name="defaultAddress"]').forEach(function (radio) {
+    radio.addEventListener('change', function () {
+      const addressId = this.id;
+      updateDefaultAddress(addressId);
+    });
+  });
+
+  function updateDefaultAddress(addressId) {
+    fetch(`/address/default/${addressId}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ userId: '{{user._id}}' })
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        location.reload(); // Reload the page to reflect changes
+      } else {
+        alert('Failed to update default address');
+      }
+    })
+    .catch(error => console.error('Error:', error));
+  }
+
+  function deleteAddress(addressId) {
+    fetch(`/address/delete/${addressId}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        location.href = '/user/checkout'; // Reload the page to reflect changeswindow.
+      } else {
+        alert('Failed to delete address');
+      }
+    })
+    .catch(error => console.error('Error:', error));
+  }
+
+  function editAddress(addressId) {
+    window.location.href = `/address/edit/${addressId}?originPage=checkout`;
+  }
+
+  function proceedToCheckout() {
+    const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked').value;
+    const defaultAddressId = document.querySelector('input[name="defaultAddress"]:checked').id;
+
+    if (!defaultAddressId) {
+      alert('Please select a default address');
+      return;
+    }
+
+    const orderData = {
+      paymentIntent: paymentMethod,
+      orderby: '{{user._id}}'
+    };
+
+    fetch('/user/checkout', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(orderData)
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        alert('Order placed successfully!');
+        window.location.href = '/user/get-orders'  // Redirect to order summary page
+      } else {
+        alert('Failed to place order');
+      }
+    })
+    .catch(error => console.error('Error:', error));
+  }
+</script>
+<style>
+  .payment-option {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+  }
+  .payment-option div {
+    text-align: center;
+    flex: 1;
+  }
+  .payment-option input {
+    margin-top: 10px;
+  }
+  .payment-option .fa {
+    font-size: 24px;
+    margin-bottom: 10px;
+  }
+</style>

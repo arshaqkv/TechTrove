@@ -1,4 +1,5 @@
 {{> user-header}}
+
 <div class="container mt-5">
     <div class="row">
         <!-- Sidebar for Category and Price Range -->
@@ -101,6 +102,8 @@
                             <img src="{{this.images.[0]}}" class="card-img-top" alt="{{this.title}}">
                             <div class="card-body">
                                 <h5 class="card-title">{{this.brand}}</h5>
+                                
+                                
                                 <p class="card-text">
                                     <span class="text-warning">{{this.rating}} ★</span>
                                     <span class="text-muted">{{this.title}}</span>
@@ -109,7 +112,9 @@
                                     <span class="text-dark fw-bold">Rs.{{this.price}}</span>
                                 </p>
                                 <a href="/product/{{this._id}}" class="btn btn-primary">Buy Product</a>
+                                
                             </div>
+                            
                         </div>
                     </div>
                     {{/each}}
@@ -217,4 +222,5 @@
         // Set the filter state from the URL parameters on page load
         setFiltersFromURL();
     });
+    
 </script>

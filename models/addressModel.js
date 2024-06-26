@@ -5,6 +5,13 @@ const addressSchema = new Schema({
         type: Schema.Types.ObjectId, 
         ref: 'User' 
     },
+    name: {
+        type: String,
+        required: true
+    },
+    phone: {
+        type: Number
+    },
     addressLine1: {
         type: String,
         required: true

@@ -1,5 +1,6 @@
 const Product = require('../models/productModel')
 const Category = require('../models/categoryModel')
+const User = require('../models/userModel')
 const asyncHandler = require('express-async-handler')
 const slugify = require('slugify')
 const validateMongoDbId = require('../utils/validateMongodbID')
@@ -62,18 +63,20 @@ const getAllProducts = asyncHandler(async (req,res) =>{
 
 const getProduct = asyncHandler(async (req,res) =>{
     const user = req.user
-    const { id } = req.params
+    const { _id } = user
+    const { prodId } = req.params
+    validateMongoDbId(prodId)
     try {
-        const product = await Product.findById(id).populate('category')
+        const user = await User.findById(_id)
+        const product = await Product.findById(prodId).populate('category')
         // adjusting path ...correcting exact path
         if (product.images && Array.isArray(product.images)) {
             product.images = product.images.map(img => img.replace(/\\/g, '/').replace(/public/g, '')) // Replace backslashes with forward slashes
         }
-
         const recommendedProduct = await Product.find({
             category: product.category._id,
             _id: {$ne: product._id}
-        }).limit(4)
+        }).limit(8)
         
         recommendedProduct.forEach(product => {
             // Adjust the path if necessary
@@ -81,15 +84,17 @@ const getProduct = asyncHandler(async (req,res) =>{
                 product.images = product.images.map(img => img.replace(/\\/g, '/').replace(/public/g, '')) // Replace backslashes with forward slashes
             }
         });
+        
+        const alreadyAddedProduct = user.wishlist.find((id) => id.toString() === prodId)
 
         const breadcrumbs = [
             { name: 'Home', url: '/dashboard'},  
-            { name: product.title, url: `/product/${id}`}
+            { name: product.title, url: `/product/${prodId}`}
         ]
         
-        res.status(201).render('productDetails', { user, product, recommendedProduct, breadcrumbs })
-    } catch (err) {
-        throw new Error(err)
+        res.status(201).render('productDetails', { user, product, recommendedProduct, breadcrumbs, alreadyAddedProduct })
+    } catch (error) {
+        console.log(error)
     }
 })
 
@@ -154,6 +159,60 @@ const deleteProduct = asyncHandler(async (req,res) =>{
     }
 })
 
+const addToWishList = asyncHandler(async (req,res) =>{
+    const { _id } = req.user
+    const { prodId } = req.body
+    try {
+        const user = await User.findById(_id)
+        const alreadyAddedProduct = user.wishlist.find((id) => id.toString() === prodId)
+        if(alreadyAddedProduct){
+            const user = await User.findByIdAndUpdate(_id,
+                { 
+                    $pull: { wishlist: prodId }    
+                },
+                {
+                    new: true
+                }
+            )
+            res.json(user)
+           
+        }else{
+            const user = await User.findByIdAndUpdate(_id,
+                { 
+                    $push: { wishlist: prodId }
+                },
+                {
+                    new: true
+                }
+            )
+            res.json(user)
+            
+        }
+    } catch (error) { 
+        console.log(error)
+    }
+}) 
+
+//wishlist page
+const loadWishlist = asyncHandler(async (req,res) =>{
+    const user = req.user
+    const { _id } = user
+    validateMongoDbId(_id)
+    try {
+        const userWishlist = await User.findById(_id).populate('wishlist')
+        const wishlist = userWishlist.wishlist
+        wishlist.forEach(product => {
+            if (product.images && Array.isArray(product.images)) {
+                // Replace backslashes with forward slashes and remove 'public' from the path
+                product.images = product.images.map(img => img.replace(/\\/g, '/').replace(/public/g, ''));
+            }
+        });
+        res.render('wishlist', { user, wishlist })
+    } catch (error) {
+        console.log(error) 
+    }
+})
+
 //rating of product
 const rating = asyncHandler(async (req, res) =>{
     const { id } = req.params
@@ -208,5 +267,7 @@ module.exports = {
     loadUpdateProduct,
     updateProduct,
     deleteProduct,
-    rating
+    rating,
+    addToWishList,
+    loadWishlist
 } 
