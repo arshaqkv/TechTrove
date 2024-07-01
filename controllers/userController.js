@@ -1,91 +1,107 @@
 const User = require('../models/userModel')
-const asyncHandler = require('express-async-handler')
-const { generateToken } = require('../config/jwToken')
-const { validationResult } = require('express-validator')
-const validateMongoDbId = require('../utils/validateMongodbID')
-const bcrypt = require('bcrypt')
-const Otp = require('../models/otpModel')
-const mailer = require('../helpers/nodemailer')
-const { oneMinuteExpiry, fiveMinuteExpiry } = require('../helpers/otpValidate')
 const Product = require('../models/productModel')
 const Category = require('../models/categoryModel')
 const Cart = require('../models/cartModel')
 const Address = require('../models/addressModel')
 const Order = require('../models/orderModel')
+const Coupon = require('../models/couponModel')
+const Otp = require('../models/otpModel')
+const asyncHandler = require('express-async-handler')
+const { generateToken } = require('../config/jwToken')
+const { validationResult } = require('express-validator')
+const validateMongoDbId = require('../utils/validateMongodbID')
+const bcrypt = require('bcrypt')
+const mailer = require('../helpers/nodemailer')
+const { oneMinuteExpiry, fiveMinuteExpiry } = require('../helpers/otpValidate')
+const moment = require('moment')
+const crypto = require('crypto')
+const Razorpay = require('razorpay')
+const razorpay = new Razorpay({
+    key_id: process.env.RAZORPAY_KEY_ID,
+    key_secret: process.env.RAZORPAY_KEY_SECRET 
+});
+
 
 //home page
 const loadDashboard = asyncHandler(async (req, res) => {
-    const filterParams = req.query.filter || {};
-    const sortParam = req.query.sort || '';
-
-    const filter = { isDeleted: false };
-
-    if (filterParams.category) {
-        const category = await Category.findOne({ title: filterParams.category, isDeleted: false }).exec();
-        filter.category = category ? category._id : null;
-    }
-
-    if (filterParams.brand) {
-        filter.brand = { $in: filterParams.brand.split(',') };
-    }
-
-    if (filterParams.price) {
-        const price = parseInt(filterParams.price);
-        filter.price = { $lte: price };
-    }
-
-    if (filterParams.search) {
-        filter.title = { $regex: filterParams.search, $options: 'i' };
-    }
-
-    let sort = {};
-
-    switch (sortParam) {
-        case 'price-asc':
-            sort.price = 1;
-            break;
-        case 'price-desc':
-            sort.price = -1;
-            break;
-        case 'rating':
-            sort.rating = -1;
-            break;
-        case 'featured':
-            sort.featured = -1; 
-            break;
-        case 'new-arrivals':
-            sort.createdAt = -1; 
-            break;
-        case 'a-z':
-            sort.title = 1;
-            break;
-        case 'z-a':
-            sort.title = -1;
-            break;
-        default:
-            sort.popularity = -1; 
-            break;
-    }
 
     try {
+        const filterParams = req.query.filter || {};
+        const sortParam = req.query.sort || '';
+
+        const filter = { isDeleted: false };
+
+        if (filterParams.category) {
+            const category = await Category.findOne({ title: filterParams.category, isDeleted: false }).exec();
+            filter.category = category ? category._id : null;
+        }
+
+        if (filterParams.brand) {
+            filter.brand = { $in: filterParams.brand.split(',') };
+        }
+
+        if (filterParams.price) {
+            const price = parseInt(filterParams.price);
+            filter.price = { $lte: price };
+        }
+
+        if (filterParams.search) {
+            filter.title = { $regex: filterParams.search, $options: 'i' };
+        }
+
+        let sort = {};
+
+        switch (sortParam) {
+            case 'price-asc':
+                sort.price = 1;
+                break;
+            case 'price-desc':
+                sort.price = -1;
+                break;
+            case 'rating':
+                sort.rating = -1;
+                break;
+            case 'featured':
+                sort.featured = -1; 
+                break;
+            case 'new-arrivals':
+                sort.createdAt = -1; 
+                break;
+            case 'a-z':
+                sort.title = 1;
+                break;
+            case 'z-a':
+                sort.title = -1;
+                break;
+            default:
+                sort.popularity = -1; 
+                break;
+        }
+
+        const user = req.user
         const [products, categories] = await Promise.all([
             Product.find(filter).populate('category').sort(sort).exec(),
             Category.find({ isDeleted: false }).exec()
         ]);
 
-        products.forEach(product => {
+        const processedProducts = await Promise.all(products.map(async (product) => {
             if (product.images && Array.isArray(product.images)) {
                 product.images = product.images.map(img => img.replace(/\\/g, '/').replace(/public/g, '')); // Replace backslashes with forward slashes
             }
-        });
-
-        
-            const user = req.user
-           
-            return res.render('userDashboard', { user, products, categories });
+            const { originalPrice, offerPrice, discountPercentage } = await product.getEffectivePrice();
+            return {
+                ...product.toObject(),
+                originalPrice,
+                offerPrice,
+                discountPercentage
+            };
+        }));
+            
+        console.log(processedProducts.offerPrice)
+        return res.render('userDashboard', { user, products: processedProducts });
         
     } catch (error) {
-        throw new Error(error);
+        console.log(error);
     }
 });
 
@@ -213,7 +229,7 @@ const loginUserCntrl = asyncHandler(async(req,res) =>{
         }else if(findUser && await findUser.isPasswordMatched(password)){
             
             token = generateToken(findUser?._id)
-            console.log(token)
+            
             res.cookie('jwt', token, {httpOnly: true})
             return res.status(201).redirect('/dashboard')
             
@@ -412,14 +428,18 @@ const userCart = asyncHandler(async (req, res) => {
                     cartToUpdate.products[index].count += count;
                 } else {
                     // Product doesn't exist in cart, add it
-                    let getPrice = await Product.findById(productId).select('price').exec();
+                    let product = await Product.findById(productId).exec();
  
-                    if (getPrice) {
+                    if (product) {
+                        const { originalPrice, offerPrice } = await product.getEffectivePrice();
+                        const finalPrice = offerPrice !== null ? offerPrice : originalPrice;
+
                         cartToUpdate.products.push({
                             product: productId,
                             count: count,
-                            price: getPrice.price
+                            price: finalPrice
                         });
+                        
                     } else {
                         return res.status(404).json({ message: 'Product not found' });
                     }
@@ -427,12 +447,20 @@ const userCart = asyncHandler(async (req, res) => {
             }
 
             // Recalculate cart total
+            
             cartToUpdate.cartTotal = 0;
-            const individualTotals = cartToUpdate.products.map(product => {
-                const total = product.price * product.count;
+            cartToUpdate.totalAfterDiscount = 0;
+            const individualTotals = await Promise.all(cartToUpdate.products.map(async (productItem) => {
+                const { product: productId, count } = productItem;
+                const product = await Product.findById(productId).exec();
+                const { originalPrice, offerPrice } = await product.getEffectivePrice();
+                const finalPrice = offerPrice !== null ? offerPrice : originalPrice;
+
+                const total = finalPrice * count;
                 cartToUpdate.cartTotal += total;
-                return { productId: product.product._id, total };
-            });
+                cartToUpdate.totalAfterDiscount += total;
+                return { productId: product._id, total };
+            }));
 
             await cartToUpdate.save();
             return res.status(200).json({
@@ -446,15 +474,18 @@ const userCart = asyncHandler(async (req, res) => {
 
             for (let i = 0; i < cart.length; i++) {
                 const { product: productId, count } = cart[i];
-                let getPrice = await Product.findById(productId).select('price').exec();
+                let product = await Product.findById(productId).exec();
 
-                if (getPrice) {
+                if (product) {
+                    const { originalPrice, offerPrice } = await product.getEffectivePrice();
+                    const finalPrice = offerPrice !== null ? offerPrice : originalPrice;
+
                     products.push({
                         product: productId,
                         count: count,
-                        price: getPrice.price
+                        price: finalPrice
                     });
-                    cartTotal += getPrice.price * count;
+                    cartTotal += finalPrice * count;
                 } else {
                     return res.status(404).json({ message: 'Product not found' });
                 }
@@ -463,7 +494,8 @@ const userCart = asyncHandler(async (req, res) => {
             const newCart = await Cart.create({
                 products,
                 cartTotal,
-                orderby: user._id
+                orderby: user._id,
+                totalAfterDiscount: cartTotal
             });
 
             return res.status(201).redirect('/cart');
@@ -476,34 +508,65 @@ const userCart = asyncHandler(async (req, res) => {
 
 
 //load user cart
-const loadUserCart = asyncHandler(async (req,res) =>{
-    const user = req.user
-    const { _id } = user
-    validateMongoDbId(_id)
+const loadUserCart = asyncHandler(async (req, res) => {
+    const user = req.user;
+    const { _id } = user;
+    validateMongoDbId(_id);
+
     try {
-        const cart = await Cart.findOne({ orderby: _id }).populate({
-            path: 'products.product',
-             // Specify the fields you want to populate
-        }).exec();
-        
-        cart.products.forEach(productItem => {
+        const couponCode = req.session.couponCode;
+        const coupon = await Coupon.findOne({ code: couponCode });
+
+        // Fetch cart with populated products
+        let cart = await Cart.findOne({ orderby: _id }).populate('products.product').exec();
+
+        if (!cart) {
+            throw new Error('Cart not found');
+        }
+
+        // Transform products with prices
+        const productsWithPrices = await Promise.all(cart.products.map(async productItem => {
             let product = productItem.product;
+
             if (product.images && Array.isArray(product.images)) {
-                product.images = product.images.map(img => img.replace(/\\/g, '/').replace(/public/g, '')); // Replace backslashes with forward slashes
+                product.images = product.images.map(img => img.replace(/\\/g, '/').replace(/public/g, ''));
             }
-        });
-        res.render('cart', { cart, user })
+
+            // Compute effective price details
+            const { originalPrice, offerPrice, discountPercentage } = await product.getEffectivePrice();
+            let finalPrice = offerPrice !== null ? offerPrice : originalPrice;
+            let offerSavings = (offerPrice !== null ? (originalPrice - offerPrice) * productItem.count : 0);
+
+            // Update product details
+            product.effectivePrice = finalPrice;
+            product.originalPrice = originalPrice;
+            product.discountPercentage = discountPercentage;
+            product.offerSavings = offerSavings.toFixed(2);
+
+            // Return updated product item
+            return {
+                ...productItem.toObject(),
+                product: product 
+            };
+        }));
+
+        // Update cart's products with transformed products
+        cart.products = productsWithPrices;
+        res.render('cart', { cart, user, coupon });
     } catch (error) {
-        console.log(error)
+        console.error('Error loading user cart:', error);
+        // Handle error appropriately, e.g., render an error page
+        res.status(500).render('error', { message: 'Error loading cart. Please try again later.' });
     }
-})
+});
+
 
 //decrease quantity of products in cart
 const updateCart = asyncHandler(async (req, res) => {
     const { productId, newQuantity } = req.body;
     const { _id } = req.user;
 
-    validateMongoDbId(_id);
+    validateMongoDbId(_id); 
 
     try {
         const cart = await Cart.findOne({ orderby: _id }).populate('products.product').exec();
@@ -518,12 +581,19 @@ const updateCart = asyncHandler(async (req, res) => {
             return res.status(404).json({ message: 'Product not found in cart' });
         }
 
-        if (newQuantity <= 0) {
-            // Remove the product if newQuantity is 0
-            cart.products.splice(itemIndex, 1);
-        } else {
-            cart.products[itemIndex].count = newQuantity;
-        }
+        const productItem = cart.products[itemIndex];
+        const oldQuantity = productItem.count;
+        productItem.count = newQuantity;
+
+        const { originalPrice, offerPrice } = await productItem.product.getEffectivePrice();
+        const finalPrice = offerPrice !== null ? offerPrice : originalPrice;
+
+        const offerSavings = offerPrice !== null ? (originalPrice - offerPrice) * newQuantity : 0;
+
+        productItem.product.effectivePrice = finalPrice;
+        productItem.product.originalPrice = originalPrice;
+        productItem.product.discountPercentage = ((originalPrice - finalPrice) / originalPrice) * 100;
+        productItem.product.offerSavings = offerSavings.toFixed(2);
 
         // Recalculate cart total
         const updatedCartTotal = cart.products.reduce((total, product) => total + product.count * product.price, 0);
@@ -533,7 +603,8 @@ const updateCart = asyncHandler(async (req, res) => {
             {
                 $set: {
                     products: cart.products,
-                    cartTotal: updatedCartTotal
+                    cartTotal: updatedCartTotal,
+                    totalAfterDiscount: updatedCartTotal
                 }
             },
             { new: true }
@@ -543,7 +614,8 @@ const updateCart = asyncHandler(async (req, res) => {
 
         res.status(200).json({
             cartTotal: updatedCart.cartTotal,
-            count: cart.products[itemIndex].count
+            count: cart.products[itemIndex].count,
+            offerSavings: productItem.product.offerSavings 
         });
     } catch (error) {
         console.error(error);
@@ -566,8 +638,9 @@ const removeCartItem = asyncHandler(async (req,res) =>{
 
                 // Recalculate cart total
                 cart.cartTotal = cart.products.reduce((acc, item) => acc + item.price * item.count, 0);
-
+                cart.totalAfterDiscount = cart.cartTotal
                 await cart.save();
+                req.session.couponCode = null
                 return res.status(200).json(cart);
             } else {
                 return res.status(404).json({ message: 'Product not found in cart' });
@@ -581,37 +654,190 @@ const removeCartItem = asyncHandler(async (req,res) =>{
     }
 })
 
-
-
-const createOrder = asyncHandler(async (req,res) =>{
-    const { _id } = req.user
-    validateMongoDbId(_id)
-    const { paymentIntent } = req.body
+//apply coupon
+const userApplyCoupon = asyncHandler(async (req,res) =>{
+    const user = req.user
+    const { _id } = user
+    const { couponCode } =  req.body
+    req.session.couponCode = couponCode;
     try {
-        const cart = await Cart.findOne({ orderby: _id }).populate('products.product');
-    if (!cart) {
-      return res.status(404).json({ success: false, message: 'Cart not found' });
+        const cart = await Cart.findOne({ orderby: _id}).populate('products.product').exec()
+        const coupon = await Coupon.findOne({ code: couponCode })
+        console.log(coupon);
+        if(coupon === null){
+            return res.status(400).json({ message: 'Invalid coupon code' });
+        }
+        if (coupon.usedBy.includes(_id)) {
+            return res.status(400).json({ message: 'Coupon has already been used' });
+          }
+        if (coupon.expiry < Date.now()) {
+            return res.status(400).json({ message: 'Coupon has expired' });
+        }
+        if (cart.cartTotal < coupon.minBill) {
+            return res.status(400).json({ message: `Minimum bill amount should be Rs.${coupon.minBill}` });
+        }
+        const discountAmount = coupon.discount
+        const totalAfterDiscount = cart.cartTotal - discountAmount
+        cart.totalAfterDiscount = totalAfterDiscount
+        await cart.save() 
+         
+        res.json({ success: true, cartTotal: totalAfterDiscount, discount: discountAmount,coupon });
+
+       
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ success: false, error: "Server error" });
     }
-    
-    const totalPrice = cart.cartTotal;
+});
 
-    const order = new Order({
-      products: cart.products, 
-      totalPrice: totalPrice,
-      paymentIntent: paymentIntent,
-      orderby: _id
-    });
-    await order.save();
-    // clear the cart after order creation
-    cart.products = [];
-    await cart.save();
+const userRemoveCoupon = asyncHandler(async (req,res) =>{
+    const user = req.user
+    const { _id } = user
+    try {
+        const cart = await Cart.findOne({ orderby: _id });
 
-    res.status(201).json({ success: true, orderId: order._id });
+        if (!cart) {
+        return res.status(404).json({ message: 'Cart not found' });
+        }
+        cart.totalAfterDiscount = cart.cartTotal;
+        await cart.save();
+
+        // Clear the coupon code from session
+        req.session.couponCode = null;
+
+        res.json({ success: true, cartTotal: cart.totalAfterDiscount });
     } catch (error) {
         console.log(error)
     }
-
 })
+
+const userCoupons = asyncHandler(async (req,res) =>{
+    const user = req.user
+    try {
+        const allCoupons = await Coupon.find({}).exec();
+        const currentDate = moment();
+
+        const coupons = allCoupons.map(coupon => {
+        const isExpired = moment(coupon.expiry).isBefore(currentDate);
+        return { ...coupon._doc, isExpired };
+        });
+        res.render('user-coupons', { coupons, user })
+    } catch (error) {
+        console.log(error)
+    }
+})
+
+const createOrder = asyncHandler(async (req, res) => {
+    const { _id } = req.user;
+    validateMongoDbId(_id);
+    const { paymentIntent, couponCode } = req.body;
+
+    try {
+        const cart = await Cart.findOne({ orderby: _id }).populate('products.product');
+        if (!cart) {
+            return res.status(404).json({ success: false, message: 'Cart not found' });
+        }
+
+        if (couponCode) {
+            const coupon = await Coupon.findOne({ code: couponCode });
+            if (coupon) {
+                coupon.usedBy.push(_id);
+                await coupon.save();
+                req.session.couponCode = null;
+            }
+        }
+
+        const totalPrice = cart.totalAfterDiscount;
+
+        // Handle different payment intents
+        if (paymentIntent === 'razorpay') {
+            // Create a Razorpay order
+            const options = {
+                amount: totalPrice * 100, // amount in paise
+                currency: 'INR',
+                receipt: `receipt_order_${Date.now()}`
+            };
+            const razorpayOrder = await razorpay.orders.create(options);
+            if (!razorpayOrder) {
+                return res.status(500).json({ success: false, message: 'Failed to create Razorpay order' });
+            }
+            res.status(201).json({ success: true, razorpayOrder, totalPrice, products: cart.products });
+        } else if (paymentIntent === 'cod') {
+            // Handle COD orders directly
+            await finalizeOrder(cart, _id, paymentIntent, totalPrice, null);
+            res.status(201).json({ success: true, message: 'Order placed successfully' });
+        } else {
+            res.status(400).json({ success: false, message: 'Invalid payment intent' });
+        }
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ success: false, message: 'Server Error' });
+    }
+});
+
+const finalizeOrder = async (cart, userId, paymentIntent, totalPrice, razorpayOrderId) => {
+    const order = new Order({
+        products: cart.products,
+        totalPrice: totalPrice,
+        paymentIntent: paymentIntent,
+        orderby: userId,
+        razorpayOrderId: razorpayOrderId
+    });
+    await order.save();
+
+    for (const item of cart.products) {
+        const product = await Product.findById(item.product._id);
+        if (product) {
+            product.stock_count -= item.count;
+            product.sold += item.count;
+            await product.save();
+        }
+    }
+
+    // Clear the cart after order creation
+    cart.products = [];
+    cart.cartTotal = 0;
+    cart.totalAfterDiscount = 0;
+    await cart.save();
+};
+
+
+const verifyRazorpayPayment = asyncHandler(async (req, res) => {
+    const { razorpayPaymentId, razorpayOrderId, razorpaySignature, orderData } = req.body;
+
+    // Verify the payment signature
+    const crypto = require('crypto');
+    const hmac = crypto.createHmac('sha256', process.env.RAZORPAY_KEY_SECRET);
+    hmac.update(`${razorpayOrderId}|${razorpayPaymentId}`);
+    const generatedSignature = hmac.digest('hex');
+
+    if (generatedSignature !== razorpaySignature) {
+        return res.status(400).json({ success: false, message: 'Payment verification failed' });
+    }
+
+    // Payment is verified, create the order
+    const order = new Order(orderData);
+    await order.save();
+
+    for (const item of orderData.products) {
+        const product = await Product.findById(item.product._id);
+        if (product) {
+            product.stock_count -= item.count;
+            product.sold += item.count;
+            await product.save();
+        }
+    }
+
+    // Clear the cart after order creation
+    const cart = await Cart.findOne({ orderby: orderData.orderby });
+    cart.products = [];
+    cart.cartTotal = 0;
+    cart.totalAfterDiscount = 0;
+    await cart.save();
+
+    res.status(201).json({ success: true, orderId: order._id });
+});
+
 
 const loadCreateOrder = asyncHandler(async (req,res) =>{
     const user = req.user
@@ -627,8 +853,12 @@ const loadCreateOrder = asyncHandler(async (req,res) =>{
                 product.images = product.images.map(img => img.replace(/\\/g, '/').replace(/public/g, '')); // Replace backslashes with forward slashes
             }
         });
+        
+        const appliedCoupon = req.session.couponCode || ''
+        const coupon = await Coupon.findOne({ code: appliedCoupon })
+
         const address = await Address.find({user: user._id})
-        res.render('checkout', { user,cart,address }) 
+        res.render('checkout', { user,cart,address, coupon }) 
     } catch (error) {
         console.log(error);
     }
@@ -640,7 +870,6 @@ const getOrder = asyncHandler(async (req,res) =>{
     validateMongoDbId(_id)
     try {
         const userOrders = await Order.find({ orderby: _id }).populate('products.product').exec()
-        console.log(userOrders)
         userOrders.forEach(order => {
             order.products.forEach(productItem => {
                 let product = productItem.product;
@@ -689,7 +918,6 @@ const getAllOrders = asyncHandler( async(req,res) =>{
     const user = req.user
     try {
         const orders = await Order.find().populate('orderby').populate('products.product').exec()
-        console.log(orders)
         orders.forEach(order => {
             order.products.forEach(productItem => {
                 let product = productItem.product;
@@ -777,9 +1005,13 @@ module.exports = {
     updateCart,
     removeCartItem,
     createOrder,
+    verifyRazorpayPayment,
     loadCreateOrder,
     getOrder,
     updateOrderStatus,
     cancelOrder,
-    getAllOrders
+    getAllOrders,
+    userApplyCoupon,
+    userCoupons,
+    userRemoveCoupon
 } 

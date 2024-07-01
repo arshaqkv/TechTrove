@@ -1,0 +1,78 @@
+{{> user-header}}
+
+<div class="container mt-5">
+  <h2 class="mb-4">Available Coupons</h2>
+  <div class="row">
+    <div class="col-md-3">
+      {{> profile-nav}}
+    </div>
+    <div class="col-md-9 d-flex flex-wrap">
+      {{#each coupons}}
+      <div class="col-md-6 ">
+        <div class="card mb-3 border">
+          <div class="card-body">
+            <h5 class="card-title">{{this.code}}</h5>
+            <p class="card-text text-primary">Discount: Rs.{{this.discount}}</p>
+            <p class="card-text">Minimum Purchase:  <b>Rs.{{this.minBill}}</b></p>
+            {{#if this.isExpired}}
+              <p class="card-text text-danger">Expired</p>
+            {{else}}
+              <p class="card-text">Expires in: <span class="text-danger ">{{expiryInDays this.expiry}} days</span></p>
+              <button class="btn btn-outline-warning copy-btn" data-code="{{this.code}}">Copy Code</button>
+              {{/if}}
+          </div>
+        </div>
+      </div>
+    {{/each}}
+    </div>
+  </div>
+</div>
+
+{{> footer}}
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const copyButtons = document.querySelectorAll('.copy-btn');
+
+    copyButtons.forEach(button => {
+      button.addEventListener('click', function () {
+        const couponCode = this.getAttribute('data-code');
+        navigator.clipboard.writeText(couponCode).then(() => {
+          
+          Swal.fire({
+            title: 'Coupon Copied',
+            text: 'Coupon code copied to clipboard: ' + couponCode,
+            icon: 'success',
+            confirmButtonText: 'Okay',
+            customClass: {
+              popup: 'swal2-custom'
+            },
+          });
+        }).catch(err => {
+          console.error('Could not copy text: ', err);
+        });
+      });
+    });
+  });
+</script>
+
+<style>
+  .card {
+    border: 1px solid #dee2e6;
+    border-radius: 0.25rem;
+  }
+
+  .card-body {
+    text-align: center;
+  }
+
+  .copy-btn {
+    margin-top: 10px;
+  }
+  
+  .swal2-custom {
+    width: 300px !important;  /* Adjust width as needed */
+    font-size: 16px;  /* Adjust font size as needed */
+  }
+</style>
+

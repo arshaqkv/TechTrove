@@ -1,6 +1,6 @@
 const { Schema, default:mongoose} = require('mongoose')
 
-const coupenSchema = new Schema({
+const couponSchema = new Schema({
     code: {
         type: String,
         required: true,
@@ -14,12 +14,25 @@ const coupenSchema = new Schema({
     discount: {
         type: Number,
         required: true
-    }},
-    {
+    },
+    minBill:{
+        type:Number,
+        required:true
+    },
+    status: {
+        type: String
+    },
+    usedBy: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
+    }]},
+    { 
         timestamps: true
     }
 )
 
-const Coupen = mongoose.model('Coupen', coupenSchema)
-module.exports = Coupen
+
+
+const Coupon = mongoose.model('Coupon', couponSchema)
+module.exports = Coupon
 

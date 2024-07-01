@@ -1,6 +1,6 @@
 {{> user-header}}
 
-<div class="container cart-container">
+<div class="container cart-container mb-5">
   {{#if cart.products.length}}
   <h1 class="my-4">Cart</h1>
   <div class="row">
@@ -23,27 +23,49 @@
             </div>
           </div>
           <div class="ml-auto">
-            <p class="text-right"><strong>{{this.count}}</strong> x Rs.{{this.product.price}}</p>
+            <p class="text-right"><strong>{{this.count}}</strong>  x  
+            {{#if this.product.discountPercentage}}
+                <span class="text-muted text-decoration-line-through"> ₹{{this.product.originalPrice}}</span>
+                <span class="fw-bold"> ₹{{this.product.effectivePrice}}</span>
+                <span class="text-success">{{this.product.discountPercentage}}% Off</span>
+                <span class="offerSavings">Savings: ₹{{this.product.offerSavings}}</span>
+            {{else}}
+                <span class="fw-bold ms-1"> ₹{{this.product.originalPrice}}</span>
+            {{/if}}
+            </p>
           </div>
         </div>
       </div>
       {{/each}}
     </div>
     <div class="col-md-4">
-      <div class="order-summary">
+      <div class="mb-2">
+        <span class="error" style="color: red;"></span>
+      </div>
+      <div class="coupon-section form-group">
+        <form id="couponForm">
+          <input type="text" id="couponCode" {{#if coupon}} value="{{coupon.code}}"{{/if}} class="form-control" placeholder="Enter coupon code" />
+          <button type="submit" class="btn btn-warning btn-block mt-2">Apply Coupon</button>
+        </form>
+        <button id="removeCouponBtn" class="btn btn-outline-danger btn-block mt-2" {{#if coupon}}style="display: block;"{{else}}style="display: none;"{{/if}}>Remove Coupon</button>
+      </div>
+      <div class="order-summary"> 
         <h5>Order Summary</h5>
-        <p>Price:</p>
-        <p>Discount: Rs.0</p>
+        <p id="firstPrice">Price: Rs.{{cart.cartTotal}}</p>
+        {{!-- <p>Offer Discount: {{cart.products.product.title}}</p> --}}
         <p>Shipping: Free</p>
-        <p>Coupon Applied: $0.00</p>
+        <p id="couponDiscount"></p>{{#if coupon.discount}}Coupon Discount: Rs.{{coupon.discount}}{{/if}}</p>
         <hr>
-        <h5>Total: Rs.{{cart.cartTotal}}</h5>
-        <p>Estimated Delivery by <strong>30 June, 2024</strong></p>
-        <div class="form-group">
-          <input type="text" class="form-control" placeholder="Coupon Code">
-          <button class="btn btn-outline-secondary btn-block mt-2">Apply</button>
-        </div>
+        <h5>Total: Rs.{{cart.totalAfterDiscount}}</h5>
+        <p>Estimated Delivery by <strong>07 July, 2024</strong></p>
+        {{!-- <div class="form-group">
+          <form id="couponForm" action="/user/apply-coupon" method="POST">
+            <input type="text" id="couponCode" class="form-control" placeholder="Coupon Code" >
+            <button type="submit" class="btn btn-outline-secondary btn-block mt-2">Apply</button>
+          </form>
+        </div> --}}
         <a href="/user/checkout" class="btn btn-primary btn-block mt-3">Proceed to Checkout</a>
+        <a href="/user/dashboard" class="btn btn-outline-secondary btn-block mt-1">Add More Items</a>
       </div>
     </div>
   </div>

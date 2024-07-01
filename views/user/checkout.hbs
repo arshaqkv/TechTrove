@@ -6,7 +6,7 @@
     <div class="col-md-8">
       <div class="d-flex justify-content-between align-items-center mb-3">
         <h4 class="card-title">Saved Address</h4>
-        <button class="btn btn-primary" id="addAddressBtn">Add Address</button>
+        <button class="btn btn-outline-dark" id="addAddressBtn">Add Address</button>
       </div>
       <div id="addressList">
         {{#each address}}
@@ -61,30 +61,30 @@
               <img src="{{this.product.images.[0]}}" class="img-fluid" style="max-width: 50px; height:50px" alt="Product Image">
               <div class="ms-3">
                 <p class="card-text">{{this.product.title}}</p>
-                <p class="text-right">{{this.count}} x <strong>Rs.{{this.product.price}}</strong></p>
+                <p class="text-right">{{this.count}} x <strong>Rs.{{this.price}}</strong></p>
               </div>
             </div>
           </div>
         {{/each}}
         <h5>Order Summary</h5>
         <p>Price: Rs.{{cart.cartTotal}}</p>
-        <p>Discount: Rs.0</p>
         <p>Shipping: Free</p>
-        <p>Coupon Applied: $0.00</p>
+        <p>{{#if coupon}}Coupon Discount: Rs.{{coupon.discount}}{{/if}}</p>
         <hr>
-        <h5>Total: Rs.{{cart.cartTotal}}</h5>
+        <h5>Total: Rs.{{cart.totalAfterDiscount}}</h5>
         <p>Estimated Delivery by <strong>30 June, 2024</strong></p>
-        <div class="form-group">
-          <input type="text" class="form-control" placeholder="Coupon Code">
-          <button class="btn btn-outline-secondary btn-block mt-2">Apply</button>
-        </div>
-        <button class="btn btn-primary btn-block mt-3 mb-5" onclick="proceedToCheckout()">Place Order</button>
+        <input type="hidden" id="couponCode" name="couponCode" value="{{coupon.code}}">
+        <button class="btn btn-outline-primary btn-block mt-3 mb-1" onclick="proceedToCheckout()">Place Order</button>
+        <a href="/user/cart" class="btn btn-outline-secondary btn-block">Go back</a>
       </div>
     </div>
   </div>
 </div>
 
 {{> footer}}
+
+//razorpay intergration
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 
 <script>
   document.getElementById('addAddressBtn').addEventListener('click', function() {
@@ -139,38 +139,154 @@
     window.location.href = `/address/edit/${addressId}?originPage=checkout`;
   }
 
-  function proceedToCheckout() {
+  //checkout 
+ function proceedToCheckout() {
     const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked').value;
     const defaultAddressId = document.querySelector('input[name="defaultAddress"]:checked').id;
+    const couponCode = document.getElementById('couponCode').value;
 
     if (!defaultAddressId) {
-      alert('Please select a default address');
-      return;
+        Swal.fire({
+            title: 'No Address Selected',
+            text: 'Please select a default address',
+            icon: 'warning',
+            confirmButtonText: 'Okay'
+        });
+        return;
     }
 
-    const orderData = {
-      paymentIntent: paymentMethod,
-      orderby: '{{user._id}}'
-    };
+    const orderData = { paymentIntent: paymentMethod, couponCode };
 
     fetch('/user/checkout', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(orderData)
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(orderData)
     })
     .then(response => response.json())
     .then(data => {
-      if (data.success) {
-        alert('Order placed successfully!');
-        window.location.href = '/user/get-orders'  // Redirect to order summary page
-      } else {
-        alert('Failed to place order');
-      }
+        if (data.success) {
+            if (paymentMethod === 'razorpay') {
+                const options = {
+                    key: '', // Enter the Key ID generated from the Dashboard
+                    amount: data.razorpayOrder.amount, // Amount is in currency subunits. Default currency is INR. Hence, 1000 means 1000 paise = INR 10.
+                    currency: data.razorpayOrder.currency,
+                    name: 'TechTrove',
+                    description: 'Test Transaction',
+                    image: 'https://example.com/your_logo',
+                    order_id: data.razorpayOrder.id, // This is the order_id created in your backend.
+                    handler: function (response) {
+                        fetch('/user/verify-payment', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                razorpayPaymentId: response.razorpay_payment_id,
+                                razorpayOrderId: response.razorpay_order_id,
+                                razorpaySignature: response.razorpay_signature,
+                                orderData: {
+                                    products: data.products,
+                                    totalPrice: data.totalPrice,
+                                    paymentIntent: paymentMethod,
+                                    orderby: '{{user._id}}',
+                                    razorpayOrderId: data.razorpayOrder.id
+                                }
+                            })
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                Swal.fire({
+                                    title: 'Payment Successful!',
+                                    text: 'Your payment has been processed successfully.',
+                                    icon: 'success',
+                                    confirmButtonText: 'Okay'
+                                }).then(() => {
+                                    window.location.href = '/user/get-orders'; // Redirect to order summary page
+                                });
+                            } else {
+                                Swal.fire({
+                                    title: 'Failed to Place Order',
+                                    text: 'Please try again later.',
+                                    icon: 'error',
+                                    confirmButtonText: 'Okay'
+                                });
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                            Swal.fire({
+                                title: 'Error',
+                                text: 'An unexpected error occurred. Please try again.',
+                                icon: 'error',
+                                confirmButtonText: 'Okay'
+                            });
+                        });
+                    },
+                    prefill: {
+                        name: '{{user.name}}',
+                        email: '{{user.email}}',
+                        contact: '{{user.phone}}'
+                    },
+                    notes: {
+                        address: 'Your Company Address'
+                    },
+                    theme: {
+                        color: '#1976D2'
+                    }
+                };
+                const rzp1 = new Razorpay(options);
+                rzp1.on('payment.failed', function (response) {
+                    Swal.fire({
+                        title: 'Payment Failed',
+                        text: 'Please try again later.',
+                        icon: 'error',
+                        confirmButtonText: 'Okay'
+                    });
+                });
+                rzp1.open();
+            } else {
+                // Handle other payment methods
+                Swal.fire({
+                    title: 'Order Placed!',
+                    text: 'Your order is on its way!',
+                    icon: 'success',
+                    confirmButtonText: 'Okay'
+                }).then(() => {
+                    window.location.href = '/user/get-orders'; // Redirect to order summary page
+                });
+            }
+        } else {
+            Swal.fire({
+                title: 'Failed to Place Order',
+                text: 'Please try again later.',
+                icon: 'error',
+                confirmButtonText: 'Okay'
+            });
+        }
     })
-    .catch(error => console.error('Error:', error));
-  }
+    .catch(error => {
+        console.error('Error:', error);
+        Swal.fire({
+            title: 'Error',
+            text: 'An unexpected error occurred. Please try again.',
+            icon: 'error',
+            confirmButtonText: 'Okay'
+        });
+    });
+}
+
+
+  {{!-- document.addEventListener('DOMContentLoaded', function () {
+    const appliedCoupon = localStorage.getItem('appliedCoupon');
+    if (appliedCoupon) {
+      const coupon = JSON.parse(appliedCoupon);
+      document.querySelector('.order-summary p:nth-child(4)').textContent = `Coupon Applied: Rs.${coupon.discount}`;
+    }
+  }); --}}
+
 </script>
 <style>
   .payment-option {

@@ -7,9 +7,10 @@ const session = require('express-session');
 const dbConnect = require('./config/dbConnect')
 const methodOverride = require('method-override')
 const noCache = require('nocache')
-const exhbs =require('hbs')
+
 const cookieParser = require('cookie-parser')
 const { notFound, errorHandler } = require('./middlewares/errorHandler')
+const hbsHelpers = require('./helpers/hbsHelpers');
 require('./config/passport')
 const app = express()
 dbConnect()
@@ -21,7 +22,8 @@ const hbs = require('express-handlebars').create({
     runtimeOptions: {
         allowProtoPropertiesByDefault: true,
         allowProtoMethodsByDefault: true
-    }
+    },
+    helpers: hbsHelpers
 }) 
 
 const authRouter = require('./routes/authRoute')
@@ -29,23 +31,8 @@ const auth = require('./routes/auth');
 const productRouter = require('./routes/productRoute')
 const categoryRouter = require('./routes/categoryRoute');
 const addressRouter = require('./routes/addressRoute')
-const coupenRouter = require('./routes/coupenRoute')
-
-hbs.handlebars.registerHelper('ne', function(a, b) {
-    return a != b;
-});
-
-
-hbs.handlebars.registerHelper('statusClass', function(status) {
-    switch (status) {
-      case 'Order Placed': return 'badge-success';
-      case 'Processing': return 'badge-warning';
-      case 'Dispatched': return 'badge-info';
-      case 'Delivered': return 'badge-primary';
-      case 'Cancelled': return 'badge-danger';
-      default: return 'badge-secondary';
-    }
-});
+const couponRouter = require('./routes/couponRoute')
+const offerRouter = require('./routes/offerRoute')
 
 app.use(methodOverride('_method'))
 app.use(morgan('dev'))
@@ -57,7 +44,7 @@ app.use(cookieParser())
 app.use(express.static(path.join(__dirname, 'public')));
 
 
-
+app.use(noCache())
 
 // Set up hbs as the view engine
 app.engine('hbs', hbs.engine)
@@ -86,11 +73,12 @@ app.use('/product', productRouter)
 app.use('/auth', auth);
 app.use('/prod/category', categoryRouter)
 app.use('/address', addressRouter)
-app.use('/coupen', coupenRouter)
+app.use('/coupon', couponRouter)
+app.use('/offers', offerRouter)
 
 app.use(notFound)
 app.use(errorHandler)
-app.use(noCache())
+
 
 const PORT = process.env.PORT || 3000 
 app.listen(PORT, ()=>{

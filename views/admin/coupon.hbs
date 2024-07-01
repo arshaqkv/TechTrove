@@ -1,0 +1,126 @@
+{{> admin-header}}
+
+<div class="content">
+    <div class="container mt-5">
+        <section class="h-100 h-custom" style="background-color: #ffff;">
+            <div class="container py-5 h-100">
+                <div class="row d-flex justify-content-center align-items-center h-100">
+                    <div class="col-12 border-0 mt-5">
+                        <div class="card card-registration card-registration-2 border-0">
+                            <div class="card-body p-0">
+                                <div class="row g-0">
+                                    <div class="col-lg">
+                                        <div class="p-5">
+                                            <div class="d-flex justify-content-between align-items-center mb-5">
+                                                <h1 class="mb-0 text-black">Coupons</h1>
+                                                
+                                                <h6 class="mb-0 text-muted">{{#if (ne coupons.length 1)}}{{coupons.length}} Coupons{{else}}{{coupons.length}} Coupon{{/if}}</h6>
+                                            </div>
+                                            <div class="d-flex justify-content-end mb-4">
+                                                <a href="/coupon/add" class="btn btn-outline-primary"><i class="fas fa-plus"></i>Add</a>
+                                            </div>
+                                            <div class="row mb-4 d-flex justify-content-between align-items-center table-responsive">
+                                                <table id="myTable" class="table table-striped table-hover" style="width:100%">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Sl No</th>
+                                                            <th>Coupon Code</th>
+                                                            <th>Discount Value</th>
+                                                            <th>Min bill</th>
+                                                            <th>Coupon Expiry</th>
+                                                            <th>Status</th>
+                                                            <th>Action</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        {{#each coupons}}
+                                                        <tr id="couponRow-{{this._id}}">
+                                                            <td>{{incrementIndex @index}}</td>
+                                                            <td>{{this.code}}</td>
+                                                            <td class="text-primary">Rs.{{this.discount}}</td>
+                                                            <td class="text-primary">Rs. {{this.minBill}}</td>
+                                                            <td>{{formatDate expiry}}</td>
+                                                            <td><span class="badge badge-warning {{#if (ne (expiryStatus expiry) 'Active')}} badge-danger {{/if}}">{{expiryStatus expiry}}</span></td>
+                                                            <td>
+                                                                <a href="/coupon/edit/{{this._id}}" class="btn"><i class="fas fa-edit"></i></a>
+                                                                <button class="btn" onclick="showConfirmation('{{this._id}}')"><i class="fas fa-trash"></i></button>
+                                                            </td>
+                                                        </tr>
+                                                        {{/each}}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                            <hr class="my-4">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+</div>
+
+<div id="modalOverlay" class="modal-overlay"></div>
+
+<!-- Confirmation modal -->
+<div id="confirmationModal" class="confirmation-modal">
+    <h2>Confirm Deletion</h2>
+    <p>Are you sure you want to delete this coupon?</p>
+    <div class="buttons">
+        <button class="btn btn-danger" id="confirmDeleteButton">Yes</button>
+        <button class="btn btn-secondary" onclick="hideConfirmation()">No</button>
+    </div>
+</div>
+
+<script>
+    let currentCouponId = null;
+
+    function showConfirmation(couponId) {
+        currentCouponId = couponId;
+        document.getElementById('modalOverlay').style.display = 'block';
+        document.getElementById('confirmationModal').style.display = 'block';
+    }
+
+    function hideConfirmation() {
+        document.getElementById('modalOverlay').style.display = 'none';
+        document.getElementById('confirmationModal').style.display = 'none';
+        currentCouponId = null;
+    }
+
+    document.getElementById('confirmDeleteButton').addEventListener('click', function() {
+        if (currentCouponId) {
+            deleteCoupon(currentCouponId);
+        }
+    });
+
+    function deleteCoupon(couponId) {
+        fetch(`/coupon/delete/${couponId}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Failed to delete coupon');
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                document.getElementById('couponRow-' + couponId).remove();
+                hideConfirmation();
+                window.location.reload();
+            } else {
+                alert('Failed to delete coupon: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Failed to delete coupon: ' + error.message);
+        });
+    }
+</script>

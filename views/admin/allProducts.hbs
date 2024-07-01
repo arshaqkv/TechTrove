@@ -2,31 +2,35 @@
 <div class="content">
     <div class="container mt-5">
         <h3>All Products</h3>
-        <a href="/product/add" class="btn btn-success mb-3">Add New Product</a>
+        <a href="/product/add" class="btn btn-outline-dark mb-3 mt-3"><i class="fas fa-plus"></i>Add New Product</a>
         <div class="table-responsive">
             <table class="table table-bordered">
                 <thead>
                     <tr>
+                        <th>Sl no</th>
                         <th>Image</th>
                         <th>Title</th>
                         <th>Category</th>
                         <th>Brand</th>
                         <th>Price</th>
                         <th>Stock</th>
+                        <th>Sold</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     {{#each products}}
                     <tr>
+                        <td>{{incrementIndex @index}}</td>
                         <td>
                             <img src="{{this.images.[0]}}" class="img-thumbnail" alt="{{this.title}}" style="max-height: 50px;">
                         </td>
                         <td>{{this.title}}</td>
                         <td>{{this.category.title}}</td>
                         <td>{{this.brand}}</td>
-                        <td>${{this.price}}</td>
+                        <td class="text-primary">Rs.{{this.price}}</td>
                         <td>{{this.stock_count}}</td>
+                        <td>{{this.sold}}</td>
                         <td>
                             <a class="btn btn-sm me-2" href="/product/edit/{{this._id}}"><i class="fas fa-edit"></i></a>
                             <form id="deleteForm-{{this._id}}" class="d-inline" action="/product/delete/{{this._id}}" method="POST" onsubmit="return showConfirmation(event, '{{this._id}}')">

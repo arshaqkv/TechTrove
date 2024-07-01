@@ -2,11 +2,12 @@
 <div class="content">
     <div class="container mt-5">
         <h3>All Categories</h3>
-        <a href="/prod/category/add" class="btn btn-success mb-3">Add New Category</a>
+        <a href="/prod/category/add" class="btn btn-outline-dark mb-3 mt-4"><i class="fas fa-plus"></i>Add New Category</a>
         <div class="table-responsive">
             <table class="table table-bordered">
                 <thead>
                     <tr>
+                        <th>Sl no</th>
                         <th>Category Name</th>
                         <th>Added</th>
                         <th>Action</th>
@@ -15,8 +16,9 @@
                 <tbody>
                     {{#each categories}}
                     <tr>
+                        <td>{{incrementIndex @index}}</td>
                         <td>{{this.title}}</td>
-                        <td>{{this.createdAt}}</td>
+                        <td>{{formatDate this.createdAt}}</td>
                         <td>
                             <a class="btn btn-sm me-2" href="/prod/category/edit/{{this._id}}"><i class="fas fa-edit"></i></a>
                             <form id="deleteForm-{{this._id}}" action="/prod/category/delete/{{this._id}}?_method=PUT" method="POST" class="d-inline" onsubmit="return showConfirmation(event, '{{this._id}}')">

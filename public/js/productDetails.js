@@ -94,12 +94,32 @@ document.addEventListener('DOMContentLoaded', () => {
                     wishlistBtn.textContent = 'Wishlisted';
                     wishlistBtn.classList.remove('btn-warning');
                     wishlistBtn.classList.add('btn-success');
+                    Swal.fire({
+                        title: 'Added to Wishlist!',
+                        text: 'This item has been added to your wishlist.',
+                        icon: 'success',
+                        showConfirmButton: false,
+                        timer: 2000,
+                        customClass: {
+                            popup: 'animated fadeInDown'
+                        }
+                    });
                 } else {
                     wishlistBtn.textContent = 'Wishlist';
                     wishlistBtn.classList.remove('btn-success');
                     wishlistBtn.classList.add('btn-warning');
+                    Swal.fire({
+                        title: 'Owchh',
+                        text: `Product removed from wishlist`,
+                        icon: 'error',
+                        showConfirmButton: false,  
+                        timer: 2000, 
+                        customClass: {
+                          popup: 'animated fadeInDown'
+                        }
+                      }); 
                 }
-                window.location.reload()
+                // window.location.reload()
                 // Optionally, you can show a success message to the user
             } else {
                 console.error('Failed to submit cart');

@@ -12,6 +12,9 @@ const authMiddleware = asyncHandler(async (req,res,next) =>{
         if(token){
             const decoded = jwt.verify(token,process.env.JWT_SECRET)
             const user = await User.findById(decoded?.id)
+            if (!user) {
+                return res.status(401).redirect('/user/login'); // Redirect to login if user not found
+            }
             req.user = user 
             next() 
         }
@@ -20,9 +23,6 @@ const authMiddleware = asyncHandler(async (req,res,next) =>{
         console.log("Not authorized, token expired, Please login again")
         return res.status(401).redirect('/user/login');
     }    
-    // }else{ 
-    //     throw new Error("There is no token attached to header")
-    // }
 })
 
 
@@ -36,4 +36,38 @@ const isAdmin = asyncHandler(async (req,res,next) =>{
     }
 })
 
-module.exports = { authMiddleware, isAdmin }
+const redirectIfAuthenticated = asyncHandler(async (req, res, next) => {
+    const token = req.cookies.jwt;
+    if (token) {
+        try {
+            const decoded = jwt.verify(token, process.env.JWT_SECRET);
+            const user = await User.findById(decoded?.id);
+            if (user) {
+                return res.redirect('/dashboard'); // Redirect to dashboard if authenticated
+            }
+        } catch (error) {
+            // Token might be expired or invalid, so clear the cookie
+            res.clearCookie('jwt');
+        }
+    }
+    next();
+});
+
+const redirectToAdminDashboard = asyncHandler(async (req, res, next) => {
+    const token = req.cookies.jwt;
+    if (token) {
+        try {
+            const decoded = jwt.verify(token, process.env.JWT_SECRET);
+            const user = await User.findById(decoded?.id);
+            if (user) {
+                return res.redirect('/admin/dashboard'); // Redirect to dashboard if authenticated
+            }
+        } catch (error) {
+            // Token might be expired or invalid, so clear the cookie
+            res.clearCookie('jwt');
+        }
+    }
+    next();
+});
+
+module.exports = { authMiddleware, isAdmin, redirectIfAuthenticated, redirectToAdminDashboard}

@@ -12,10 +12,11 @@
         </div>
       </div>
       <div class="table-responsive-sm">
-        <table class="table table-hover">
+        <table class="table table-hover table-sm text-center">
           <thead>
             <tr>
-              <th>Order ID</th>
+              <th>Sl no</th>
+              {{!-- <th>Order ID</th> --}}
               <th>Product</th>
               <th>Date</th>
               <th>Customer</th>
@@ -28,7 +29,8 @@
           <tbody>
             {{#each orders}}
             <tr>
-              <td>#{{this._id}}</td>
+              <td>{{incrementIndex @index}}</td>
+              {{!-- <td>#{{this._id}}</td> --}}
               <td>
                 {{#each this.products}}
                   <div class="d-flex align-items-center">
@@ -38,14 +40,14 @@
                   </div>
                 {{/each}}
               </td>
-              <td>{{this.createdAtFormatted}}</td>
+              <td>{{formatDate this.createdAt}}</td>
               <td>{{this.orderby.name}}</td>
-              <td>{{this.totalPrice}}/-</td>
-              <td>{{this.paymentIntent}}</td>
+              <td class="text-primary">Rs.{{this.totalPrice}}</td>
+              <td class="text-info">{{this.paymentIntent}}</td>
               <td id="order-status-{{this._id}}">
                 <span class="badge {{statusClass this.orderStatus}}">{{this.orderStatus}}</span>
               </td>
-              <td></td>
+              <td><a href="/order/update-order/{{this._id}}" class="btn"><i class="fas fa-edit"></i></a></td>
               
             </tr>
             {{/each}}

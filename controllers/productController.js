@@ -1,6 +1,7 @@
 const Product = require('../models/productModel')
 const Category = require('../models/categoryModel')
 const User = require('../models/userModel')
+const Offer = require('../models/offerModel')
 const asyncHandler = require('express-async-handler')
 const slugify = require('slugify')
 const validateMongoDbId = require('../utils/validateMongodbID')
@@ -91,8 +92,11 @@ const getProduct = asyncHandler(async (req,res) =>{
             { name: 'Home', url: '/dashboard'},  
             { name: product.title, url: `/product/${prodId}`}
         ]
-        
-        res.status(201).render('productDetails', { user, product, recommendedProduct, breadcrumbs, alreadyAddedProduct })
+
+        const { originalPrice, offerPrice, discountPercentage } = await product.getEffectivePrice();
+
+        res.status(201).render('productDetails', { user, product, recommendedProduct, breadcrumbs, alreadyAddedProduct, originalPrice, offerPrice,
+            discountPercentage })
     } catch (error) {
         console.log(error)
     }
@@ -199,15 +203,24 @@ const loadWishlist = asyncHandler(async (req,res) =>{
     const { _id } = user
     validateMongoDbId(_id)
     try {
-        const userWishlist = await User.findById(_id).populate('wishlist')
-        const wishlist = userWishlist.wishlist
-        wishlist.forEach(product => {
+        const userWishlist = await User.findById(_id).populate('wishlist');
+        const wishlist = await Promise.all(userWishlist.wishlist.map(async product => {
             if (product.images && Array.isArray(product.images)) {
                 // Replace backslashes with forward slashes and remove 'public' from the path
                 product.images = product.images.map(img => img.replace(/\\/g, '/').replace(/public/g, ''));
             }
-        });
-        res.render('wishlist', { user, wishlist })
+
+            const { originalPrice, offerPrice, discountPercentage } = await product.getEffectivePrice();
+            return {
+                ...product.toObject(),
+                effectivePrice: offerPrice !== null ? offerPrice : originalPrice,
+                originalPrice,
+                discountPercentage
+            };
+        }));
+        
+
+        res.render('wishlist', { user, wishlist });
     } catch (error) {
         console.log(error) 
     }

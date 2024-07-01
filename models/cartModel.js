@@ -19,7 +19,8 @@ const cartSchema = new Schema({
         type: Number
     },
     totalAfterDiscount: {
-        type: Number
+        type: Number,
+        default: 0
     },
     orderby: {
         type: Schema.Types.ObjectId,

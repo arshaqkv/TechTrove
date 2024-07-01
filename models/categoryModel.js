@@ -11,7 +11,12 @@ const catogorySchema = new Schema({
     {
         type: Boolean,
         default: false
-    }},
+    },
+    offer: { 
+        type: Schema.Types.ObjectId, 
+        ref: 'Offer' 
+    }
+    },
     {
         timestamps: true
     }

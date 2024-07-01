@@ -25,8 +25,15 @@
                     </td>
                     <td><a class="link" href="/product/{{this._id}}"><span>{{this.title}}</span></a></td>
                     <td>
-                        <span class="text-muted"><strike>₹{{this.price}}</strike></span>
-                        <span class="font-weight-bold text-danger">₹{{this.price}}</span>
+                        {{#if this.discountPercentage}}
+                        <span class="text-muted"><s>₹{{this.originalPrice}}</s></span>
+                        <div class="d-flex">
+                            <span class="text-dark fw-bold">₹{{this.effectivePrice}}</span>
+                            <span class="text-success ms-1 fw-">{{this.discountPercentage}}% off</span>
+                        </div>
+                        {{else}}
+                        <span class="text-dark fw-bold">₹{{this.originalPrice}}</span>
+                        {{/if}}
                     </td>
                     <td>
                         {{#if this.stock_count}}
@@ -78,7 +85,20 @@
                         if (response.ok) {
                             // Optionally remove the product row from the table
                             this.closest('tr').remove();
-                            window.location.reload()
+                            
+                            Swal.fire({
+                                title: 'Owchh',
+                                text: `Product removed from wishlist`,
+                                icon: 'error',
+                                showConfirmButton: false,  
+                                timer: 1000,
+                                customClass: {
+                                popup: 'animated fadeInDown'
+                                }
+                            }); 
+                            setTimeout(() =>{
+                                window.location.reload()
+                            },1900)
                         } else {
                             console.error('Failed to update the wishlist');
                         }

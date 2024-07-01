@@ -21,20 +21,20 @@
                         <td>{{this.phone}}</td>
                         <td>
                             {{#if this.isBlocked}}
-                            <span class="badge bg-danger">Blocked</span>
+                            <span class="badge badge-danger">Blocked</span>
                             {{else}}
-                            <span class="badge bg-success">Active</span>
+                            <span class="badge badge-success">Active</span>
                             {{/if}}
                         </td>
                         
                         <td>
                             {{#if this.isBlocked}}
                             <form action="/admin/unblock-user/{{this._id}}" method="POST" class="d-inline">
-                                <button type="submit" class="btn btn-warning btn-sm">Unblock</button>
+                                <button type="submit" class="btn btn-outline-dark btn-sm">Unblock</button>
                             </form>
                             {{else}}
                             <form action="/admin/block-user/{{this._id}}" method="POST" class="d-inline">
-                                <button type="submit" class="btn bg-danger btn-sm">Block</button>
+                                <button type="submit" class="btn btn-outline-danger btn-sm">Block</button>
                             </form>
                             {{/if}}
                         </td>

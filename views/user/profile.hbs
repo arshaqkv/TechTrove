@@ -34,7 +34,7 @@
               <p><i class="fas fa-map-marker-alt"></i> Location: {{user.defaultAddress.city}}</p>
               <p><i class="fas fa-envelope"></i> Email: <a href="mailto:{{user.email}}">{{user.email}}</a></p>
               <p><i class="fas fa-phone"></i> Phone: <a href="tel:{{user.phone}}">{{user.phone}}</a></p>
-              <a href="/profile/edit-user" class="btn btn-warning mt-3"><i class="fas fa-edit"></i> Edit Account</a>
+              <a href="/profile/edit-user" class="btn btn-outline-dark mt-3"><i class="fas fa-edit"></i> Edit Account</a>
             </div>
             <div class="col-md-6 mb-5">
               <h5>Default Address</h5>
@@ -43,7 +43,7 @@
               <p>{{user.defaultAddress.addressLine1}}</p>
               <p>{{user.defaultAddress.addressLine2}}</p>
               <p>Pin: {{user.defaultAddress.pinCode}}</p>
-              <a href="/address/all" class="btn btn-secondary mt-3"><i class="fas fa-map-marker-alt "></i> Change Address</a>
+              <a href="/address/all" class="btn btn-outline-secondary mt-3"><i class="fas fa-map-marker-alt "></i> Change Address</a>
             </div>
           </div>
         </div>
