@@ -10,10 +10,10 @@
 
 
 /* navbar */
-/* .navbar {
+.navbar {
    background: linear-gradient(0, rgb(230, 230, 230), white);
    margin-bottom: 2rem;
-} */
+}
 /* *****************input number************** */
 
 /* Chrome, Safari, Edge, Opera */
@@ -370,4 +370,55 @@ footer .subscribe button {
   .order-summary h5 { font-weight: bold; }
   .order-summary p { margin: 0; }
   .cart-item { margin-bottom: 20px; }
+
+
+  /* ***********wishlist**********************/
+  .wishlist-item td a{
+    text-decoration: none;
+  }
+
+  /* *********Pagination******** */
+  .pagination {
+    display: flex;
+    justify-content: center;
+    padding: 1rem 0;
+}
+
+.pagination .page-item {
+    margin: 0 5px;
+}
+
+.pagination .page-item .page-link {
+    color: #007bff;
+    border-radius: 0.25rem;
+    border: 1px solid #dee2e6;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s;
+}
+
+.pagination .page-item .page-link:hover {
+    background-color: #f8f9fa;
+    text-decoration: none;
+    border-color: #007bff;
+}
+
+.pagination .page-item.active .page-link {
+    background-color: #007bff;
+    color: white;
+    border-color: #007bff;
+}
+
+.pagination .page-item.disabled .page-link {
+    color: #6c757d;
+    background-color: #e9ecef;
+    border-color: #dee2e6;
+}
+
+.pagination .page-link:focus {
+    box-shadow: none;
+}
 

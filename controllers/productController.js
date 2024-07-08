@@ -18,10 +18,10 @@ const loadCreateProduct = asyncHandler( async(req,res) =>{
 })
 
 //create products
-const createProduct = asyncHandler( async(req,res) =>{
+const createProduct = asyncHandler(async (req, res) => {
     try {
-        let { title, slug } = req.body
-        if(title){
+        let { title, slug } = req.body;
+        if (title) {
             let productSlug = slug || slugify(title, { lower: true, strict: true });
             // Check if the slug already exists, if it does, append a number until it's unique
             let counter = 1;
@@ -29,36 +29,59 @@ const createProduct = asyncHandler( async(req,res) =>{
                 productSlug = `${slug || slugify(title, { lower: true, strict: true })}-${counter}`;
                 counter++;
             }
-            req.body.slug = productSlug
+            req.body.slug = productSlug;
         }
-        const images = req.files.map(file => file.path); 
+        
+        // req.body.images now contains the paths to the resized images
         const newProductData = {
             ...req.body, // Include other fields from req.body
-            images: images // Add the images field
-        };
-        const newProduct = await Product.create(newProductData)
-        return res.redirect('/product/index') 
+        }; 
+        console.log(newProductData)
+        const newProduct = await Product.create(newProductData);
+        return res.redirect('/product/index');
     } catch (err) {
-        throw new Error(err)
+        throw new Error(err);
     }
-})
+});
+
 
 //get all products
-const getAllProducts = asyncHandler(async (req,res) =>{
+const getAllProducts = asyncHandler(async (req, res) => {
+    const page = parseInt(req.query.page) || 1;
+    const limit = 5; // Number of products per page
+    const skip = (page - 1) * limit;
+
     try {
-        const findAllProducts = await Product.find({isDeleted: false}).populate('category').exec()
-        findAllProducts.forEach(product => {
-            // Adjust the path if necessary
+        const count = await Product.countDocuments({ isDeleted: false });
+        const totalPages = Math.ceil(count / limit);
+
+        const products = await Product.find({ isDeleted: false })
+            .populate('category')
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(limit)
+            .exec();
+
+        products.forEach(product => {
             if (product.images && Array.isArray(product.images)) {
-                product.images = product.images.map(img => img.replace(/\\/g, '/').replace(/public/g, '')) // Replace backslashes with forward slashes
+                product.images = product.images.map(img => img.replace(/public/g, ''));
             }
         });
-        
-        return res.status(200).render('allProducts', { products: findAllProducts })
+
+        const pagination = {
+            totalPages,
+            page,
+            count,
+            pages: Array.from({ length: totalPages }, (_, i) => ({ page: i + 1, active: i + 1 === page })),
+            hasNextPage: page < totalPages,
+            hasPrevPage: page > 1,
+        };
+
+        res.render('allProducts', { products, pagination });
     } catch (err) {
-        throw new Error(err)
+        throw new Error(err);
     }
-})
+});
 
 //get a product
 
@@ -110,8 +133,9 @@ const loadUpdateProduct = asyncHandler( async(req,res) =>{
         const product = await Product.findById(id); 
         
         if (product.images && Array.isArray(product.images)) {
-            product.images = product.images.map(img => img.replace(/\\/g, '/').replace(/public/g, '')) // Replace backslashes with forward slashes
+            product.images = product.images.map(img => img.replace(/public/g, '')) // Replace backslashes with forward slashes
         }
+        console.log(product)
         res.status(201).render('editProduct', {product,categories});
     } catch (error) {
         console.log(error)
@@ -136,10 +160,7 @@ const updateProduct = asyncHandler(async (req,res) =>{
         } 
         let newProductData = { ...req.body };
 
-        if (req.files && req.files.length > 0) {
-            const images = req.files.map(file => file.path);
-            newProductData.images = images;
-        }
+        
         const updatedProduct = await Product.findByIdAndUpdate( id , newProductData ,{
             new: true,
         })
@@ -198,33 +219,50 @@ const addToWishList = asyncHandler(async (req,res) =>{
 }) 
 
 //wishlist page
-const loadWishlist = asyncHandler(async (req,res) =>{
-    const user = req.user
-    const { _id } = user
-    validateMongoDbId(_id)
+const loadWishlist = asyncHandler(async (req, res) => {
+    const user = req.user;
+    const { _id } = user;
+    validateMongoDbId(_id);
+
+    const page = parseInt(req.query.page) || 1;
+    const limit = 5;
     try {
         const userWishlist = await User.findById(_id).populate('wishlist');
-        const wishlist = await Promise.all(userWishlist.wishlist.map(async product => {
-            if (product.images && Array.isArray(product.images)) {
-                // Replace backslashes with forward slashes and remove 'public' from the path
-                product.images = product.images.map(img => img.replace(/\\/g, '/').replace(/public/g, ''));
-            }
+        const count = userWishlist.wishlist.length;
+        const totalPages = Math.ceil(count / limit);
+        const skip = (page - 1) * limit;
 
-            const { originalPrice, offerPrice, discountPercentage } = await product.getEffectivePrice();
-            return {
-                ...product.toObject(),
-                effectivePrice: offerPrice !== null ? offerPrice : originalPrice,
-                originalPrice,
-                discountPercentage
-            };
-        }));
-        
+        const wishlist = await Promise.all(
+            userWishlist.wishlist.slice(skip, skip + limit).map(async product => {
+                if (product.images && Array.isArray(product.images)) {
+                    product.images = product.images.map(img => img.replace(/\\/g, '/').replace(/public/g, ''));
+                }
 
-        res.render('wishlist', { user, wishlist });
+                const { originalPrice, offerPrice, discountPercentage } = await product.getEffectivePrice();
+                return {
+                    ...product.toObject(),
+                    effectivePrice: offerPrice !== null ? offerPrice : originalPrice,
+                    originalPrice,
+                    discountPercentage
+                };
+            })
+        );
+
+        const pagination = {
+            totalPages,
+            page,
+            count,
+            pages: Array.from({ length: totalPages }, (_, i) => ({ page: i + 1, active: i + 1 === page })),
+            hasNextPage: page < totalPages,
+            hasPrevPage: page > 1,
+        };
+
+        res.render('wishlist', { user, wishlist, pagination });
     } catch (error) {
-        console.log(error) 
+        console.log(error);
     }
-})
+});
+
 
 //rating of product
 const rating = asyncHandler(async (req, res) =>{

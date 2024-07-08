@@ -14,14 +14,13 @@
     <div class="col-md-9">
         {{#if wishlist.length}}
         <h3>My Wishlist({{wishlist.length}})</h3>
-        <table class="table table-hover">
+        <table class="table">
             
             <tbody>
                 {{#each wishlist}}
-                <tr>
+                <tr class="wishlist-item">
                     <td>
                         <img src="{{this.images.[0]}}" alt="{{this.title}}" class="img-thumbnail" width="50">
-                        
                     </td>
                     <td><a class="link" href="/product/{{this._id}}"><span>{{this.title}}</span></a></td>
                     <td>
@@ -29,7 +28,7 @@
                         <span class="text-muted"><s>₹{{this.originalPrice}}</s></span>
                         <div class="d-flex">
                             <span class="text-dark fw-bold">₹{{this.effectivePrice}}</span>
-                            <span class="text-success ms-1 fw-">{{this.discountPercentage}}% off</span>
+                            <span class="text-success ms-1">{{this.discountPercentage}}% off</span>
                         </div>
                         {{else}}
                         <span class="text-dark fw-bold">₹{{this.originalPrice}}</span>
@@ -43,7 +42,11 @@
                         {{/if}}
                     </td>
                     <td>
-                        <button class="btn  toggle-wishlist-item" data-id="{{this._id}}">
+                        
+                        <button class="btn btn-warning add-to-cart" data-id="{{this._id}}" data-price="{{this.price}}">
+                            <i class="fas fa-shopping-cart"></i>
+                        </button>
+                        <button class="btn toggle-wishlist-item" data-id="{{this._id}}">
                             <i class="fas fa-trash-alt"></i>
                         </button>
 
@@ -52,6 +55,27 @@
                 {{/each}}
             </tbody>
         </table>
+        <nav aria-label="Page navigation">
+            <ul class="pagination justify-content-center">
+                {{#if pagination.hasPrevPage}}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{subtract pagination.page 1}}">&lt;</a>
+                </li>
+                {{/if}}
+
+                {{#each pagination.pages}}
+                <li class="page-item {{#if this.active}}active{{/if}}">
+                    <a class="page-link" href="?page={{this.page}}">{{this.page}}</a>
+                </li>
+                {{/each}}
+
+                {{#if pagination.hasNextPage}}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{add pagination.page 1}}">&gt;</a>
+                </li>
+                {{/if}}
+            </ul>
+        </nav>
         {{else}}
         <div class="text-center">
             <h5 class="mb-4"></h>YOUR WISHLIST IS EMPTY</h5>
@@ -67,6 +91,9 @@
 
 
 <script>
+
+        const wishlistItems = document.querySelectorAll('.wishlist-item');
+
         document.addEventListener('DOMContentLoaded', () => {
             document.querySelectorAll('.toggle-wishlist-item').forEach(button => {
                 button.addEventListener('click', async function(event) {
@@ -108,4 +135,50 @@
                 });
             });
         });
-    </script>
+
+        wishlistItems.forEach(item => {
+            const addToCartBtn = item.querySelector('.add-to-cart');
+
+            addToCartBtn.addEventListener('click', async () => {
+                const productId = addToCartBtn.getAttribute('data-id');
+                const price = addToCartBtn.getAttribute('data-price'); // Assuming you have price data attribute
+
+                const cart = {
+                    product: productId,
+                    count: 1, // Always set count to 1 for wishlist items
+                    price: parseFloat(price)
+                };
+
+                try {
+                    const response = await fetch('/user/cart', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ cart: [cart] }) // Send as an array
+                    });
+
+                    if (response.ok) {
+                        Swal.fire({
+                            title: 'Success',
+                            text: 'Product added to cart',
+                            icon: 'success',
+                            showConfirmButton: false,
+                            timer: 1000,
+                            customClass: {
+                                popup: 'animated fadeInDown'
+                            },
+                            iconHtml: '<i class="fas fa-check-circle"></i>'
+                        });
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 1500);
+                    } else {
+                        console.error('Failed to add product to cart');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                }
+            });
+        });
+</script>

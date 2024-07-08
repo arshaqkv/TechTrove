@@ -1,0 +1,144 @@
+{{> admin-header}}
+<style>
+        /* Custom styles */
+    .card {
+    margin-top: 20px;
+    }
+
+    .img-fluid {
+    max-height: 200px;
+    object-fit: cover;
+    }
+
+    .input-group {
+    max-width: 300px;
+    margin-top: 10px;
+    }
+
+</style>
+<div class="content">
+    <div class="container mt-5 mb-5">
+    <div class="card">
+      <div class="card-header">
+        <h2>Order #{{order.orderId}}</h2>
+        <p class="text-muted">Order Date: {{formatDate order.createdAt}}</p>
+      </div>
+      <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mt-3">
+                <li class="breadcrumb-item"><a href="/user/admin/dashboard">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="/order/all-orders">Orders</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Order Details #{{order.orderId}}</li>
+            </ol>
+        </nav>
+      <div class="card-body">
+        {{#each order.products}}
+        <div class="row mb-3">
+          <div class="col-md-6">
+            <img src="{{this.product.images.[0]}}" class="img-fluid" alt="{{this.product.name}}">
+          </div>
+          <div class="col-md-6">
+            <h4>{{this.product.title}}</h4>
+            <p>Price: {{this.product.price}}</p>
+            <p>Quantity: {{this.count}}</p>
+          </div>
+        </div>
+        {{/each}}
+        <hr>
+        <div class="row">
+          <div class="col-md-6">
+            <h5>Billing Address</h5>
+            <p>{{order.orderby.name}}</p>
+            <p>{{order.orderby.defaultAddress.addressLine1}}</p>
+            <p>{{order.orderby.defaultAddress.addressLine2}}</p>
+            <p>{{order.orderby.defaultAddress.city}}, {{order.orderby.defaultAddress.state}} {{order.orderby.defaultAddress.pinCode}}</p>
+          </div>
+          <div class="col-md-6">
+            <h5>Payment Method</h5>
+            <p>{{order.paymentIntent}}</p>
+          </div>
+        </div>
+        <hr>
+        <div class="row">
+          <div class="col-md-6">
+            <h5>Current Order Status</h5>
+            <span class="badge {{statusClass order.orderStatus}}">{{order.orderStatus}}</span>
+          </div>
+          {{#if (ne order.orderStatus 'Cancelled')}}
+          <div class="col-md-6">
+            <h5>Change Order Status</h5>
+            <form id="orderStatusForm">
+              <div class="input-group">
+                <select class="form-select pe-1" name="status" id="status">
+                  <option value="Processing" {{#if (eq order.orderStatus "Processing")}}selected{{/if}}>Processing</option>
+                  <option value="Dispatched" {{#if (eq order.orderStatus "Dispatched")}}selected{{/if}}>Dispatched</option>
+                  <option value="Delivered" {{#if (eq order.orderStatus "Delivered")}}selected{{/if}}>Delivered</option>
+                </select>
+                <button class="btn btn-outline-warning ms-1" type="submit">Update</button>
+                <a class="btn btn-outline-primary ms-1" href="/order/all-orders">Cancel</a>
+              </div>
+            </form>
+          </div>
+          {{/if}}
+        </div>
+      </div>
+    </div>
+  </div>
+ <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const form = document.getElementById('orderStatusForm');
+
+        form.addEventListener('submit', function (event) {
+            event.preventDefault(); // Prevent default form submission
+
+            const status = form.elements.status.value; // Retrieve status value
+
+            fetch(`/order/update-order/{{order._id}}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ status }) // Send as JSON payload
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                // Assuming data.success is returned from server upon successful update
+                if (data.success) {
+                    // Show success message using SweetAlert2
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Success!',
+                        text: 'Order status updated successfully.',
+                        timer: 2000, // Auto close after 2 seconds
+                        showConfirmButton: false
+                    }).then(() => {
+                        // Reload or redirect as needed
+                        window.location.reload(); // Example: reload the page
+                    });
+                } else {
+                    // Show error message using SweetAlert2
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error!',
+                        text: 'Failed to update order status. Please try again.',
+                        showConfirmButton: true
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error updating order status:', error);
+                // Show error message using SweetAlert2
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error!',
+                    text: 'Failed to update order status. Please try again.',
+                    showConfirmButton: true
+                });
+            });
+        });
+    });
+</script>

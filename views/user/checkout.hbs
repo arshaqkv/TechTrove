@@ -73,7 +73,6 @@
         <hr>
         <h5>Total: Rs.{{cart.totalAfterDiscount}}</h5>
         <p>Estimated Delivery by <strong>30 June, 2024</strong></p>
-        <input type="hidden" id="couponCode" name="couponCode" value="{{coupon.code}}">
         <button class="btn btn-outline-primary btn-block mt-3 mb-1" onclick="proceedToCheckout()">Place Order</button>
         <a href="/user/cart" class="btn btn-outline-secondary btn-block">Go back</a>
       </div>
@@ -143,7 +142,7 @@
  function proceedToCheckout() {
     const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked').value;
     const defaultAddressId = document.querySelector('input[name="defaultAddress"]:checked').id;
-    const couponCode = document.getElementById('couponCode').value;
+    
 
     if (!defaultAddressId) {
         Swal.fire({
@@ -155,7 +154,7 @@
         return;
     }
 
-    const orderData = { paymentIntent: paymentMethod, couponCode };
+    const orderData = { paymentIntent: paymentMethod };
 
     fetch('/user/checkout', {
         method: 'POST',
@@ -279,13 +278,7 @@
 }
 
 
-  {{!-- document.addEventListener('DOMContentLoaded', function () {
-    const appliedCoupon = localStorage.getItem('appliedCoupon');
-    if (appliedCoupon) {
-      const coupon = JSON.parse(appliedCoupon);
-      document.querySelector('.order-summary p:nth-child(4)').textContent = `Coupon Applied: Rs.${coupon.discount}`;
-    }
-  }); --}}
+ 
 
 </script>
 <style>

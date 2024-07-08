@@ -42,6 +42,29 @@
                 </tbody>
             </table>
         </div>
+        <nav aria-label="Page navigation">
+            <div class="text-center">
+                <ul class="pagination justify-content-center">
+                    {{#if pagination.hasPrevPage}}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{subtract pagination.page 1}}">&lt;</a>
+                    </li>
+                    {{/if}}
+
+                    {{#each pagination.pages}}
+                    <li class="page-item {{#if this.active}}active{{/if}}">
+                        <a class="page-link" href="?page={{this.page}}">{{this.page}}</a>
+                    </li>
+                    {{/each}}
+
+                    {{#if pagination.hasNextPage}}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{add pagination.page 1}}">&gt;</a>
+                    </li>
+                    {{/if}}
+                </ul>
+            </div>
+        </nav>
     </div>
 </div>
 

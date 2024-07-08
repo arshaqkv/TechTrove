@@ -13,25 +13,25 @@
       </div>
       <div class="table-responsive-sm">
         <table class="table table-hover table-sm text-center">
-          <thead>
+          <thead class="table-active">
             <tr>
               <th>Sl no</th>
-              {{!-- <th>Order ID</th> --}}
-              <th>Product</th>
-              <th>Date</th>
+              <th>Order ID</th>
+              {{!-- <th>Product</th> --}}
+              <th>Order Date</th>
               <th>Customer</th>
-              <th>Total</th>
               <th>Payment</th>
               <th>Status</th>
+              <th>Total</th>
               <th>Action</th>
             </tr>
           </thead>
           <tbody>
             {{#each orders}}
             <tr>
-              <td>{{incrementIndex @index}}</td>
-              {{!-- <td>#{{this._id}}</td> --}}
-              <td>
+              <td class="fw-bold">{{incrementIndex @index}}</td>
+              <td>#{{this.orderId}}</td>
+              {{!-- <td>
                 {{#each this.products}}
                   <div class="d-flex align-items-center">
                     <img class="img-thumbnail" src="{{this.product.images.[0]}}" alt="" style="width: 50px;">
@@ -39,14 +39,14 @@
                     <div class="ms-2">{{this.product.title}}</div>
                   </div>
                 {{/each}}
-              </td>
+              </td> --}}
               <td>{{formatDate this.createdAt}}</td>
               <td>{{this.orderby.name}}</td>
-              <td class="text-primary">Rs.{{this.totalPrice}}</td>
               <td class="text-info">{{this.paymentIntent}}</td>
               <td id="order-status-{{this._id}}">
                 <span class="badge {{statusClass this.orderStatus}}">{{this.orderStatus}}</span>
               </td>
+              <td class="text-primary">Rs.{{this.totalPrice}}</td>
               <td><a href="/order/update-order/{{this._id}}" class="btn"><i class="fas fa-edit"></i></a></td>
               
             </tr>

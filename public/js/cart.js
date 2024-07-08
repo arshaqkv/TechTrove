@@ -80,14 +80,40 @@ document.addEventListener('DOMContentLoaded', function () {
           },
           body: JSON.stringify({ couponCode }),
         });
-  
+    
         if (response.ok) {
           const data = await response.json();
-          document.querySelector('.order-summary h5:last-of-type').textContent = `Total: Rs.${data.cartTotal}`;
-          document.querySelector('.order-summary #couponDiscount').textContent = `Coupon Discount: Rs.${data.discount}`;
-          document.querySelector('.error').textContent = ''; // Clear any previous error message
-          document.getElementById('removeCouponBtn').style.display = 'block';
-
+          const totalElement = document.querySelector('.order-summary h5:last-of-type');
+          const discountElement = document.querySelector('.order-summary #couponDiscount');
+          const errorElement = document.querySelector('.error');
+          const removeCouponBtn = document.getElementById('removeCouponBtn');
+    
+          if (totalElement) {
+            totalElement.textContent = `Total: Rs.${data.cartTotal}`;
+          } else {
+            console.error('Total element not found');
+          }
+    
+          if (discountElement) {
+            discountElement.textContent = `Coupon Discount: Rs.${data.discount}`;
+          } else {
+            // If the element doesn't exist, we might need to create it dynamically
+            const newDiscountElement = document.createElement('p');
+            newDiscountElement.id = 'couponDiscount';
+            newDiscountElement.textContent = `Coupon Discount: Rs.${data.discount}`;
+            document.querySelector('.order-summary').insertBefore(newDiscountElement, totalElement);
+          }
+    
+          if (errorElement) {
+            errorElement.textContent = ''; // Clear any previous error message
+          }
+    
+          if (removeCouponBtn) {
+            removeCouponBtn.style.display = 'block';
+          } else {
+            console.error('Remove coupon button not found');
+          }
+    
           Swal.fire({
             title: 'Coupon Applied!',
             text: `You saved Rs.${data.discount}`,
@@ -97,23 +123,33 @@ document.addEventListener('DOMContentLoaded', function () {
             customClass: {
               popup: 'animated fadeInDown'
             }
-          });  
-
+          });
         } else {
           const error = await response.json();
-          document.querySelector('.error').textContent = error.message;
+          const errorElement = document.querySelector('.error');
+          if (errorElement) {
+            errorElement.textContent = error.message;
+          } else {
+            console.error('Error element not found');
+          }
         }
       } catch (error) {
         console.error('Error:', error);
-        document.querySelector('.error').textContent = 'An unexpected error occurred. Please try again.';
+        const errorElement = document.querySelector('.error');
+        if (errorElement) {
+          errorElement.textContent = 'An unexpected error occurred. Please try again.';
+        } else {
+          console.error('Error element not found');
+        }
       }
     }
-  
+    
     document.getElementById('couponForm').addEventListener('submit', function (event) {
-      event.preventDefault(); 
+      event.preventDefault();
       const couponCode = document.getElementById('couponCode').value;
       applyCoupon(couponCode);
     });
+    
    
     document.getElementById('removeCouponBtn').addEventListener('click', async function () {
       try {

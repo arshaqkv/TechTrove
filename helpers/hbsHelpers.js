@@ -38,13 +38,30 @@ module.exports = {
           default: return 'badge-secondary';
         }
     },
+    calculateIndex: function(page, limit, index) {
+        return (page - 1) * limit + index + 1;
+    }, 
     eq: function(a, b) {
         return a != b;
     },
     ne: function(a, b) {
         return a != b;
+    },
+    gt: function(a, b) {
+        return a > b;
+    },
+    and: function(a, b) { 
+        return a && b
+    },
+    add: function(a, b){
+        return a + b
+    },
+    subtract: function(a, b){
+        return a - b
+    },
+    formatDay: function(date) {
+        // Implement date formatting as needed
+        return `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}`;
     }
-    
-
 
 };

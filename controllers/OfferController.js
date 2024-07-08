@@ -35,17 +35,38 @@ const createOffer = asyncHandler(async (req,res) =>{
 })
 
 const getAllOffers = asyncHandler(async (req, res) => {
+    const page = parseInt(req.query.page) || 1;
+    const limit = 5; // Number of offers per page
+
     try {
-        const offers = await Offer.find();
+        const count = await Offer.countDocuments();
+        const totalPages = Math.ceil(count / limit);
+        const skip = (page - 1) * limit;
+
+        const offers = await Offer.find()
+            .skip(skip) 
+            .limit(limit);
+
         const offerDetails = await Promise.all(offers.map(async (offer) => {
             const targetName = await lookupTargetName(offer.offerTarget, offer.targetId);
             return { ...offer.toObject(), targetName };
         }));
-        res.render('offers', { offers: offerDetails });
+
+        const pagination = {
+            totalPages,
+            page,
+            count,
+            pages: Array.from({ length: totalPages }, (_, i) => ({ page: i + 1, active: i + 1 === page })),
+            hasNextPage: page < totalPages,
+            hasPrevPage: page > 1,
+        };
+
+        res.render('offers', { offers: offerDetails, pagination });
     } catch (error) {
         console.log(error);
     }
 });
+
 
 const lookupTargetName = async (offerTarget, targetId) => {
     if (offerTarget === 'Product') {

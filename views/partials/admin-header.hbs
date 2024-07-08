@@ -7,23 +7,27 @@
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
     <link rel="stylesheet" href="/css/adminDash.css">
     <title>TechTrove Admin</title>
-</head> 
+    <style>
+        /* Add your additional CSS styles here if needed */
+    </style>
+</head>
+
 <body>
 
     <!-- Sidebar -->
     <div class="sidebar">
-        <a href="/user/admin/dashboard" class="logo mt-5">
+        <a href="/user/admin/dashboard" class="logo mt-5 text-decoration-none">
             <i class='bx bx-code-alt'></i>
             <div class="logo-name"><span>Tech</span>Trove</div>
         </a>
         <ul class="side-menu">
-            <li class="active"><a href="/user/admin/dashboard"><i class='bx bxs-dashboard'></i>Dashboard</a></li>
+            <li><a href="/user/admin/dashboard"><i class='bx bxs-dashboard'></i>Dashboard</a></li>
             <li><a href="/user/admin/all-users"><i class='bx bx-group'></i>Users</a></li>
             <li><a href="/product/index"><i class='bx bx-store-alt'></i>Products</a></li>
             <li><a href="/prod/category"><i class='bx bx-message-square-dots'></i>Categories</a></li>
             <li><a href="/order/all-orders"><i class='bx bx-package'></i>Order List</a></li>
             <li><a href="/coupon"><i class='bx bxs-coupon'></i>Coupon</a></li>
-            <li><a href="/offers"><i class='bx bxs-offer' ></i>Offers</a></li>
+            <li><a href="/offers"><i class='bx bxs-offer'></i>Offers</a></li>
         </ul>
         <ul class="side-menu">
             <li>
@@ -36,6 +40,152 @@
     </div>
     <!-- End of Sidebar -->
 
-   
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const sideMenu = document.querySelector('.side-menu');
+            const menuItems = sideMenu.querySelectorAll('li');
+            const currentUrl = window.location.pathname;
 
-    <script src="/js/adminDash.js"></script>
+            // Retrieve the stored URL from session storage
+            const storedUrl = sessionStorage.getItem('activeMenuItem');
+
+            // Set the active class based on the stored URL or default to the first item
+            let activeSet = false;
+            menuItems.forEach((item, index) => {
+                const link = item.querySelector('a');
+                if (link) {
+                    if (link.getAttribute('href') === (storedUrl || currentUrl)) {
+                        item.classList.add('active');
+                        activeSet = true;
+                    } else {
+                        item.classList.remove('active');
+                    }
+
+                    // Store the active menu item in session storage when clicked
+                    link.addEventListener('click', () => {
+                        sessionStorage.setItem('activeMenuItem', link.getAttribute('href'));
+                    });
+                }
+            });
+
+            // If no active item is set, set the first item as active
+            if (!activeSet) {
+                menuItems[0].classList.add('active');
+            }
+
+            // Add click event to the logo link to reset the active state to the first li tag
+            const logoLink = document.querySelector('.logo');
+            logoLink.addEventListener('click', () => {
+                sessionStorage.removeItem('activeMenuItem');
+                menuItems.forEach(i => i.classList.remove('active'));
+                menuItems[0].classList.add('active');
+            });
+
+            // Add click event to the logout link to clear the session storage
+            const logoutLink = document.querySelector('.logout');
+            logoutLink.addEventListener('click', () => {
+                sessionStorage.clear();
+            });
+        });
+    </script>
+</body>
+
+</html>
+
+
+
+
+
+
+
+
+{{!-- <!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <link rel="stylesheet" href="/css/adminDash.css">
+    <title>TechTrove Admin</title>
+    <style>
+        /* Add your additional CSS styles here if needed */
+    </style>
+</head>
+
+<body>
+
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <a href="/user/admin/dashboard" class="logo mt-5 text-decoration-none" id="logo-link">
+            <i class='bx bx-code-alt'></i>
+            <div class="logo-name"><span>Tech</span>Trove</div>
+        </a>
+        <ul class="side-menu">
+            <li><a href="/user/admin/dashboard" data-route="/user/admin/dashboard"><i class='bx bxs-dashboard'></i>Dashboard</a></li>
+            <li><a href="/user/admin/all-users" data-route="/user/admin/all-users"><i class='bx bx-group'></i>Users</a></li>
+            <li><a href="/product/index" data-route="/product/index"><i class='bx bx-store-alt'></i>Products</a></li>
+            <li><a href="/prod/category" data-route="/prod/category"><i class='bx bx-message-square-dots'></i>Categories</a></li>
+            <li><a href="/order/all-orders" data-route="/order/all-orders"><i class='bx bx-package'></i>Order List</a></li>
+            <li><a href="/coupon" data-route="/coupon"><i class='bx bxs-coupon'></i>Coupon</a></li>
+            <li><a href="/offers" data-route="/offers"><i class='bx bxs-offer'></i>Offers</a></li>
+        </ul>
+        <ul class="side-menu">
+            <li>
+                <a href="/user/logout" class="logout">
+                    <i class='bx bx-log-out-circle'></i>
+                    Logout
+                </a>
+            </li>
+        </ul>
+    </div>
+    <!-- End of Sidebar -->
+
+    <script>
+        // Function to set the active route in localStorage and update the active class
+        function setActiveRoute(route) {
+            localStorage.setItem('activeRoute', route);
+            sideLinks.forEach(item => {
+                if (item.getAttribute('data-route') === route) {
+                    item.parentElement.classList.add('active');
+                } else {
+                    item.parentElement.classList.remove('active');
+                }
+            });
+        }
+
+        // Store the active route in localStorage when a menu item is clicked
+        const sideLinks = document.querySelectorAll('.sidebar .side-menu li a:not(.logout)');
+
+        sideLinks.forEach(item => {
+            item.addEventListener('click', (event) => {
+                const route = event.currentTarget.getAttribute('data-route');
+                setActiveRoute(route);
+            });
+        });
+
+        // Add event listener to the logo link
+        document.getElementById('logo-link').addEventListener('click', () => {
+            setActiveRoute('/user/admin/dashboard');
+        });
+
+        // Retrieve the active route from localStorage and apply the active class on page load
+        window.addEventListener('load', () => {
+            let activeRoute = localStorage.getItem('activeRoute');
+            // Set default active route if not set
+            if (!activeRoute) {
+                activeRoute = sideLinks[0].getAttribute('data-route');
+                localStorage.setItem('activeRoute', activeRoute);
+            }
+            setActiveRoute(activeRoute);
+        });
+
+        // Clear the active route from localStorage upon logout
+        document.querySelector('.logout').addEventListener('click', () => {
+            localStorage.removeItem('activeRoute');
+        });
+    </script>
+</body>
+
+</html> --}}

@@ -1,6 +1,12 @@
 const { Schema, default:mongoose} = require('mongoose')
 
+
 const orderSchema = new Schema({
+    orderId: {
+        type: String,
+        required: true, 
+        unique: true
+    },
     products: [
     {
         product: {
@@ -23,7 +29,7 @@ const orderSchema = new Schema({
     orderStatus: {
         type: String, 
         default: "Order Placed",
-        enum: ["Order Placed", "Processing", "Dispatched", "Delivered", "Cancelled"]
+        enum: ["Order Placed", "Processing", "Dispatched", "Delivered", "Cancelled", "Returned"]
     },
     orderby: {
         type: Schema.Types.ObjectId,

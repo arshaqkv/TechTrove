@@ -1,4 +1,319 @@
 {{> admin-header}}
-       <div class="content mt-5">
-        <h1>Welcome, {{user.name}}!</h1>
-       </div>
+<div class="content mt-5">
+    <h1 class="ms-3">Welcome, {{user.name}}!</h1>
+
+    <div class="container mt-5 text-center">
+        <h2>Sales Report</h2>
+        <ul class="insights">
+            <li class="shadow-sm p-3 bg-white">
+                <i class='bx bxs-to-top'></i>
+                <span class="info">
+                    <h3 class="text-primary">
+                        {{totalOrders}}
+                    </h3>
+                    <p>Total Sales Count</p>
+                </span>
+            </li>
+            <li class="shadow-sm p-3 bg-white">
+                <i class='bx bx-dollar-circle'></i>
+                <span class="info">
+                    <h3 class="text-success">
+                        ₹{{totalRevenue}}
+                    </h3>
+                    <p>Total Revenue</p>
+                </span>
+            </li>
+            <li class="shadow-sm p-3 bg-white">
+                <i class='bx bxs-discount'></i>
+                <span class="info">
+                    <h3 class="text-danger">
+                        ₹{{totalDiscount}}
+                    </h3>
+                    <p>Overall Discount</p>
+                </span>
+            </li>
+            <li class="shadow-sm p-3 bg-white">
+                <i class='bx bxs-chart'></i>
+                <span class="info">
+                    <h3>
+                        ₹{{oneDaySales}}
+                    </h3>
+                    <p>Dialy Sales</p>
+                    <small class="text-muted text-sm">{{currentDay}}</small>
+                </span>
+            </li>
+            <li class="shadow-sm p-3 bg-white">
+                <i class='bx bx-line-chart'></i>
+                <span class="info">
+                    <h3 class="text-primary">
+                        ₹{{oneWeekSales}}
+                    </h3>
+                    <p>Weekly Sales</p>
+                </span>
+            </li>
+            <li class="shadow-sm p-3 bg-white">
+                <i class='bx bx-chart'></i>
+                <span class="info">
+                    <h3 class="text-warning">
+                        ₹{{oneMonthSales}}
+                    </h3>
+                    <p>Monthly Sales</p>
+                    <small class="text-muted text-sm">{{currentMonth}}</small>
+                </span>
+            </li>
+            <li class="shadow-sm p-3 bg-white">
+                <i class='bx bx-basket'></i>
+                <span class="info">
+                    <h3 class="text-muted">
+                        {{totalDelivered}}
+                    </h3>
+                    <p>Total Delivered</p>
+                </span>
+            </li>
+            <li class="shadow-sm p-3 bg-white">
+                <i class='bx bx-block'></i>
+                <span class="info">
+                    <h3 class="text-danger">
+                        {{totalCanceled}}
+                    </h3>
+                    <p>Total Cancelled</p>
+                </span>
+            </li>
+        </ul>
+
+        <!-- Form for Custom Sales Report -->
+        <form method="GET" action="/user/admin/dashboard" id="customSalesForm" class="mb-4 mt-5">
+            <div class="row">
+                <div class="col-sm-4">
+                    <div class="input-group">
+                        <label class="input-group-text" for="salesDuration">Sales Duration:</label>
+                        <select class="form-control" id="salesDuration" name="salesDuration">
+                            <option value="daily">Daily Sales</option>
+                            <option value="weekly">Weekly Sales</option>
+                            <option value="monthly">Monthly Sales</option>
+                            <option value="yearly">Yearly Sales</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-sm-4">
+                    <div class="input-group">
+                        <label class="input-group-text" for="startDate">Start Date:</label>
+                        <input type="date" class="form-control" id="startDate" name="startDate" value="{{startDate}}">
+                    </div>
+                </div>
+                <div class="col-sm-4">
+                    <div class="input-group">
+                        <label class="input-group-text" for="endDate">End Date:</label>
+                        <input type="date" class="form-control" id="endDate" name="endDate" value="{{endDate}}">
+                    </div>
+                </div>
+            </div>
+            <div class="row mt-4">
+                <div class="col-sm-12">
+                    <button type="submit" class="btn btn-outline-dark w-100">Get Custom Sales Report</button>
+                </div>
+            </div>
+        </form>
+
+        <div class="row mb-4">
+            <div class="col-sm-12">
+                <div class="card">
+                    <div class="card-body">
+                        {{#if customDateOrders.length}}
+                        <h5>Custom Date Orders
+                            {{#if startDate}} 
+                            ({{startDate}} to {{endDate}}) 
+                            {{else}} 
+                            ({{salesDuration}}) 
+                            {{/if}}
+                        </h5>
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Order ID</th>
+                                    <th>Total Price</th>
+                                    <th>Order Status</th>
+                                    <th>Payment</th>
+                                    <th>Products</th>
+                                    <th>Discount</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                
+                                {{#each customDateOrders}}
+                                    <tr>
+                                        <td>{{this.orderId}}</td>
+                                        <td>₹{{this.totalPrice}}</td>
+                                        <td>{{this.orderStatus}}</td>
+                                        <td>{{this.paymentIntent}}</td>
+                                        <td>
+                                            <ul>
+                                                {{#each this.products}}
+                                                    <li>{{this.name}} - ₹{{this.price}} x {{this.count}} </li>
+                                                {{/each}}
+                                            </ul>
+                                        </td>
+                                        <td>₹{{this.discount}}</td>
+                                    </tr>
+                                {{/each}}
+                            </tbody>
+                        </table>
+                        <p class="fw-bold">Total Sales: {{customDateSales}}</p>
+                        <p class="fw-bold">Total Discount: {{customDiscount}}</p>
+                    </div>
+                    {{/if}}
+                </div>
+            </div>
+        </div>
+        <!-- Download Report Buttons -->
+        <div class="row mb-4">
+            <div class="col-sm-6">
+                <form method="GET" action="/user/admin/dashboard/report/pdf">
+                    <input type="hidden" name="salesDuration" value="{{salesDuration}}">
+                    <input type="hidden" name="startDate" value="{{startDate}}">
+                    <input type="hidden" name="endDate" value="{{endDate}}">
+                    <button type="submit" id="downloadPdf" class="btn btn-outline-dark w-100">Download PDF Report</button>
+                </form>
+            </div>
+            <div class="col-sm-6">
+                <form method="GET" action="/user/admin/dashboard/report/excel">
+                    <input type="hidden" name="salesDuration" value="{{salesDuration}}">
+                    <input type="hidden" name="startDate" value="{{startDate}}">
+                    <input type="hidden" name="endDate" value="{{endDate}}">
+                    <button type="submit" id="downloadExcel" class="btn btn-outline-dark w-100">Download Excel Report</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="row mb-4 mt-5">
+            <div class="col-sm-4">
+                <canvas id="paymentPieChart"></canvas>
+                <p class="mt-2">Payment Method</p>
+            </div>
+            <div class="col-sm-4">
+                <canvas id="orderStatusPieChart"></canvas>
+                <p class="mt-2">Order Status</p>
+            </div>
+            <div class="col-sm-4">
+                <canvas id="revenuePieChart"></canvas>
+            </div>
+        </div>
+
+        <div class="row mb-4">
+            <div class="col-sm-12">
+                <canvas id="monthlySalesChart"></canvas>
+                <p class="mt-2">Monthly Sales-{{currentMonth}}</p>
+            </div>
+        </div>
+
+        <div class="row mb-4">
+            <div class="col-sm-12">
+                <canvas id="yearlySalesBarChart"></canvas>
+            </div>
+        </div>
+
+        <div class="row mb-4">
+            <div class="col-sm-6">
+                <ul id="mostSoldItems">
+                    
+                </ul>
+            </div>
+            <div class="col-sm-6">
+                <canvas id="customerMapChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const paymentData = JSON.parse('{{{paymentData}}}');
+        const orderStatusData = JSON.parse('{{{orderStatusData}}}');
+        const monthlySalesData = JSON.parse('{{{monthlySalesData}}}');
+        const yearlySalesData = JSON.parse('{{{yearlySalesData}}}');
+
+        const labels = paymentData.map(item => item._id);
+        const counts = paymentData.map(item => item.count);
+
+        const paymentPieChartCtx = document.getElementById('paymentPieChart').getContext('2d');
+        new Chart(paymentPieChartCtx, {
+            type: 'pie',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: counts,
+                    backgroundColor: ['#388E3C', '#FBC02D', '#ffcd56']
+                }]
+            }
+        });
+
+        const orderlabels = orderStatusData.map(item => item._id);
+        const ordercounts = orderStatusData.map(item => item.count);
+
+        const orderStatusPieChart = document.getElementById('orderStatusPieChart').getContext('2d');
+        new Chart(orderStatusPieChart, {
+            type: 'pie',
+            data: {
+                labels: orderlabels,
+                datasets: [{
+                    data: ordercounts,
+                    backgroundColor: ['#363949', '#D32F2F', '#1976D2']
+                }]
+            }
+        });
+
+        const ctx = document.getElementById('monthlySalesChart').getContext('2d');
+        const yearlySalesChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: [
+                    'January', 'February', 'March', 'April', 'May', 'June',
+                    'July', 'August', 'September', 'October', 'November', 'December'
+                ],
+                datasets: [{
+                    label: 'Monthly Sales',
+                    data: monthlySalesData,
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                    fill: true,
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+
+        const yearlyCtx = document.getElementById('yearlySalesBarChart').getContext('2d');
+        const yearlySalesBarChart = new Chart(yearlyCtx, {
+            type: 'bar',
+            data: {
+                labels: yearlySalesData.map(data => data.year),
+                datasets: [{
+                    label: 'Yearly Sales',
+                    data: yearlySalesData.map(data => data.totalSales),
+                    backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    x: {
+                        beginAtZero: true
+                    },
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    });
+
+    
+</script>
