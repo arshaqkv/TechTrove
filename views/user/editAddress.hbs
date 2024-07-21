@@ -10,34 +10,41 @@
           <h4 class="card-title">Edit Address</h4>
           <form id="editAddressForm" method="POST">
             <input type="hidden" id="originPage" name="originPage" value="{{originPage}}">
-            <div class="form-group ">
+            <div class="form-group">
               <label for="name">Name</label>
-              <input type="text" class="form-control" id="name" name="name" value="{{address.name}}" placeholder="Name*" required>
+              <input type="text" class="form-control" id="name" name="name" value="{{address.name}}" placeholder="Name*" >
+              <span class="error" id="error-name"></span>
             </div>
-            <div class="form-group ">
+            <div class="form-group">
               <label for="phone">Mobile No</label>
-              <input type="number" class="form-control" id="phone" name="phone" value="{{address.phone}}" placeholder="Mobile No*" required>
+              <input type="text" class="form-control" id="phone" name="phone" value="{{address.phone}}" placeholder="Mobile No*" >
+              <span class="error" id="error-phone"></span>
             </div>
-            <div class="form-group ">
+            <div class="form-group">
               <label for="addressLine1">Address Line 1</label>
-              <input type="text" class="form-control" id="addressLine1" name="addressLine1" value="{{address.addressLine1}}" placeholder="Enter your address" required>
+              <input type="text" class="form-control" id="addressLine1" name="addressLine1" value="{{address.addressLine1}}" placeholder="Enter your address*" >
+              <span class="error" id="error-addressLine1"></span>
             </div>
             <div class="form-group">
               <label for="addressLine2">Address Line 2</label>
               <input type="text" class="form-control" id="addressLine2" name="addressLine2" value="{{address.addressLine2}}" placeholder="Enter your address">
+              <span class="error" id="error-addressLine2"></span>
             </div>
             <div class="form-row">
               <div class="form-group col-md-6">
                 <label for="city">City</label>
-                <input type="text" class="form-control" id="city" name="city" value="{{address.city}}" placeholder="Enter your city" required>
+                <input type="text" class="form-control" id="city" name="city" value="{{address.city}}" placeholder="Enter your city*" >
+                <span class="error" id="error-city"></span>
               </div>
               <div class="form-group col-md-6">
                 <label for="state">State</label>
-                <input type="text" class="form-control" id="state" name="state" value="{{address.state}}" placeholder="Enter your state" required>
+                <input type="text" class="form-control" id="state" name="state" value="{{address.state}}" placeholder="Enter your state*" >
+                <span class="error" id="error-state"></span>
               </div>
               <div class="form-group col-md-6">
                 <label for="pincode">Pincode</label>
-                <input type="text" class="form-control" id="pincode" name="pinCode" value="{{address.pinCode}}" placeholder="Enter your pincode" required>
+                <input type="text" class="form-control" id="pincode" name="pinCode" value="{{address.pinCode}}" placeholder="Enter your pincode*" >
+                <span class="error" id="error-pinCode"></span>
               </div>
             </div>
             <button type="submit" class="btn btn-dark mt-3">Save Changes</button>
@@ -76,21 +83,50 @@ document.getElementById('editAddressForm').addEventListener('submit', async func
 
     if (response.ok) {
       // Handle success
-      alert('Address Updated successfully!');
-      if (originPage === 'checkout') {
-        window.location.href = 'user/checkout'; // Reload the checkout page
-      } else {
-        window.location.href = '/address/all'; // Redirect to address/all page
-      }
+      Swal.fire({
+        icon: 'success',
+        title: 'Success',
+        text: 'Address updated successfully!',
+        showConfirmButton: false,
+        timer: 1500
+      }).then(() => {
+        if (originPage === 'checkout') {
+          window.location.href = 'user/checkout'; // Reload the checkout page
+        } else {
+          window.location.href = '/address/all'; // Redirect to address/all page
+        }
+      });
     } else {
       // Handle error response
       const errorData = await response.json();
-      alert('Error saving address: ' + errorData.message);
+      handleErrors(errorData.errors);
     }
   } catch (error) {
     // Handle network error
     console.error('Network error:', error);
-    alert('Network error: ' + error.message);
+    Swal.fire({
+      icon: 'error',
+      title: 'Network Error',
+      text: error.message
+    });
   }
 });
+
+function handleErrors(errors) {
+  // Clear previous error messages
+  document.querySelectorAll('.error').forEach(error => error.textContent = '');
+
+  if (errors) {
+    Object.keys(errors).forEach(key => {
+      showError(`error-${key}`, errors[key].msg);
+    });
+  }
+}
+
+function showError(elementId, message) {
+  const errorElement = document.getElementById(elementId);
+  if (errorElement) {
+    errorElement.textContent = message;
+  }
+}
 </script>

@@ -7,7 +7,6 @@ const session = require('express-session');
 const dbConnect = require('./config/dbConnect')
 const methodOverride = require('method-override')
 const noCache = require('nocache')
-
 const cookieParser = require('cookie-parser')
 const { notFound, errorHandler } = require('./middlewares/errorHandler')
 const hbsHelpers = require('./helpers/hbsHelpers');

@@ -11,7 +11,7 @@
         </div>
         <div>
             <nav aria-label="breadcrumb">
-                <ol class="breadcrumb">
+                <ol class="breadcrumb  mt-3 ms-1">
                     <li class="breadcrumb-item"><a href="/user/admin/dashboard">Dashboard</a></li>
                     <li class="breadcrumb-item"><a href="/offers">Offers</a></li>
                     <li class="breadcrumb-item active" aria-current="page">Add Offer</li>
@@ -27,7 +27,7 @@
                         <form id="offerForm" action="/offers/add" method="post">          
                             <div class="form-group mb-3">
                                 <label for="offerTarget">Offer Target:</label>
-                                <select id="offerTarget" name="offerTarget" class="form-control" onchange="toggleTargetOptions()" required>
+                                <select id="offerTarget" name="offerTarget" class="form-control form-select" onchange="toggleTargetOptions()" required>
                                     <option value="">Select Target</option>
                                     <option value="Product">Product</option>
                                     <option value="Category">Category</option>
@@ -35,7 +35,7 @@
                             </div>
                             <div class="form-group" id="productSelect" style="display: none;">
                                 <label for="productId">Product</label>
-                                <select id="productId" name="targetId" class="form-control">
+                                <select id="productId" name="targetId" class="form-control form-select">
                                     <option value="">Select Product</option>
                                     {{#each products}}
                                     <option value="{{this._id}}">{{this.title}}</option>
@@ -45,7 +45,7 @@
 
                             <div class="form-group" id="categorySelect" style="display: none;">
                                 <label for="categoryId">Category</label>
-                                <select id="categoryId" name="targetId" class="form-control">
+                                <select id="categoryId" name="targetId" class="form-control form-select">
                                     <option value="">Select Category</option>
                                     {{#each categories}}
                                     <option value="{{this._id}}">{{this.title}}</option>
@@ -99,4 +99,94 @@
             categoryId.disabled = true;
         }
     }
+
+    const validateOfferForm = ()=>{
+
+        const discountPercentage = document.getElementById('discountPercentage').value
+        const startDate = document.getElementById('startDate').value;
+        const expiryDate = document.getElementById('expiryDate').value;
+
+        const today = new Date();
+        const start = new Date(startDate);
+        const expiry = new Date(expiryDate);
+        today.setHours(0, 0, 0, 0);
+        
+        if (discountPercentage < 1 || discountPercentage > 99) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Invalid Discount',
+                text: 'Discount percentage must be between 1 and 99.',
+            });
+            return false; 
+        }
+
+        if (start < today) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Invalid Start Date',
+                text: 'Start date must be today or later.',
+            });
+            return false; 
+        }
+
+        // Check start date is earlier than expiry date
+        if (start >= expiry) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Invalid Dates',
+                text: 'Start date must be earlier than the expiry date.',
+            });
+            return false; 
+        }
+        return true
+    }
+
+   document.getElementById('offerForm').addEventListener('submit', async function(event) {
+        event.preventDefault(); // Prevent default form submission
+
+            if (!validateOfferForm()) {
+                return;
+            }
+
+
+        const form = event.target;
+        const formData = new FormData(form);
+        const formObject = Object.fromEntries(formData.entries());
+
+        try {
+            const response = await fetch(form.action, {
+                method: form.method,
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(formObject),
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: errorData.message,
+                });
+            } else {
+                const successData = await response.json();
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Success',
+                    text: successData.message,
+                }).then(() => {
+                    window.location.href = '/offers';
+                });
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'An error occurred while creating the offer.',
+            });
+        }
+    });
+
     </script>

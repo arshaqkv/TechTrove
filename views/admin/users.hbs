@@ -6,6 +6,7 @@
             <table class="table table-bordered table-hover">
                 <thead class="thead-light">
                     <tr>
+                        <th scope="col">SI</th>
                         <th scope="col">Name</th>
                         <th scope="col">Email</th>
                         <th scope="col">Phone No</th>
@@ -14,8 +15,9 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {{#each user}}
+                    {{#each users}}
                     <tr>
+                        <td>{{paginationIndex @index ../pagination.page ../pagination.limit}}</td>
                         <td>{{this.name}}</td>
                         <td>{{this.email}}</td>
                         <td>{{this.phone}}</td>
@@ -30,11 +32,11 @@
                         <td>
                             {{#if this.isBlocked}}
                             <form action="/admin/unblock-user/{{this._id}}" method="POST" class="d-inline">
-                                <button type="submit" class="btn btn-outline-dark btn-sm">Unblock</button>
+                                <button type="submit" class="btn btn-sm"><i class='bx bx-lock-open'></i></button>
                             </form>
                             {{else}}
                             <form action="/admin/block-user/{{this._id}}" method="POST" class="d-inline">
-                                <button type="submit" class="btn btn-outline-danger btn-sm">Block</button>
+                                <button type="submit" class="btn btn-sm"><i class='bx bx-lock'></i></button>
                             </form>
                             {{/if}}
                         </td>
@@ -42,6 +44,29 @@
                     {{/each}}
                 </tbody>
             </table>
+        </div>
+        <div class="d-flex justify-content-center">
+            <nav aria-label="Page navigation">
+                <ul class="pagination mt-3">
+                    {{#if pagination.hasPrevPage}}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{subtract pagination.page 1}}">&lt;</a>
+                    </li>
+                    {{/if}}
+
+                    {{#each pagination.pages}}
+                    <li class="page-item {{#if this.active}}active{{/if}}">
+                        <a class="page-link" href="?page={{this.page}}">{{this.page}}</a>
+                    </li>
+                    {{/each}}
+
+                    {{#if pagination.hasNextPage}}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{add pagination.page 1}}">&gt;</a>
+                    </li>
+                    {{/if}}
+                </ul>
+            </nav>
         </div>
     </div>
     

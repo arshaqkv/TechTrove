@@ -5,11 +5,11 @@
             <h3>Add Category</h3>
             <div>
                 <a href="/prod/category" class="btn btn-outline-secondary me-2">Cancel</a>
-                <button form="addCategoryForm" class="btn btn-outline-primary">Add Category</button>
+                <button id="addCategoryButton" class="btn btn-outline-primary">Add Category</button>
             </div>
         </div>
         <nav aria-label="breadcrumb">
-            <ol class="breadcrumb">
+            <ol class="breadcrumb ms-1 mt-3">
                 <li class="breadcrumb-item"><a href="/user/admin/dashboard">Dashboard</a></li>
                 <li class="breadcrumb-item"><a href="/prod/category">Categories</a></li>
                 <li class="breadcrumb-item active" aria-current="page">Add Category</li>
@@ -40,15 +40,14 @@
                 <div class="card">
                     <div class="card-body">
                         <h5 class="card-title">General Information</h5>
-                        <form id="addCategoryForm" action="/prod/category/add" method="POST">
+                        <form id="addCategoryForm">
                             <div class="form-group mb-3">
                                 <label for="categoryName">Category Name</label>
                                 <input type="text" class="form-control" id="categoryName" name="title" placeholder="Type category name here..." required>
                             </div>
-                            {{!-- <div class="form-group mb-3">
-                                <label for="categoryDescription">Description</label>
-                                <textarea class="form-control" id="categoryDescription" name="description" rows="4" placeholder="Type category description here..." required></textarea>
-                            </div> --}}
+                            <div id="errorMessage" class="alert alert-danger d-none" role="alert">
+                                Category already exists.
+                            </div>
                         </form>
                     </div>
                 </div>
@@ -56,36 +55,80 @@
         </div>
     </div>
 </div>
-
 <script>
+    document.getElementById('addCategoryButton').addEventListener('click', async function(event) {
+        event.preventDefault();
+        
+        const categoryName = document.getElementById('categoryName').value;
+
+        const validNameRegex = /^[a-zA-Z\s]+$/;
+
+        if (categoryName.trim() === '') {
+            Swal.fire({
+                icon: 'error',
+                title: 'Empty Category Name',
+                text: 'Please enter a category name.'
+            });
+            return;
+        }
+
+        if (!validNameRegex.test(categoryName)) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Invalid Category Name',
+                text: 'Please enter a valid category name.'
+            });
+            return;
+        }
+
+
+        try {
+            const response = await fetch('/prod/category/add', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ title: categoryName })
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                // Show success message with SweetAlert
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Category Added',
+                    text: result.message || 'Category created successfully!',
+                    showConfirmButton: false,
+                    timer: 2000
+                }).then(() => {
+                    // Redirect to categories page
+                    window.location.href = '/prod/category';
+                });
+            } else {
+                // Show error message with SweetAlert
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: result.message || 'An error occurred while adding the category.'
+                });
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'An error occurred while adding the category.'
+            });
+        }
+    });
+
     function previewImage(event) {
-        const input = event.target;
+        const file = event.target.files[0];
         const reader = new FileReader();
-        reader.onload = function(){
-            const dataURL = reader.result;
-            const output = document.getElementById('previewImage');
-            output.src = dataURL;
-        };
-        reader.readAsDataURL(input.files[0]);
+        reader.onload = function(e) {
+            document.getElementById('previewImage').src = e.target.result;
+        }
+        reader.readAsDataURL(file);
     }
 </script>
-
-<style>
-    .image-upload {
-        text-align: center;
-        border: 1px dashed #ddd;
-        padding: 20px;
-        border-radius: 5px;
-    }
-    .image-upload img {
-        max-width: 100%;
-        max-height: 150px;
-        margin-bottom: 10px;
-    }
-    .upload-text {
-        display: none;
-    }
-    .image-upload:hover .upload-text {
-        display: block;
-    }
-</style>

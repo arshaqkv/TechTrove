@@ -16,7 +16,15 @@ const orderSchema = new Schema({
         count: {
             type: Number
         },
-    }
+        originalPrice: {
+            type: Number,
+            required: true
+        },
+        finalPrice: {
+            type: Number,
+            required: true
+        }
+}
     ],
     totalPrice: {
       type: Number,
@@ -29,14 +37,20 @@ const orderSchema = new Schema({
     orderStatus: {
         type: String, 
         default: "Order Placed",
-        enum: ["Order Placed", "Processing", "Dispatched", "Delivered", "Cancelled", "Returned"]
+        enum: ["Pending","Order Placed", "Processing", "Dispatched", "Delivered", "Cancelled", "Returned"]
     },
     orderby: {
         type: Schema.Types.ObjectId,
         ref: 'User',
         required: true
     },
-    razorpayOrderId: String, 
+    razorpayOrderId: {
+        type: String
+    },
+    // paymentStatus: {
+    //     type: String,
+    //     default: 'Pending'
+    // }
     },
     {
         timestamps: true

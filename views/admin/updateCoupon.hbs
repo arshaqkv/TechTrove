@@ -5,11 +5,11 @@
             <h3>Update Coupon</h3>
             <div>
                 <a href="/coupon" class="btn btn-outline-secondary me-2">Cancel</a>
-                <button form="addCategoryForm" class="btn btn-outline-success">Save Changes</button>
+                <button form="editCouponForm" class="btn btn-outline-success">Save Changes</button>
             </div>
         </div>
         <nav aria-label="breadcrumb">
-            <ol class="breadcrumb">
+            <ol class="breadcrumb ms-1 mt-3">
                 <li class="breadcrumb-item"><a href="/user/admin/dashboard">Dashboard</a></li>
                 <li class="breadcrumb-item"><a href="/coupon">Categories</a></li>
                 <li class="breadcrumb-item active" aria-current="page">Add Coupon</li>
@@ -17,26 +17,30 @@
         </nav>
         
             
-            <div class="col-md-8 mt-4">
+            <div class="col-md-8 mt-5 mb-5 ms-auto me-auto">
                 <div class="card">
                     <div class="card-body">
                         <h5 class="card-title">General Information</h5>
-                        <form id="addCategoryForm" action="/coupon/edit/{{coupons._id}}?_method=PUT" method="POST">
+                        <form id="editCouponForm">
                             <div class="form-group mb-3">
                                 <label for="couponCode">Coupon Code</label>
-                                <input type="text" class="form-control" id="couponCode" value="{{coupons.code}}" name="code" placeholder="Type Coupen code" required>
+                                <input type="text" class="form-control" id="couponCode" value="{{coupons.code}}" name="code" placeholder="Type Coupen code">
+                                <span class="error" id="error-code"></span>
                             </div>
                             <div class="form-group mb-3">
-                                <label for="couponDiscount">Discount Value</label>
-                                <input type="number" class="form-control" id="couponDiscount" value="{{coupons.discount}}" name="discount" placeholder="Discount" required>
+                                <label for="discount">Discount Value</label>
+                                <input type="number" class="form-control" id="discount" value="{{coupons.discount}}" name="discount" placeholder="Discount">
+                                <span class="error" id="error-discount"></span>
                             </div>
                             <div class="form-group mb-3">
                                 <label for="minBill">Min bill</label>
-                                <input type="number" class="form-control" id="minBill" value="{{coupons.minBill}}" name="minBill" placeholder="Min Bill" required>
+                                <input type="number" class="form-control" id="minBill" value="{{coupons.minBill}}" name="minBill" placeholder="Min Bill">
+                                <span class="error" id="error-minBill"></span>
                             </div>
                             <div class="form-group mb-3">
                                 <label for="couponExpiry">Coupon Expiry</label>
-                                <input type="date" class="form-control" id="couponExpiry" value="{{coupons.code}}" name="expiry"  required>
+                                <input type="date" class="form-control" id="couponExpiry" value="{{coupons.expiry}}" name="expiry" >
+                                <span class="error" id="error-expiry"></span>
                             </div>
                             
                             {{!-- <div class="form-group mb-3">
@@ -47,8 +51,114 @@
                     </div>
                 </div>
             </div>
-            
         </div>
     </div>
 </div>
+
+<script>
+    const expiryDate = new Date("{{coupons.expiry}}");
+    const formattedDate = expiryDate.toISOString().split('T')[0];
+    document.getElementById('couponExpiry').value = formattedDate;
+
+    document.getElementById('editCouponForm').addEventListener('submit', async function(event){
+        event.preventDefault()
+
+        const discount = document.getElementById('discount').value
+        const minBill = document.getElementById('minBill').value
+        const expiryDate = document.getElementById('couponExpiry').value;
+
+        const today = new Date();
+        const expiry = new Date(expiryDate);
+
+        const couponId = '{{coupons._id}}'
+
+        if(discount > minBill){
+            Swal.fire({
+                icon: 'error',
+                title: 'error',
+                text: 'Discount must be lower than Minimum Bill!',
+                
+            })
+            return
+        }
+
+        if (expiry < today) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Invalid Expiry Date',
+                text: 'Expiry date must be today or later.',
+            });
+            return 
+        }
+
+        const form = event.target;
+        const formData = new FormData(form);
+
+        const data = {};
+        formData.forEach((value, key) => {
+            data[key] = value;
+        });
+
+        try {
+            const response = await fetch(`/coupon/edit/${couponId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+            });
+
+            const result = await response.json();
+            
+            if (response.ok) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Success',
+                    text: 'Coupon updated successfully!',
+                    showConfirmButton: false,
+                    timer: 1500
+                }).then(() => {
+                    // Redirect to address/all page
+                    location.href = '/coupon';
+                });
+            } else {
+            // Handle error response
+                handleErrors(result.errors || { message: result.message });
+            }
+        } catch (error) {
+            // Handle network error
+            console.error('Network error:', error);
+            Swal.fire({
+            icon: 'error',
+            title: 'Network Error',
+            text: error.message
+            });
+        }
+        });
+
+        function handleErrors(errors) {
+        document.querySelectorAll('.error').forEach(error => error.textContent = '');
+
+        if (errors) {
+            if (errors.message) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: errors.message,
+                });
+            } else {
+                Object.keys(errors).forEach(key => {
+                    showError(`error-${key}`, errors[key].msg);
+                });
+            }
+        }
+    }
+
+    function showError(elementId, message) {
+        const errorElement = document.getElementById(elementId);
+        if (errorElement) {
+            errorElement.textContent = message;
+        }
+    }
+</script>
 

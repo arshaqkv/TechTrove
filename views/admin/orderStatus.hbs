@@ -1,89 +1,118 @@
 {{> admin-header}}
+
 <style>
-        /* Custom styles */
+    /* Custom styles */
     .card {
-    margin-top: 20px;
+        margin-top: 20px;
     }
 
     .img-fluid {
-    max-height: 200px;
-    object-fit: cover;
+        max-height: 200px;
+        object-fit: cover;
     }
 
     .input-group {
-    max-width: 300px;
-    margin-top: 10px;
+        max-width: 300px;
+        margin-top: 10px;
     }
 
+    .download-invoice-btn {
+        margin-top: 10px;
+    }
 </style>
+
 <div class="content">
     <div class="container mt-5 mb-5">
-    <div class="card">
-      <div class="card-header">
-        <h2>Order #{{order.orderId}}</h2>
-        <p class="text-muted">Order Date: {{formatDate order.createdAt}}</p>
-      </div>
-      <nav aria-label="breadcrumb">
-            <ol class="breadcrumb mt-3">
-                <li class="breadcrumb-item"><a href="/user/admin/dashboard">Dashboard</a></li>
-                <li class="breadcrumb-item"><a href="/order/all-orders">Orders</a></li>
-                <li class="breadcrumb-item active" aria-current="page">Order Details #{{order.orderId}}</li>
-            </ol>
-        </nav>
-      <div class="card-body">
-        {{#each order.products}}
-        <div class="row mb-3">
-          <div class="col-md-6">
-            <img src="{{this.product.images.[0]}}" class="img-fluid" alt="{{this.product.name}}">
-          </div>
-          <div class="col-md-6">
-            <h4>{{this.product.title}}</h4>
-            <p>Price: {{this.product.price}}</p>
-            <p>Quantity: {{this.count}}</p>
-          </div>
+        <div class="card">
+            <div class="card-header">
+                <h2>Order #{{order.orderId}}</h2>
+                <p class="text-muted">Order Date: {{formatDate order.createdAt}}</p>
+            </div>
+
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mt-3">
+                    <li class="breadcrumb-item"><a href="/user/admin/dashboard">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="/order/all-orders">Orders</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Order Details #{{order.orderId}}</li>
+                </ol>
+            </nav>
+
+            <div class="card-body">
+                {{#each order.products}}
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <img src="{{this.product.images.[0]}}" class="img-fluid" alt="{{this.product.title}}">
+                    </div>
+                    <div class="col-md-6">
+                        <h4>{{this.product.title}}</h4>
+                        <span>Brand: {{this.product.brand}}</span>
+                        <p class="d-flex" style="font-size: 13px;">Category: <span class="text-muted ms-1" > {{this.product.category.title}}</span></p>
+                        <p>
+                            {{#if (lt this.finalPrice this.originalPrice)}}
+                            <span class="fw-bold">₹{{this.finalPrice}}</span> <span class="text-muted "><s>₹{{this.originalPrice}}</s></span>
+                            
+                            {{else}}
+                            <span class="fw-bold">₹{{this.originalPrice}}</span> <span class="text-muted">No offer</span> <span class="badge bg-danger"></span>
+                            {{/if}}
+                        </p>
+                        <p>Quantity: {{this.count}}</p>
+                    </div>
+                </div>
+                {{/each}}
+                <hr>
+                <div class="row">
+                    <div class="col-md-6">
+                        <h5>Billing Address</h5>
+                        <p>{{order.orderby.name}}</p>
+                        <p>{{order.orderby.defaultAddress.addressLine1}}</p>
+                        <p>{{order.orderby.defaultAddress.addressLine2}}</p>
+                        <p>{{order.orderby.defaultAddress.city}}, {{order.orderby.defaultAddress.state}} {{order.orderby.defaultAddress.pinCode}}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h5>Payment Method</h5>
+                        <p>{{order.paymentIntent}}</p>
+
+                        <h5>Total Price</h5>
+                        <p>₹{{order.totalPrice}}</p>
+                    </div>
+                </div>
+                <hr>
+                <div class="row">
+                    <div class="col-md-6">
+                        <h5>Current Order Status</h5>
+                        <span class="badge {{statusClass order.orderStatus}}">{{order.orderStatus}}</span>
+                    </div>
+                    {{#if (and (ne order.orderStatus 'Cancelled')(ne order.orderStatus 'Returned'))}}
+                    <div class="col-md-6">
+                        <h5>Change Order Status</h5>
+                        <form id="orderStatusForm">
+                            <div class="input-group mt-4">
+                                <select class="form-select" name="status" id="status">
+                                    <option value="Processing" {{#if (eq order.orderStatus 'Order Placed')}}selected{{/if}}>Order Placed</option>
+                                    <option value="Processing" {{#if (eq order.orderStatus 'Processing')}}selected{{/if}}>Processing</option>
+                                    <option value="Dispatched" {{#if (eq order.orderStatus 'Dispatched')}}selected{{/if}}>Dispatched</option>
+                                    <option value="Delivered" {{#if (eq order.orderStatus 'Delivered')}}selected{{/if}}>Delivered</option>
+                                </select>
+                                <button class="btn btn-outline-warning ms-1" type="submit">Update</button>
+                                <a class="btn btn-outline-primary ms-1" href="/order/all-orders">Cancel</a>
+                            </div>
+                        </form>
+                    </div>
+                    {{/if}}
+                </div>
+            </div>
+
+            <!-- Download Invoice Button -->
+            {{#if (and (ne order.orderStatus 'Cancelled')(ne order.orderStatus 'Returned'))}}
+            <div class="card-footer">
+                <a href="/order/download-invoice/{{order._id}}" class="btn btn-outline-dark download-invoice-btn">Invoice <i class="fas fa-download"></i></a>
+            </div>
+            {{/if}}
         </div>
-        {{/each}}
-        <hr>
-        <div class="row">
-          <div class="col-md-6">
-            <h5>Billing Address</h5>
-            <p>{{order.orderby.name}}</p>
-            <p>{{order.orderby.defaultAddress.addressLine1}}</p>
-            <p>{{order.orderby.defaultAddress.addressLine2}}</p>
-            <p>{{order.orderby.defaultAddress.city}}, {{order.orderby.defaultAddress.state}} {{order.orderby.defaultAddress.pinCode}}</p>
-          </div>
-          <div class="col-md-6">
-            <h5>Payment Method</h5>
-            <p>{{order.paymentIntent}}</p>
-          </div>
-        </div>
-        <hr>
-        <div class="row">
-          <div class="col-md-6">
-            <h5>Current Order Status</h5>
-            <span class="badge {{statusClass order.orderStatus}}">{{order.orderStatus}}</span>
-          </div>
-          {{#if (ne order.orderStatus 'Cancelled')}}
-          <div class="col-md-6">
-            <h5>Change Order Status</h5>
-            <form id="orderStatusForm">
-              <div class="input-group">
-                <select class="form-select pe-1" name="status" id="status">
-                  <option value="Processing" {{#if (eq order.orderStatus "Processing")}}selected{{/if}}>Processing</option>
-                  <option value="Dispatched" {{#if (eq order.orderStatus "Dispatched")}}selected{{/if}}>Dispatched</option>
-                  <option value="Delivered" {{#if (eq order.orderStatus "Delivered")}}selected{{/if}}>Delivered</option>
-                </select>
-                <button class="btn btn-outline-warning ms-1" type="submit">Update</button>
-                <a class="btn btn-outline-primary ms-1" href="/order/all-orders">Cancel</a>
-              </div>
-            </form>
-          </div>
-          {{/if}}
-        </div>
-      </div>
     </div>
-  </div>
- <script>
+</div>
+
+<script>
     document.addEventListener('DOMContentLoaded', function () {
         const form = document.getElementById('orderStatusForm');
 

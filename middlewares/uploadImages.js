@@ -35,13 +35,13 @@ const productImgResize = async (req, res, next) => {
         req.files.map(async (file) => {
             const resizedImagePath = path.resolve(`public/images/products/${file.filename}`);
             await sharp(file.path)
-                .resize(600, 650)
+             
                 .toFormat('jpeg')
                 .jpeg({ quality: 100 })
                 .toFile(resizedImagePath);
 
             // Return the new path for the resized image
-            return `public/images/products/${file.filename}`;
+            return `/images/products/${file.filename}`;
         })
     );
     

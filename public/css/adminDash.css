@@ -442,6 +442,12 @@ body{
     
 }
 
+.content  .insights li:nth-child(9) .bx{
+    background: var(--grey);
+    color: var(--dark);
+    
+}
+
 
 
 .content  .insights li .info h3{

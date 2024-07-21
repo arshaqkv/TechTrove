@@ -101,22 +101,24 @@
                         <div class="card">
                             <img src="{{this.images.[0]}}" class="card-img-top" alt="{{this.title}}">
                             <div class="card-body">
-                                <h5 class="card-title">{{this.brand}}</h5>
+                                <h5 class="card-title">{{this.title}}</h5>
                                 
                                 
                                 <p class="card-text">
                                     <span class="text-warning">{{this.rating}} ★</span>
-                                    <span class="text-muted">{{this.title}}</span>
+                                    <span class="text-muted">{{this.brand}}</span>
                                     {{!-- <span class="text-muted">{{this.category.title}}</span> --}}
                                     {{#if this.offerPrice}}
-                                    <span class="text-muted"><s>₹{{this.originalPrice}}</s></span>
+                                    <span class="text-dark fw-bold" style="font-size: 1.2rem;">₹{{this.offerPrice}}</span>
+                                    
                                     <div class="d-flex">
-                                        <span class="text-dark fw-bold">₹{{this.offerPrice}}</span>
-                                        <span class="text-success ms-1 fw-">{{this.discountPercentage}}% off</span>
+                                        <small class="text-muted"><s>₹{{this.originalPrice}}</s></small>
+                                        <small class="ms-1 " style="color: #388e3c; font-weight: 500">{{this.discountPercentage}}% off</small>
                                     </div>
                                     {{else}}
-                                    <span class="text-dark fw-bold">₹{{this.originalPrice}}</span>
+                                    <span class="text-dark fw-bold" style="font-size: 1.2rem;">₹{{this.originalPrice}}</span>
                                     {{/if}}
+                                    <small>Free delivery by 30th July</small>
                                 </p>
                                 <a href="/product/{{this._id}}" class="btn btn-primary">Buy Product</a>
                                 
@@ -125,11 +127,35 @@
                         </div>
                     </div>
                     {{/each}}
+                    <div class="d-flex justify-content-center">
+                    <nav aria-label="Page navigation">
+                        <ul class="pagination mt-3">
+                            {{#if pagination.hasPrevPage}}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{subtract pagination.page 1}}">&lt;</a>
+                            </li>
+                            {{/if}}
+
+                            {{#each pagination.pages}}
+                            <li class="page-item {{#if this.active}}active{{/if}}">
+                                <a class="page-link" href="?page={{this.page}}">{{this.page}}</a>
+                            </li>
+                            {{/each}}
+
+                            {{#if pagination.hasNextPage}}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{add pagination.page 1}}">&gt;</a>
+                            </li>
+                            {{/if}}
+                        </ul>
+                    </nav>
+                </div>
                 {{else}}
                     <div class="col-12 text-center">
                         <h4>No products found.</h4>
                     </div>
                 {{/if}}
+                
             </div>
         </div>
     </div>

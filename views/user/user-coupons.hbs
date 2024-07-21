@@ -1,12 +1,15 @@
 {{> user-header}}
 
 <div class="container mt-5">
-  <h2 class="mb-4">Available Coupons</h2>
   <div class="row">
+    {{!-- <h2 class="mb-4">Available Coupons</h2> --}}
     <div class="col-md-3">
       {{> profile-nav}}
+      
     </div>
+    
     <div class="col-md-9 d-flex flex-wrap">
+      
       {{#each coupons}}
       <div class="col-md-6 ">
         <div class="card mb-3 border">

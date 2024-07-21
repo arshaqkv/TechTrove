@@ -8,23 +8,30 @@ const { createProduct,
         loadCreateProduct,
         loadUpdateProduct,
         addToWishList,
-        loadWishlist
+        loadWishlist,
+        getTrendingItems,
+        deleteImage
       } = require('../controllers/productController')
 const router = express.Router()
 const { authMiddleware, isAdmin } = require('../middlewares/authMiddleware')
 const { uploadImg, productImgResize } = require('../middlewares/uploadImages')
 const incrementPopularity = require('../middlewares/incrementPopularity')
+const { validateProduct } = require('../middlewares/validation')
+
 router.get('/wishlist', authMiddleware, loadWishlist)
 router.get('/add', authMiddleware, isAdmin, loadCreateProduct)
-router.post('/add', uploadImg.array('images', 5), productImgResize, createProduct) 
-// router.put('/upload/:id', uploadImg.array('images', 10), productImgResize, uploadImages)
 router.get('/index', authMiddleware, isAdmin, getAllProducts)
 router.get('/edit/:id', authMiddleware, isAdmin, loadUpdateProduct)
-router.put('/update/:id', uploadImg.array('images', 5), productImgResize, updateProduct)
+router.get('/trending-items', authMiddleware, isAdmin, getTrendingItems)
+router.get('/:prodId', authMiddleware, incrementPopularity,getProduct) 
+
+router.post('/add', authMiddleware, isAdmin, uploadImg.array('images', 5), validateProduct, productImgResize, createProduct) 
+router.put('/update/:id', authMiddleware, isAdmin, uploadImg.array('images', 5), validateProduct, productImgResize, updateProduct)
+router.put('/delete-image/:productId', authMiddleware, isAdmin, deleteImage)
 router.post('/delete/:id', authMiddleware, isAdmin, deleteProduct)
 router.put('/rating/:id', authMiddleware,rating)  
-router.get('/:prodId', authMiddleware, incrementPopularity,getProduct) 
-router.put('/wishlist', authMiddleware, addToWishList)
+router.put('/wishlist', authMiddleware, addToWishList) 
+
 
  
 module.exports = router

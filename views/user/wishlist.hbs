@@ -13,37 +13,36 @@
     </div>
     <div class="col-md-9">
         {{#if wishlist.length}}
-        <h3>My Wishlist({{wishlist.length}})</h3>
-        <table class="table">
+        <h3>My Wishlist({{count}})</h3>
+        <table class="table table-hover">
             
-            <tbody>
+            <tbody >
                 {{#each wishlist}}
-                <tr class="wishlist-item">
+                <tr class="wishlist-item ">
                     <td>
-                        <img src="{{this.images.[0]}}" alt="{{this.title}}" class="img-thumbnail" width="50">
+                        <img src="{{this.images.[0]}}" alt="{{this.title}}" class="img-thumbnail" width="100">
                     </td>
-                    <td><a class="link" href="/product/{{this._id}}"><span>{{this.title}}</span></a></td>
-                    <td>
+                    <td class="align-middle"><a class="link" href="/product/{{this._id}}"><span>{{this.title}}</span></a></td>
+                    <td class="align-middle">
                         {{#if this.discountPercentage}}
-                        <span class="text-muted"><s>₹{{this.originalPrice}}</s></span>
-                        <div class="d-flex">
-                            <span class="text-dark fw-bold">₹{{this.effectivePrice}}</span>
-                            <span class="text-success ms-1">{{this.discountPercentage}}% off</span>
-                        </div>
+                         <span class="fw-bold">₹ {{this.effectivePrice}}</span> <span class="text-muted"><s>₹ {{this.originalPrice}}</s></span>
+                         <p class="badge bg-danger btn-sm">{{this.discountPercentage}}% OFF</p>
+                       
                         {{else}}
                         <span class="text-dark fw-bold">₹{{this.originalPrice}}</span>
+                        <span class="text-muted">No offer</span>
                         {{/if}}
                     </td>
-                    <td>
+                    <td class="align-middle">
                         {{#if this.stock_count}}
                         <span class="text-success">In Stock</span>
                         {{else}}
                         <span class="text-danger">Out Of Stock</span>
                         {{/if}}
                     </td>
-                    <td>
+                    <td class="align-middle">
                         
-                        <button class="btn btn-warning add-to-cart" data-id="{{this._id}}" data-price="{{this.price}}">
+                        <button class="btn btn-warning add-to-cart" title="Add to Cart" data-id="{{this._id}}" data-price="{{this.price}}">
                             <i class="fas fa-shopping-cart"></i>
                         </button>
                         <button class="btn toggle-wishlist-item" data-id="{{this._id}}">
@@ -159,7 +158,17 @@
                     });
 
                     if (response.ok) {
-                        Swal.fire({
+                        const removeWishlistResponse = await fetch('/product/wishlist', {
+                            method: 'PUT',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({prodId: productId})
+                        })
+
+                        if(removeWishlistResponse.ok){
+                            item.remove();
+                            Swal.fire({
                             title: 'Success',
                             text: 'Product added to cart',
                             icon: 'success',
@@ -174,11 +183,14 @@
                             window.location.reload();
                         }, 1500);
                     } else {
-                        console.error('Failed to add product to cart');
-                    }
-                } catch (error) {
-                    console.error('Error:', error);
+                    console.error('Failed to remove product from wishlist');
                 }
-            });
-        });
+            } else {
+                console.error('Failed to add product to cart');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+        }
+    });
+});
 </script>

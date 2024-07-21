@@ -5,12 +5,12 @@
             <h3>Add Coupon</h3>
             <div>
                 <a href="/coupon" class="btn btn-outline-secondary me-2">Cancel</a>
-                <button form="addCategoryForm" class="btn btn-outline-primary">Add Coupon</button>
+                <button form="addCouponForm" class="btn btn-outline-primary">Add Coupon</button>
             </div>
         </div>
         <div>
             <nav aria-label="breadcrumb">
-                <ol class="breadcrumb">
+                <ol class="breadcrumb ms-1 mt-3">
                     <li class="breadcrumb-item"><a href="/user/admin/dashboard">Dashboard</a></li>
                     <li class="breadcrumb-item"><a href="/coupon">Coupons</a></li>
                     <li class="breadcrumb-item active" aria-current="page">Add Coupon</li>
@@ -18,26 +18,30 @@
             </nav>
         </div>
         
-            <div class="col-md-8 mt-4 mb-4 ms-auto me-auto">
+            <div class="col-md-8 mt-5 mb-5 ms-auto me-auto">
                 <div class="card">
                     <div class="card-body">
                         <h5 class="card-title">General Information</h5>
-                        <form id="addCategoryForm" action="/coupon/add" method="POST">
+                        <form id="addCouponForm">
                             <div class="form-group mb-3">
-                                <label for="categoryName">Coupon Code</label>
-                                <input type="text" class="form-control" id="categoryName" name="code" placeholder="Type Coupen code" required>
+                                <label for="code">Coupon Code</label>
+                                <input type="text" class="form-control" id="code" name="code" placeholder="Type Coupen code">
+                                <span class="error" id="error-code"></span>
                             </div>
                             <div class="form-group mb-3">
-                                <label for="categoryName">Discount Value</label>
-                                <input type="number" class="form-control" id="categoryName" name="discount" placeholder="Discount" required>
+                                <label for="discount">Discount Value</label>
+                                <input type="number" class="form-control" id="discount" name="discount" placeholder="Discount">
+                                <span class="error" id="error-discount"></span>
                             </div>
                             <div class="form-group mb-3">
-                                <label for="categoryName">Min bill</label>
-                                <input type="number" class="form-control" id="categoryName" name="minBill" placeholder="Min Bill" required>
+                                <label for="minBill">Min bill</label>
+                                <input type="number" class="form-control" id="minBill" name="minBill" placeholder="Min Bill">
+                                <span class="error" id="error-minBill"></span>
                             </div>
                             <div class="form-group mb-3">
-                                <label for="categoryName">Coupon Expiry</label>
-                                <input type="date" class="form-control" id="categoryName" name="expiry"  required>
+                                <label for="expiry">Coupon Expiry</label>
+                                <input type="date" class="form-control" id="expiry" name="expiry" >
+                                <span class="error" id="error-expiry"></span>
                             </div>
                             
                             {{!-- <div class="form-group mb-3">
@@ -52,3 +56,95 @@
     </div>
 </div>
 
+<script>
+    document.getElementById('addCouponForm').addEventListener('submit', async function(event) {
+        event.preventDefault(); // Prevent the default form submission
+
+        const discount = document.getElementById('discount').value
+        const minBill = document.getElementById('minBill').value
+        const expiryDate = document.getElementById('expiry').value;
+
+        const today = new Date();
+        const expiry = new Date(expiryDate);
+        today.setHours(0, 0, 0, 0);
+        if(discount >= minBill){
+            Swal.fire({
+                icon: 'error',
+                title: 'error',
+                text: 'Discount must be lower than Minimum Bill!',
+                
+            })
+            return
+        }
+
+        if (expiry < today) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Invalid Expiry Date',
+                text: 'Expiry date must be today or later.',
+            });
+            return 
+        }
+
+        const form = event.target;
+        const formData = new FormData(form);
+
+        const data = {};
+        formData.forEach((value, key) => {
+            data[key] = value;
+        });
+
+        try {
+            const response = await fetch('/coupon/add', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+            });
+
+            if (response.ok) {
+            Swal.fire({
+                icon: 'success',
+                title: 'Success',
+                text: 'Coupon added successfully!',
+                showConfirmButton: false,
+                timer: 1500
+            }).then(() => {
+                // Redirect to address/all page
+                location.href = '/coupon';
+            });
+            } else {
+            // Handle error response
+                const errorData = await response.json();
+                handleErrors(errorData.errors);
+            }
+        } catch (error) {
+            // Handle network error
+            console.error('Network error:', error);
+            Swal.fire({
+            icon: 'error',
+            title: 'Network Error',
+            text: error.message
+            });
+        }
+        });
+
+        function handleErrors(errors) {
+        // Clear previous error messages
+            document.querySelectorAll('.error').forEach(error => error.textContent = '');
+
+            if (errors) {
+                Object.keys(errors).forEach(key => {
+                showError(`error-${key}`, errors[key].msg);
+                }); 
+            }
+            }
+
+            function showError(elementId, message) {
+            const errorElement = document.getElementById(elementId);
+            if (errorElement) {
+                errorElement.textContent = message;
+            }
+        }
+</script>

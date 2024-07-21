@@ -6,12 +6,12 @@
             <h3>Edit Offer</h3>
             <div>
                 <a href="/offers" class="btn btn-outline-secondary me-2">Cancel</a>
-                <button form="offerForm" class="btn btn-outline-primary">Save Changes</button>
+                <button form="editOfferForm" class="btn btn-outline-primary">Save Changes</button>
             </div>
         </div>
         <div>
             <nav aria-label="breadcrumb">
-                <ol class="breadcrumb">
+                <ol class="breadcrumb mt-3 ms-1">
                     <li class="breadcrumb-item"><a href="/user/admin/dashboard">Dashboard</a></li>
                     <li class="breadcrumb-item"><a href="/offers">Offers</a></li>
                     <li class="breadcrumb-item active" aria-current="page">Edit Offer</li>
@@ -23,32 +23,29 @@
             <div class="card">
                 <div class="card-body">
                     <h5 class="mb-4">Edit Offer</h5>
-                    <form id="offerForm" action="/offers/update/{{offer._id}}" method="post">   
+                    <form id="editOfferForm">   
                                
                         <div class="form-group mb-3">
                             <label for="offerTarget">Offer Target:</label>
-                            <select id="offerTarget" name="offerTarget" class="form-control" onchange="toggleTargetOptions()" required>
-                                <option value="">Select Target</option>
-                                <option value="Product" {{#if offer}}{{#if (eq offer.offerTarget 'Product')}}selected{{/if}}{{/if}}>Product</option>
-                                <option value="Category" {{#if offer}}{{#if (eq offer.offerTarget 'Category')}}selected{{/if}}{{/if}}>Category</option>
+                            <select id="offerTarget" name="offerTarget" class="form-control form-select" onchange="toggleTargetOptions()" required>
+                                <option value="Product" {{#if (eq offer.offerTarget 'Product')}}selected{{/if}}>Product</option>
+                                <option value="Category" {{#if (eq offer.offerTarget 'Category')}}selected{{/if}}>Category</option>
                             </select>
                         </div>
                         <div class="form-group" id="productSelect" style="display: none;">
                             <label for="productId">Product</label>
-                            <select id="productId" name="targetId" class="form-control">
-                                <option value="">Select Product</option>
+                            <select id="productId" name="targetId" class="form-control form-select">
                                 {{#each products}}
-                                <option value="{{this._id}}" {{#if offer}}{{#if (eq this._id offer.targetId)}}selected{{/if}}{{/if}}>{{this.title}}</option>
+                                <option value="{{this._id}}" {{#if (eq this._id ../offer.targetId)}}selected{{/if}}>{{this.title}}</option>
                                 {{/each}}
                             </select>
                         </div>
 
                         <div class="form-group" id="categorySelect" style="display: none;">
                             <label for="categoryId">Category</label>
-                            <select id="categoryId" name="targetId" class="form-control">
-                                <option value="">Select Category</option>
+                            <select id="categoryId" name="targetId" class="form-control form-select">
                                 {{#each categories}}
-                                <option value="{{this._id}}" {{#if offer}}{{#if (eq this._id offer.targetId)}}selected{{/if}}{{/if}}>{{this.title}}</option>
+                                <option value="{{this._id}}" {{#if (eq this._id ../offer.targetId)}}selected{{/if}}>{{this.title}}</option>
                                 {{/each}}
                             </select>
                         </div>
@@ -74,6 +71,14 @@
 </div>
 
 <script>
+        const startDate = new Date("{{offer.startDate}}");
+        const formattedStartDate = startDate.toISOString().split('T')[0];
+        document.getElementById('startDate').value = formattedStartDate;
+
+        const expiryDate = new Date("{{offer.expiryDate}}");
+        const formattedExpiryDate = expiryDate.toISOString().split('T')[0];
+        document.getElementById('expiryDate').value = formattedExpiryDate;
+
         function toggleTargetOptions() {
         const offerTarget = document.getElementById('offerTarget').value;
         const productSelect = document.getElementById('productSelect');
@@ -108,4 +113,93 @@
             document.getElementById('categorySelect').style.display = 'block';
         }
     };
-    </script>
+
+    const validateOfferForm = ()=>{
+       const discountPercentage = document.getElementById('discountPercentage').value
+        const startDate = document.getElementById('startDate').value;
+        const expiryDate = document.getElementById('expiryDate').value;
+
+        const today = new Date();
+        const start = new Date(startDate);
+        const expiry = new Date(expiryDate);
+
+        if (discountPercentage < 1 || discountPercentage > 99) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Invalid Discount',
+                text: 'Discount percentage must be between 1 and 99.',
+            });
+            return false; // Prevent form submission
+        }
+
+        if (start < today) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Invalid Start Date',
+                text: 'Start date must be today or later.',
+            });
+            return false; // Prevent form submission
+        }
+
+        // Check start date is earlier than expiry date
+        if (start >= expiry) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Invalid Dates',
+                text: 'Start date must be earlier than the expiry date.',
+            });
+            return false; 
+        }
+        return true
+    }
+    
+
+   document.getElementById('editOfferForm').addEventListener('submit', async function(event) {
+        event.preventDefault(); // Prevent default form submission
+
+            if (!validateOfferForm()) {
+                return;
+            }
+
+        const offeriId = '{{offer._id}}'
+        const form = event.target;
+        const formData = new FormData(form);
+        const formObject = Object.fromEntries(formData.entries());
+
+        try {
+            const response = await fetch(`/offers/update/${offeriId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(formObject),
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: errorData.message,
+                });
+            } else {
+                const successData = await response.json();
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Success',
+                    text: successData.message,
+                }).then(() => {
+                    window.location.href = '/offers';
+                });
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'An error occurred while creating the offer.',
+            });
+        }
+    });
+
+</script>

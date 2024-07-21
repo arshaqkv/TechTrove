@@ -10,8 +10,13 @@ const cartSchema = new Schema({
         count: {
             type: Number
         },
-        price: {
-            type: Number
+        originalPrice: {
+            type: Number,
+            required: true
+        },
+        finalPrice: {
+            type: Number,
+            required: true
         }
     }
     ],

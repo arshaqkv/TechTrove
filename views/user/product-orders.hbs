@@ -3,81 +3,112 @@
 <div class="container mt-5 mb-5">
     <div class="row">
         <div class="col-12">
-            <h2>Orders <span class="text-muted">{{orders.length}} ITEMS</span></h2>
+            <h2>Orders <span class="text-muted">{{count}} ITEMS</span></h2>
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <h4 class="card-title">Order History</h4>
-                <div>
-                    <button class="btn btn-outline-secondary">Select Date</button>
-                    <button class="btn btn-outline-secondary">Filters</button>
-                </div>
             </div>
             {{#if orders.length}}
-            <div class="table-responsive">
-                <table class="table table-hover">
-                    <thead>
-                        <tr>
-                            <th>Order ID</th>
-                            <th>Products</th>
-                            <th>Total</th>
-                            <th>Status</th>
-                            <th>Date</th>
-                            <th></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {{#each orders}}
-                        <tr>
-                            <td>#{{this.orderId}}</td>
-                            <td>
-                                {{#each this.products}}
-                                <div class="d-flex align-items-center">
-                                    <img class="img-thumbnail" src="{{this.product.images.[0]}}" alt="" style="width: 50px;">
-                                    <div class="ms-1">{{this.count}} x </div>
-                                    <div class="ms-2">{{this.product.title}}</div>
+                {{#each orders}}
+                <div class="order-card">
+                    <div class="order-header">
+                        <h5 class="order-title"></h5>
+                        {{#ifCond this.orderStatus '!=' 'Cancelled'}}
+                            {{#ifCond this.orderStatus '!=' 'Delivered'}}
+                                {{#ifCond this.orderStatus '!=' 'Returned'}}
+                                    <button class="btn btn-outline-danger btn-sm cancel-order-btn" onclick="cancelOrder('{{this._id}}')">Cancel Order</button>
+                                {{/ifCond}}
+                            {{/ifCond}}
+                            {{#ifCond this.orderStatus '==' 'Delivered'}}
+                                <button class="btn btn-outline-warning btn-sm return-order-btn" onclick="returnOrder('{{this._id}}')">Return Order</button>
+                            {{/ifCond}}
+                        {{/ifCond}}
+
+                    </div>
+                    
+                    <div class="order-body">
+                        {{#each this.products}}
+                        <h5 class="order-title">{{this.product.title}}</h5>
+                        <div class="order-product">
+                            <img src="{{this.product.images.[0]}}" alt="{{this.product.title}}" class="order-product-image">
+                            <div class="order-product-details">
+                                <h6>{{this.product.brand}}</h6>
+                                <p>Quantity: {{this.count}}</p>
+                                {{#if (lt this.finalPrice this.originalPrice)}}
+                                <div>
+                                    <p class="d-flex">Price: <span class="text-muted text-decoration-line-through ml-1 me-1 "> ₹{{this.originalPrice}}</span><span class="fw-bold">₹{{this.finalPrice}}</span></p>
+                                    
                                 </div>
-                                {{/each}}
-                            </td>
-                            <td>{{this.totalPrice}}/-</td>
-                            <td id="order-status-{{this._id}}">
-                                <span class="badge {{statusClass this.orderStatus}}">{{this.orderStatus}}</span>
-                            </td>
-                            <td>{{formatDate this.createdAt}}</td>
-                            <td>
-                                <button class="btn btn-outline-secondary btn-sm" onclick="viewOrder('{{this._id}}')">View</button>
-                                {{#if (and  (ne this.orderStatus 'Delivered') (ne this.orderStatus 'Cancelled'))}}
-                                <button class="btn btn-outline-warning btn-sm" onclick="cancelOrder('{{this._id}}')">Cancel</button>
-                                {{else if (ne this.orderStatus 'Cancelled')}}
-                                <button class="btn btn-outline-warning btn-sm" onclick="returnOrder('{{this._id}}')">Return</button>
+                                {{else}}
+                                <p class="d-flex">Price: <span class="fw-bold ms-1">₹{{this.originalPrice}}</span></p>
                                 {{/if}}
-                            </td>
-                        </tr>
+                            </div>
+                        </div>
+                        <hr>
                         {{/each}}
-                    </tbody>
-                </table>
-            </div>
-
-            <!-- Pagination -->
-            <nav aria-label="Page navigation">
-                <ul class="pagination justify-content-center">
-                    {{#if pagination.hasPrevPage}}
-                    <li class="page-item">
-                        <a class="page-link" href="?page={{subtract pagination.page 1}}">&lt;</a>
-                    </li>
-                    {{/if}}
-
-                    {{#each pagination.pages}}
-                    <li class="page-item {{#if this.active}}active{{/if}}">
-                        <a class="page-link" href="?page={{this.page}}">{{this.page}}</a>
-                    </li>
-                    {{/each}}
-
-                    {{#if pagination.hasNextPage}}
-                    <li class="page-item">
-                        <a class="page-link" href="?page={{add pagination.page 1}}">&gt;</a>
-                    </li>
-                    {{/if}}
-                </ul>
-            </nav>
+                        
+                        <div class="order-info">
+                            <div class="order-info-item">
+                                <span>Order Placed</span>
+                                <span>{{formatDate this.createdAt}}</span>
+                            </div>
+                            <div class="order-info-item">
+                                <span>Order ID</span>
+                                <span>#{{this.orderId}}</span>
+                            </div>
+                            <div class="order-info-item">
+                                <span>Total Price</span>
+                                <span>₹{{this.totalPrice}}</span>
+                            </div>
+                            <div class="order-info-item">
+                                <span>Order Status</span>
+                                <span class="badge {{statusClass this.orderStatus}}">{{this.orderStatus}}</span>
+                            </div>
+                        </div>
+                        <div class="mt-3">
+                            <div class="order-info-item">
+                                <span>Payment Method</span>
+                                <span>{{this.paymentIntent}}</span>
+                            </div>
+                        </div>
+                        <div class="shipping-address">
+                            <span>Shipping Address-</span>
+                            <p>{{this.orderby.defaultAddress.addressLine1}}</p>
+                            <p>{{this.orderby.defaultAddress.addressLine2}}</p>
+                            <p>{{this.orderby.defaultAddress.city}}, {{this.orderby.defaultAddress.state}}</p>
+                            <p>{{this.orderby.defaultAddress.pinCode}}</p>
+                        </div>
+                        <hr>
+                    </div>
+                    <div class="order-footer">
+                        {{!-- {{#if (eq this.paymentStatus 'Pending')}}
+                                <button class="btn btn-outline-primary btn-sm retry-payment-btn" onclick="retryPayment('{{this._id}}')">Retry Payment</button>
+                        {{/if}} --}}
+                        {{#if (eq this.orderStatus 'Delivered')}}
+                        <a href="/order/download-invoice/{{this._id}}" class="btn btn-dark btn-sm">Invoice <i class="fas fa-download"></i></a>
+                        {{/if}}
+                    </div>
+                </div>
+                {{/each}}
+                <!-- Pagination -->
+                <nav aria-label="Page navigation">
+                    <ul class="pagination justify-content-center">
+                        {{#if pagination.hasPrevPage}}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{subtract pagination.page 1}}">&lt;</a>
+                        </li>
+                        {{/if}}
+                        {{#each pagination.pages}}
+                        <li class="page-item {{#if this.active}}active{{/if}}">
+                            <a class="page-link" href="?page={{this.page}}">{{this.page}}</a>
+                        </li>
+                        {{/each}}
+                        {{#if pagination.hasNextPage}}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{add pagination.page 1}}">&gt;</a>
+                        </li>
+                        {{/if}}
+                    </ul>
+                </nav>
             {{else}}
             <div class="container">
                 <div class="card col-md-8 d-flex justify-content-center align-items-center m-auto" style="height: 200px;">
@@ -90,13 +121,10 @@
     </div>
 </div>
 
-
 {{> footer}}
 
 <script>
-    
-  async function cancelOrder(orderId) {
-    // Show confirmation dialog
+async function cancelOrder(orderId) {
     const result = await Swal.fire({
         title: 'Are you sure?',
         text: "Do you really want to cancel this order?",
@@ -125,9 +153,7 @@
                     icon: 'success',
                     confirmButtonText: 'Okay'
                 }).then(() => {
-                    // Optionally, update the UI to reflect the order status change
-                    document.getElementById(`order-status-${orderId}`).innerText = 'Cancelled';
-                    location.reload();
+                    window.location.reload();
                 });
             } else {
                 Swal.fire({
@@ -149,4 +175,126 @@
     }
 }
 
+async function returnOrder(orderId) {
+    const result = await Swal.fire({
+        title: 'Are you sure?',
+        text: "Do you really want to return this order?",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Yes, return it!'
+    });
+
+    if (result.isConfirmed) {
+        try {
+            const response = await fetch(`/order/return-order/${orderId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                Swal.fire({
+                    title: 'Order Returned!',
+                    text: 'Your Order has been Returned Successfully.',
+                    icon: 'success',
+                    confirmButtonText: 'Okay'
+                }).then(() => {
+                    
+                    location.reload();
+                });
+            } else {
+                Swal.fire({
+                    title: 'Failed!',
+                    text: 'Failed to return the order: ' + data.message,
+                    icon: 'error',
+                    confirmButtonText: 'Okay'
+                });
+            }
+        } catch (error) {
+            console.error('Error returning order:', error);
+            Swal.fire({
+                title: 'Error!',
+                text: 'An error occurred while returning the order',
+                icon: 'error',
+                confirmButtonText: 'Okay'
+            });
+        }
+    }
+}
 </script>
+
+<style>
+.order-card {
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+    background-color: #fff;
+}
+.order-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.order-title {
+    font-size: 18px;
+    font-weight: 600;
+}
+.cancel-order-btn, .return-order-btn {
+    font-size: 14px;
+}
+.order-body {
+    margin-top: 20px;
+}
+.order-product {
+    display: flex;
+    align-items: center;
+}
+.order-product-image {
+    width: 50px;
+    margin-right: 15px;
+}
+.order-product-details {
+    flex-grow: 1;
+}
+.order-product-details h6 {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 5px;
+}
+.order-product-details p {
+    margin: 0;
+    font-size: 14px;
+}
+.order-info {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+}
+.order-info-item {
+    flex-basis: 24%;
+}
+.order-info-item span {
+    display: block;
+    font-size: 14px;
+}
+.shipping-address {
+    margin-top: 20px;
+}
+.shipping-address span {
+    font-weight: 600;
+}
+.shipping-address p {
+    margin: 0;
+}
+.order-footer {
+    margin-top: 20px;
+    display: flex;
+    justify-content: flex-end;
+}
+</style>

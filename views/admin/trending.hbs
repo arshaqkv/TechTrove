@@ -1,0 +1,50 @@
+{{> admin-header}}
+<div class="content mt-5">
+    <div class="row p-3">
+    <div class="col-md-8">
+        <h3 class="mb-4">Best selling products</h3>
+        {{#each trendingProducts}}
+            <div class="card mb-3">
+                <div class="row no-gutters">
+                    <div class="col-md-4">
+                        <img src="{{productDetails.images.[0]}}" class="card-img" alt="{{productDetails.title}}">
+                    </div>
+                    <div class="col-md-8">
+                        <div class="card-body">
+                            <span class="card-title">{{productDetails.brand}}</span>
+                            <h3 class="card-text">{{productDetails.title}}</h3>
+                            <p class="card-text text-muted">Category: {{productCategory.title}}</p>
+                            <p class="card-text">
+                                {{!-- <span class="text-muted text-decoration-line-through">₹{{productDetails.originalPrice}}</span>
+                                <span class="text-success">₹{{productDetails.offerPrice}}</span> --}}
+                                {{#if productDetails.offerPrice}}
+                                    <span class="fw-bold">₹ {{productDetails.offerPrice}}</span> <span class="text-muted"><s>₹ {{productDetails.originalPrice}}</s></span>
+                                    {{!-- <p class="card-text">Discount: {{productDetails.discountPercentage}}%</p> --}}
+                                     <span class="badge bg-danger">{{productDetails.discountPercentage}}% OFF</span>
+                                    {{else}}
+                                    <span class="fw-bold">₹ {{productDetails.originalPrice}}</span> <span class="text-muted">No offer</span> <span class="badge bg-danger"></span>
+                                {{/if}}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {{/each}}
+    </div>
+    <div class="col-md-4">
+        <h3 class="mb-4">Trending Categories</h3>
+        <ul class="list-group">
+            {{#each trendingCategories}}
+                <li class="list-group-item">{{incrementIndex @index}} . {{categoryDetails.title}}</li>
+            {{/each}}
+        </ul>
+        <h3 class="mt-4">Trending Brands</h3>
+        <ul class="list-group">
+            {{#each trendingBrands}}
+                <li class="list-group-item">{{incrementIndex @index}} . {{_id}}</li>
+            {{/each}}
+        </ul>
+    </div>
+</div>
+
+</div>

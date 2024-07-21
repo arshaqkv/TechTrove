@@ -10,15 +10,16 @@ const {
     getAllAddress,
     defaultAddress
  } = require('../controllers/addressController')
+const { validateAddress } = require('../middlewares/validation')
 const { authMiddleware } = require('../middlewares/authMiddleware')
 
 router.get('/all', authMiddleware, getAllAddress)
 router.put('/default/:id', authMiddleware, defaultAddress)
 router.get('/add', authMiddleware, loadCreateAddress)
-router.post('/add', createAddress)
+router.post('/add', validateAddress,authMiddleware, createAddress)
 router.get('/edit/:id', authMiddleware, loadUpdateAddress)
-router.put('/update/:id', updateAddress)  
-router.delete('/delete/:id', deleteAddress)
+router.put('/update/:id', validateAddress, authMiddleware, updateAddress)  
+router.delete('/delete/:id',authMiddleware, deleteAddress)
 router.get('/:id', authMiddleware, getAddress)
 
 

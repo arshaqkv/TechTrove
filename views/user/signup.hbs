@@ -1,76 +1,246 @@
-
-    
 {{> user-header}}
 
-    <div class="page-content d-flex align-items-center">
-
-        <div class="container d-flex justify-content-center">
-
-            <div class="col-12 col-sm-10 col-md-8 col-lg-7 col-xl-6 col-xxl-5">
-
-                <div class="auth-card">
-
-                    <div class="logo-area">
-
-
+<div class="page-content d-flex align-items-center mb-5">
+    <div class="container d-flex justify-content-center">
+        <div class="col-12 col-sm-10 col-md-8 col-lg-7 col-xl-6 col-xxl-5">
+            <div class="auth-card">
+                <div class="logo-area"></div>
+                <h3 class="auth-title">CREATE AN ACCOUNT</h3>
+                <h5 class="auth-title">Welcome to TechTrove</h5>
+                <!-- Signup-Form -->
+                <form id="signupForm">
+                    <div class="mb-2 mt-5">
+                        <input type="text" class="form-control auth-input" id="name" name="name" placeholder="Enter your name" value="{{name}}">
+                        <span class="error" id="error-name"></span>
                     </div>
-                    <h3 class="auth-title">CREATE AN ACCOUNT</h3>
-                    <h5 class="auth-title">Welcome to TechTrove</h5>
+                    <div class="mb-2">
+                        <input type="email" class="form-control auth-input" id="email" name="email" placeholder="Enter your email" value="{{email}}">
+                        <span class="error" id="error-email"></span>
+                    </div>
+                    <div class="mb-2">
+                        <input type="password" class="form-control auth-input" id="password" name="password" placeholder="Enter your password" value="{{password}}">
+                        <span class="error" id="error-password"></span>
+                    </div>
+                    <div class="mb-2">
+                        <input type="password" class="form-control auth-input" id="confirmPassword" name="confirmPassword" placeholder="Confirm password">
+                        <span class="error" id="error-confirmPassword"></span>
+                    </div>
+                    <div class="mb-2">
+                        <input type="text" class="form-control auth-input" id="phone" name="phone" placeholder="Enter your phone number" value="{{phone}}">
+                        <span class="error" id="error-phone"></span>
+                    </div>
+                    <div class="mb-2">
+                        <span class="error" id="error-general"></span>
+                    </div>
+                    <button class="btn auth-btn mt-2 mb-4" type="submit">Sign Up</button>
+                </form>
+                <hr class="separator">
+                <a class="btn service-btn mt-5 mb-3" href="/auth/google" class="google-signin"><i class="fab fa-google service-icon"></i>
+                Sign in with Google</a>
+                <p class="text mb-4">Already Have An Account? <a href="/user/login" class="text-link">Login</a></p>
+            </div>
+        </div>
+    </div>
+</div>
 
-                    
-
-                    
-
-                    <!-- Signup-Form -->
-                    <form action="/user/register" method="POST">
-                        <div class="mb-2 mt-5">
-                            <input type="text" class="form-control auth-input" id="name" name="name" placeholder="Enter your name" value="{{name}}">
-                            {{#if errors.name}}
-                                <span class="error">{{errors.name.msg}}</span>
-                            {{/if}}
-                        </div >
-                        <div class="mb-2">
-                            <input type="email" class="form-control auth-input" id="email" name="email" placeholder="Enter your email" value="{{email}}">
-                            {{#if errors.email}}
-                                <span class="error">{{errors.email.msg}}</span>
-                            {{/if}}
-                        </div>
-                        <div class="mb-2">
-                            <input type="password" class="form-control auth-input" id="password" name="password" placeholder="Enter your password" value="{{password}}">
-                            {{#if errors.password}}
-                                <span class="error">{{errors.password.msg}}</span>
-                            {{/if}}
-                        </div>
-                        <div class="mb-2">
-                            <input type="password"class="form-control auth-input" id="confirmPassword" name="confirmPassword" placeholder="Confirm password">
-                            {{#if errors.confirmPassword}}
-                                <span class="error">{{errors.confirmPassword.msg}}</span>
-                            {{/if}}
-                        </div>
-                        <div class="mb-2">
-                            <input type="text" class="form-control auth-input" id="phone" name="phone" placeholder="Enter your phone number" value="{{phone}}">
-                            {{#if errors.phone}}
-                                <span class="error">{{errors.phone.msg}}</span>
-                            {{/if}}
-                        </div>
-                        <div class="mb-2">
-                            {{#if error}}
-                                <span class="error">{{error}}</span>
-                            {{/if}}
-                        </div>
-                        <button class="btn auth-btn mt-2 mb-4" type="submit">Sign Up</button>
-                    </form>
-                    <hr class="separator">
-
-                     <a class="btn service-btn mt-5 mb-3" href="/auth/google" class="google-signin"><i class="fab fa-google service-icon"></i>
-                     Sign in with Google</a>
-
-
-                    <p class="text mb-4">Already Have An Account? <a href="/user/login" class="text-link">Login</a></p>
-
+<!-- OTP Modal -->
+<div id="otpModal" class="modal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">OTP Verification</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>OTP has been sent to your email.</p>
+                <div class="otp-input mb-2">
+                    <input type="text" maxlength="1" class="otp-box" required>
+                    <input type="text" maxlength="1" class="otp-box" required>
+                    <input type="text" maxlength="1" class="otp-box" required>
+                    <input type="text" maxlength="1" class="otp-box" required>
+                    <input type="text" maxlength="1" class="otp-box" required>
+                    <input type="text" maxlength="1" class="otp-box" required>
+                </div>
+                <span class="error" id="error-otp"></span>
+                <button class="btn auth-btn mt-2 mb-4" id="validate-otp" onclick="verifyOtp()">Verify OTP</button>
+                <button class="btn auth-btn mt-2 mb-4" id="resend-otp" onclick="resendOtp()" disabled>Resend OTP</button>
+                
+                <div class="timer d-flex justify-content-between">
+                    <span id="resend-otp-timer"></span>
+                    <span id="otp-expire-timer"></span>
                 </div>
             </div>
         </div>
     </div>
+</div>
 
+<script>
+    document.getElementById('signupForm').addEventListener('submit', async function (event) {
+        event.preventDefault();
+        const form = event.target;
+        const formData = new FormData(form);
+        const formObject = {};
+        formData.forEach((value, key) => {
+            formObject[key] = value;
+        });
+        try {
+            const response = await fetch('/user/register', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(formObject)
+            });
+            const result = await response.json();
+            if (response.status === 400) {
+                handleErrors(result.errors);
+            } else if (response.status === 201) {
+                $('#otpModal').modal('show');
+                startResendTimer();
+                startExpireTimer();
+            } else {
+                throw new Error(result.error || 'Unknown error occurred');
+            }
+        } catch (error) {
+            showError('error-general', error.message);
+        }
+    });
+
+    function handleErrors(errors) {
+        document.querySelectorAll('.error').forEach(error => error.textContent = '');
+        if (errors) {
+            Object.keys(errors).forEach(key => {
+                showError(`error-${key}`, errors[key].msg);
+            });
+        }
+    }
+
+    function showError(elementId, message) {
+        const errorElement = document.getElementById(elementId);
+        errorElement.textContent = message;
+        setTimeout(() => {
+            errorElement.textContent = '';
+        }, 3000); // Hide the error message after 3 seconds
+    }
+
+    const otpInputs = document.querySelectorAll('.otp-box');
+    otpInputs.forEach((input, index) => {
+        input.addEventListener('input', () => {
+            if (input.value.length === 1 && index < otpInputs.length - 1) {
+                otpInputs[index + 1].focus();
+            }
+            if (input.value.length === 0 && index > 0) {
+                otpInputs[index - 1].focus();
+            }
+        });
+    });
+
+    function clearOtpFields() {
+        otpInputs.forEach(input => input.value = '');
+        otpInputs[0].focus();
+    }
+
+    function combineOtpValues() {
+        let otpValue = '';
+        otpInputs.forEach(input => {
+            otpValue += input.value;
+        });
+        return otpValue;
+    }
+
+    async function verifyOtp() {
+        const otp = combineOtpValues();
+        const email = document.getElementById('email').value; 
+        const name = document.getElementById('name').value;
+        const password = document.getElementById('password').value;
+        const phone = document.getElementById('phone').value; 
+        try {
+            const response = await fetch('/user/verify-otp', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ email, otp, name, password, phone })
+            });
+            const result = await response.json();
+            if (response.status === 200) {
+                window.location.href = '/user/login';
+            } else {
+                throw new Error(result.error || 'Invalid OTP');
+            }
+        } catch (error) {
+            showError('error-otp', error.message);
+            clearOtpFields(); // Clear OTP fields on error
+        }
+    }
+
+    async function resendOtp() {
+        const email = document.getElementById('email').value;
+        try {
+            const response = await fetch('/user/resend-otp', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ email })
+            });
+            const result = await response.json();
+            if (response.status === 200) {
+                startResendTimer();
+                startExpireTimer();
+            } else {
+                throw new Error(result.error || 'Error resending OTP');
+            }
+        } catch (error) {
+            showError('error-otp', error.message);
+        }
+    }
+
+    const resendDuration = 60 * 1000; // 1 minute in milliseconds
+    const expireDuration = 5 * 60 * 1000; // 5 minutes in milliseconds
+    let resendTimerInterval;
+    let expireTimerInterval;
+
+    function startResendTimer() {
+        const resendEndTime = Date.now() + resendDuration;
+        updateResendTimer(resendEndTime);
+        resendTimerInterval = setInterval(() => updateResendTimer(resendEndTime), 1000);
+    }
+
+    function startExpireTimer() {
+        const expireEndTime = Date.now() + expireDuration;
+        updateExpireTimer(expireEndTime);
+        expireTimerInterval = setInterval(() => updateExpireTimer(expireEndTime), 1000);
+    }
+
+    function updateResendTimer(endTime) {
+        const timeLeft = endTime - Date.now();
+        if (timeLeft <= 0) {
+            clearInterval(resendTimerInterval);
+            document.getElementById("resend-otp").disabled = false;
+            document.getElementById("resend-otp-timer").innerText = "";
+        } else {
+            const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
+            document.getElementById("resend-otp").disabled = true;
+            document.getElementById("resend-otp-timer").innerText = `Resend OTP in ${minutes}m ${seconds}s`;
+        }
+    }
+
+    function updateExpireTimer(endTime) {
+        const timeLeft = endTime - Date.now();
+        if (timeLeft <= 0) {
+            clearInterval(expireTimerInterval);
+            document.getElementById("validate-otp").disabled = true;
+            document.getElementById("otp-expire-timer").innerText = "OTP expired";
+        } else {
+            const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
+            document.getElementById("validate-otp").disabled = false;
+            document.getElementById("otp-expire-timer").innerText = `OTP expires in ${minutes}m ${seconds}s`;
+        }
+    }
+</script>
 

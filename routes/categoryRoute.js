@@ -12,11 +12,11 @@ const {
 const { authMiddleware, isAdmin} = require('../middlewares/authMiddleware')
 
 router.get('/add', authMiddleware, isAdmin, loadCreateCategory)
-router.post('/add', createCategory)
+router.post('/add', authMiddleware, isAdmin, createCategory)
 router.get('/edit/:id', authMiddleware, isAdmin, loadUpdateCategory)
-router.put('/update/:id', updateCategory)
-router.put('/delete/:id', deleteCategory)
-router.get('/:id', getCategory)
+router.put('/update/:id', authMiddleware, isAdmin, updateCategory)
+router.put('/delete/:id', authMiddleware, isAdmin, deleteCategory)
+router.get('/:id', authMiddleware, isAdmin, getCategory)
 router.get('/', authMiddleware, isAdmin, getAllCategory)
 
 module.exports = router

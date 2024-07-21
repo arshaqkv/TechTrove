@@ -34,22 +34,27 @@
       </div>
       <div class="container mt-5">
         <h4>Payment Option</h4>
-        <div class="payment-option">
+        <div class="payment-option p-5">
           <div>
             <i class="fas fa-money-bill-wave"></i>
             <p>Cash on Delivery</p>
-            <input type="radio" name="paymentMethod" value="cod" checked>
+            <input type="radio" name="paymentMethod" value="COD" checked>
           </div>
           <div>
             <i class="fas fa-credit-card"></i>
             <p>Razorpay</p>
-            <input type="radio" name="paymentMethod" value="razorpay">
+            <input type="radio" name="paymentMethod" value="Razorpay">
           </div>
-          <div>
+          <div class="">
+            
             <i class="fas fa-wallet"></i>
             <p>My Wallet</p>
-            <input type="radio" name="paymentMethod" value="wallet">
+            <input type="radio" name="paymentMethod" value="Wallet">
+            <div>
+              <small class="{{#if user.walletBalance}}text-success mt-2{{else}}text-danger mt-2{{/if}}">{{#if user.walletBalance}}₹ {{user.walletBalance}} Available{{else}}Insufficient Balance{{/if}}</small>
+            </div>
           </div>
+          
         </div>
       </div>
     </div>
@@ -60,8 +65,8 @@
             <div class="card-body d-flex align-items-center ">
               <img src="{{this.product.images.[0]}}" class="img-fluid" style="max-width: 50px; height:50px" alt="Product Image">
               <div class="ms-3">
-                <p class="card-text">{{this.product.title}}</p>
-                <p class="text-right">{{this.count}} x <strong>Rs.{{this.price}}</strong></p>
+                <p class="card-text fw-bold">{{this.product.title}}</p>
+                <p class="text-left">{{this.count}} x Rs.{{this.finalPrice}}</p>
               </div>
             </div>
           </div>
@@ -72,7 +77,7 @@
         <p>{{#if coupon}}Coupon Discount: Rs.{{coupon.discount}}{{/if}}</p>
         <hr>
         <h5>Total: Rs.{{cart.totalAfterDiscount}}</h5>
-        <p>Estimated Delivery by <strong>30 June, 2024</strong></p>
+        <p>Estimated Delivery by <strong>30 Jul, 2024</strong></p>
         <button class="btn btn-outline-primary btn-block mt-3 mb-1" onclick="proceedToCheckout()">Place Order</button>
         <a href="/user/cart" class="btn btn-outline-secondary btn-block">Go back</a>
       </div>
@@ -154,6 +159,32 @@
         return;
     }
 
+    const totalPrice = {{cart.totalAfterDiscount}}
+    if(paymentMethod === 'COD' && totalPrice >30000){
+      Swal.fire({
+            title: 'Order Amount Exceeded',
+            text: 'Cash on Delivery is not available for orders above Rs 30000',
+            icon: 'warning',
+            confirmButtonText: 'Okay'
+        });
+        return;
+    }
+
+    const walletBalance = {{user.walletBalance}}
+    if(paymentMethod === 'Wallet'){
+      if(!walletBalance || totalPrice >walletBalance){
+        Swal.fire({
+              title: 'Insufficient Balance',
+              text: 'Choose another method',
+              icon: 'warning',
+              confirmButtonText: 'Okay'
+          });
+          return;
+      }
+
+    }
+
+
     const orderData = { paymentIntent: paymentMethod };
 
     fetch('/user/checkout', {
@@ -166,9 +197,9 @@
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            if (paymentMethod === 'razorpay') {
+            if (paymentMethod === 'Razorpay') {
                 const options = {
-                    key: '', // Enter the Key ID generated from the Dashboard
+                    key: 'rzp_test_4O98bI5B7yGQkw', // Enter the Key ID generated from the Dashboard
                     amount: data.razorpayOrder.amount, // Amount is in currency subunits. Default currency is INR. Hence, 1000 means 1000 paise = INR 10.
                     currency: data.razorpayOrder.currency,
                     name: 'TechTrove',
@@ -198,8 +229,8 @@
                         .then(data => {
                             if (data.success) {
                                 Swal.fire({
-                                    title: 'Payment Successful!',
-                                    text: 'Your payment has been processed successfully.',
+                                    title: 'Order Placed!',
+                                    text: 'Your order is on its way!',
                                     icon: 'success',
                                     confirmButtonText: 'Okay'
                                 }).then(() => {

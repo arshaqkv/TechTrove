@@ -19,6 +19,12 @@ const createOffer = asyncHandler(async (req,res) =>{
     const { offerTarget, targetId, discountPercentage, startDate, expiryDate } = req.body
     console.log(req.body)
     try {
+
+        const existingOffer = await Offer.findOne({targetId})
+        if(existingOffer){
+            return res.status(400).json({ success: false, message: 'Offer already exists.' })
+        }
+
         const offer = new Offer({
             offerTarget,
             targetId,
@@ -28,7 +34,9 @@ const createOffer = asyncHandler(async (req,res) =>{
         })
 
         await offer.save()
-        res.redirect('/offers')
+        return res.status(200).json({ 
+            message: "Offer created successfully!"
+        });   
     } catch (error) {
         console.log(error)
     }
@@ -36,7 +44,7 @@ const createOffer = asyncHandler(async (req,res) =>{
 
 const getAllOffers = asyncHandler(async (req, res) => {
     const page = parseInt(req.query.page) || 1;
-    const limit = 5; // Number of offers per page
+    const limit = 3 
 
     try {
         const count = await Offer.countDocuments();
@@ -55,13 +63,14 @@ const getAllOffers = asyncHandler(async (req, res) => {
         const pagination = {
             totalPages,
             page,
+            limit,
             count,
             pages: Array.from({ length: totalPages }, (_, i) => ({ page: i + 1, active: i + 1 === page })),
             hasNextPage: page < totalPages,
             hasPrevPage: page > 1,
         };
 
-        res.render('offers', { offers: offerDetails, pagination });
+        res.render('offers', { offers: offerDetails, pagination, count });
     } catch (error) {
         console.log(error);
     }
@@ -83,12 +92,39 @@ const loadUpdateOffer = asyncHandler(async (req,res) =>{
     const { id } =req.params
     try {
         const offer = await Offer.findById(id)
-        res.render('updateOffer', { offer })
+        const products = await Product.find() 
+        const categories = await Category.find()
+        console.log(offer)
+        res.render('updateOffer', { offer, products, categories }) 
     } catch (error) {
         console.log(error)
     }
 })
 
+const updateOffer = asyncHandler(async (req,res) =>{
+    const { id } = req.params
+    const { targetId } = req.body
+    console.log(req.body)
+    try {
+        const existingOffer = await Offer.findOne({targetId})
+        if(existingOffer && existingOffer._id.toString() !== id){
+            return res.status(400).json({ success: false, message: 'Offer already exists.' })
+        }
+
+        const coupon = await Offer.findByIdAndUpdate(id,
+            req.body, 
+            { 
+                new: true 
+
+            }
+        )
+        return res.status(200).json({ 
+            message: "Offer updated successfully!"
+        }); 
+    } catch (error) {
+        console.log(error)
+    }
+})
 
 const deleteOffer = asyncHandler(async (req, res) => {
     try {
@@ -104,7 +140,8 @@ const deleteOffer = asyncHandler(async (req, res) => {
 module.exports = {
                     loadCreateOffer,
                     createOffer,
-                    getAllOffers,
+                    getAllOffers, 
                     deleteOffer,
-                    loadUpdateOffer
+                    loadUpdateOffer,
+                    updateOffer
                 }

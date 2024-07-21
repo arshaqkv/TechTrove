@@ -11,8 +11,16 @@
           <img src="{{this.product.images.[0]}}" class="img-fluid" style="max-width: 70px; height:70px" alt="Product Image">
           <div class="ml-3">
             <div>
-              <h5 class="card-title">{{this.product.brand}}</h5>
-              <p class="card-text">{{this.product.title}}</p>
+              <h5 class="card-title">{{this.product.title}}</h5>
+              <span class="card-text">{{this.product.brand}}</span>
+              {{#ifCond this.product.stock_count '===' 0}}
+                  <p class="text-danger">Out of Stock</p>
+              {{else ifCond this.product.stock_count '<' 10}}
+                  <p class="low-stock badge badge-danger">Only {{this.product.stock_count}} left</p>
+              {{else}}
+                  <p class="text-success">In Stock</p>
+              {{/ifCond}}
+              <span class="stock-count" style="display: none;">{{this.product.stock_count}}</span>
             </div>
             <div class="d-flex align-items-center">
               <button class="btn btn-outline-secondary btn-sm" onclick="decreaseQuantity('{{this.product._id}}')">-</button>
@@ -25,12 +33,13 @@
             <p class="text-right">
               <strong>{{this.count}}</strong> x  
               {{#if this.product.discountPercentage}}
-                <span class="text-muted text-decoration-line-through"> ₹{{this.product.originalPrice}}</span>
-                <span class="fw-bold"> ₹{{this.product.effectivePrice}}</span>
-                <span class="text-success">{{this.product.discountPercentage}}% Off</span>
-                <span class="offerSavings">Savings: ₹{{this.product.offerSavings}}</span>
+              <span> ₹{{this.product.effectivePrice}}</span>
+              <small class="text-muted text-decoration-line-through"> ₹{{this.product.originalPrice}}</small>
+              <span class="badge badge-success btn-sm">{{this.product.discountPercentage}}% OFF</span>
+              <span class="offerSavings mt-1">Savings: ₹{{this.product.offerSavings}}</span>
               {{else}}
                 <span class="fw-bold ms-1"> ₹{{this.product.originalPrice}}</span>
+                <span class="text-muted">No offer</span>
               {{/if}}
             </p>
           </div>
@@ -39,28 +48,27 @@
       {{/each}}
     </div>
     <div class="col-md-4">
-      <div class="mb-2">
-        <span class="error" style="color: red;"></span>
-      </div>
+
       <div class="coupon-section form-group">
         <form id="couponForm">
-          <input type="text" id="couponCode" {{#if coupon}} value="{{coupon.code}}"{{/if}} class="form-control" placeholder="Enter coupon code" />
+          {{#if appliedCoupon}} <small>Applied Coupon</small> {{/if}}
+          <input type="text" id="couponCode" {{#if appliedCoupon.code}} value="{{appliedCoupon.code}}"{{/if}} class="form-control" placeholder="Enter coupon code" />
           <button type="button" class="btn btn-warning btn-block mt-2" onclick="openCouponModal()">View Available Coupons</button>
-          <button type="submit" class="btn btn-success btn-block mt-2">Apply Coupon</button>
+          <button id="applyCouponBtn" type="submit" class="btn btn-outline-success btn-block mt-2" {{#if appliedCoupon}}style="display: none;"{{else}}style="display: block;"{{/if}}>Apply Coupon</button>
         </form>
-        <button id="removeCouponBtn" class="btn btn-outline-danger btn-block mt-2" {{#if discount}}style="display: block;"{{else}}style="display: none;"{{/if}}>Remove Coupon</button>
+        <button id="removeCouponBtn" class="btn btn-outline-danger btn-block mt-2" {{#if appliedCoupon}}style="display: block;"{{else}}style="display: none;"{{/if}}>Remove Coupon</button>
       </div>
       <div class="order-summary"> 
         <h5>Order Summary</h5>
         <p id="firstPrice">Price: Rs.{{cart.cartTotal}}</p>
        
-        {{#if discount}}
-          <p>Coupon Discount: Rs.{{discount}}</p>
+        {{#if appliedCoupon}}
+          <p id="couponDiscount">Coupon Discount: Rs.{{appliedCoupon.discount}}</p>
         {{/if}}
         <p>Shipping: Free</p>
         <hr>
         <h5>Total: Rs.{{cart.totalAfterDiscount}}</h5>
-        <p>Estimated Delivery by <strong>14 July, 2024</strong></p>
+        <p>Estimated Delivery by <strong>30 July, 2024</strong></p>
         <hr>
         <a href="/user/checkout" class="btn btn-primary btn-block mt-3">Proceed to Checkout</a>
         <a href="/user/dashboard" class="btn btn-outline-secondary btn-block mt-1">Add More Items</a>
@@ -83,10 +91,13 @@
           <li class="list-group-item d-flex justify-content-between align-items-center">
             {{this.code}} - Rs.{{this.discount}}
             <span> Minimum Purchase Rs.{{this.minBill}}</span>
-            <button class="btn btn-warning btn-sm ms-2" onclick="applyCoupon('{{this.code}}')">Apply</button>
+              <button class="btn btn-warning btn-sm ms-2" onclick="applyCoupon('{{this.code}}')">Apply</button>
           </li>
           {{/each}}
         </ul>
+        <div class="mb-2">
+            <span class="error" style="color: red;"></span>
+          </div>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
@@ -115,10 +126,21 @@
   }
 
   function applyCoupon(code) {
-    // Set the coupon code in the input field and submit the form
+    // Set the coupon code in the input field
     document.getElementById('couponCode').value = code;
-    $('#couponModal').modal('hide');
+    
+    // Submit the form to apply the coupon
+    document.getElementById('couponForm').submit();
   }
+
+  document.addEventListener('DOMContentLoaded', function() {
+    // Add event listener to all apply coupon buttons in the modal
+    document.querySelectorAll('.apply-coupon-btn').forEach(function(button) {
+      button.addEventListener('click', function() {
+        applyCoupon(button.dataset.code);
+      });
+    });
+  });
 </script>
 
 <script src="/js/cart.js"></script>

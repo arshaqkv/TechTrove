@@ -8,39 +8,48 @@
       <div class="card">
         <div class="card-body">
           <h4 class="card-title">Shipping Address</h4>
-          <form id="shippingAddressForm" method="POST">
+          <div id="errorMessages" class="alert alert-danger d-none"></div>
+          <form id="shippingAddressForm">
             <input type="hidden" name="user" value="{{user._id}}">
-            <div class="form-group ">
+            <div class="form-group">
               <label for="name">Name</label>
-              <input type="text" class="form-control" id="name" name="name" placeholder="Name*" required>
+              <input type="text" class="form-control" id="name" name="name" placeholder="Name*" >
+              <span class="error" id="error-name"></span>
             </div>
-            <div class="form-group ">
+            <div class="form-group">
               <label for="phone">Mobile No</label>
-              <input type="number" class="form-control" id="phone" name="phone" placeholder="Mobile No*" required>
+              <input type="number" class="form-control" id="phone" name="phone" placeholder="Mobile No*" >
+              <span class="error" id="error-phone"></span>
             </div>
-            <div class="form-group ">
+            <div class="form-group">
               <label for="addressLine1">Address Line 1</label>
-              <input type="text" class="form-control" id="addressLine1" name="addressLine1" placeholder="Enter your address*" required>
+              <input type="text" class="form-control" id="addressLine1" name="addressLine1" placeholder="Enter your address*" >
+              <span class="error" id="error-addressLine1"></span>
             </div>
             <div class="form-group">
               <label for="addressLine2">Address Line 2</label>
               <input type="text" class="form-control" id="addressLine2" name="addressLine2" placeholder="Enter your address*">
+              <span class="error" id="error-addressLine2"></span>
             </div>
             <div class="form-row">
               <div class="form-group col-md-6">
                 <label for="city">City</label>
-                <input type="text" class="form-control" id="city" name="city" placeholder="Enter your city*" required>
+                <input type="text" class="form-control" id="city" name="city" placeholder="Enter your city*" >
+                <span class="error" id="error-city"></span>
               </div>
               <div class="form-group col-md-6">
                 <label for="state">State</label>
-                <input type="text" class="form-control" id="state" name="state" placeholder="Enter your state*" required>
+                <input type="text" class="form-control" id="state" name="state" placeholder="Enter your state*" >
+                <span class="error" id="error-state"></span>
               </div>
               <div class="form-group col-md-6">
                 <label for="pincode">Pincode</label>
-                <input type="text" class="form-control" id="pincode" name="pinCode" placeholder="Enter your pincode*" required>
+                <input type="text" class="form-control" id="pincode" name="pinCode" placeholder="Enter your pincode*" >
+                <span class="error" id="error-pinCode"></span>
               </div>
             </div>
             <button type="submit" class="btn btn-dark mt-3">Save Address</button>
+            <a href="/address/all" type="submit" class="btn btn-dark mt-3">Cancel</a>
           </form>
         </div>
       </div>
@@ -48,6 +57,8 @@
   </div>
 </div>
 {{> footer}}
+
+
 
 <script>
 document.getElementById('shippingAddressForm').addEventListener('submit', async function(event) {
@@ -71,20 +82,47 @@ document.getElementById('shippingAddressForm').addEventListener('submit', async 
     });
 
     if (response.ok) {
-      // Handle success
-      alert('Address saved successfully!');
-      console.log(response)
-      // Redirect to address/all page
-      location.href = '/address/all';
+      Swal.fire({
+        icon: 'success',
+        title: 'Success',
+        text: 'Address saved successfully!',
+        showConfirmButton: false,
+        timer: 1500
+      }).then(() => {
+        // Redirect to address/all page
+        location.href = '/address/all';
+      });
     } else {
       // Handle error response
       const errorData = await response.json();
-      alert('Error saving address: ' + errorData.message);
+      handleErrors(errorData.errors);
     }
   } catch (error) {
     // Handle network error
     console.error('Network error:', error);
-    alert('Network error: ' + error.message);
+    Swal.fire({
+      icon: 'error',
+      title: 'Network Error',
+      text: error.message
+    });
   }
 });
+
+function handleErrors(errors) {
+  // Clear previous error messages
+  document.querySelectorAll('.error').forEach(error => error.textContent = '');
+
+  if (errors) {
+    Object.keys(errors).forEach(key => {
+      showError(`error-${key}`, errors[key].msg);
+    });
+  }
+}
+
+function showError(elementId, message) {
+  const errorElement = document.getElementById(elementId);
+  if (errorElement) {
+    errorElement.textContent = message;
+  }
+}
 </script>

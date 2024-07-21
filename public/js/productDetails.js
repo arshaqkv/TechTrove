@@ -32,11 +32,20 @@ document.addEventListener('DOMContentLoaded', () => {
     const submitBtn = document.getElementById('submitBtn');
     const wishlistForm = document.getElementById('wishlistForm');
     const wishlistBtn = document.getElementById('wishlistBtn');
-
-
+    const stockCount = parseInt(document.getElementById('stockCount').value);
+    console.log(stockCount)
     incrementBtn.addEventListener('click', () => {
         let currentValue = parseInt(countInput.value);
-        countInput.value = currentValue + 1;
+        if (currentValue < stockCount) {
+            countInput.value = currentValue + 1;
+        } else {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Stock Limit Exceeded',
+                text: 'You cannot add more items than available in stock.',
+                showConfirmButton: true,
+              });
+        }
     });
 
     decrementBtn.addEventListener('click', () => {
@@ -52,6 +61,16 @@ document.addEventListener('DOMContentLoaded', () => {
             count: parseInt(countInput.value),
             price: parseFloat(priceInput)
         };
+
+        if (cart.count > stockCount) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Stock Limit Exceeded',
+                text: 'You cannot add more items than available in stock.',
+                showConfirmButton: true,
+              });
+            return;
+        }
 
         try {
             const response = await fetch('/user/cart', {

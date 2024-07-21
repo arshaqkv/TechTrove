@@ -82,7 +82,7 @@ productSchema.methods.getEffectivePrice = async function() {
         offerTarget: 'Product',
         targetId: this._id,
         startDate: { $lte: currentDate },
-        expiryDate: { $gte: currentDate }
+        expiryDate: { $gte: currentDate } 
     });
 
     if (productOffer) {

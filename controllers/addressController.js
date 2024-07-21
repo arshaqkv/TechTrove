@@ -1,6 +1,7 @@
 const Address = require('../models/addressModel')
 const asyncHandler = require('express-async-handler')
 const User = require('../models/userModel')
+const { validationResult } = require('express-validator')
 
 const loadCreateAddress = asyncHandler(async (req,res) =>{
     const user = req.user
@@ -13,19 +14,23 @@ const loadCreateAddress = asyncHandler(async (req,res) =>{
 
 const createAddress = asyncHandler(async (req,res) =>{
     try {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({ errors: errors.mapped() });
+        }
         const newAddress = await Address.create(req.body)
-        // res.status(201).redirect('/address/all') 
-        res.json(newAddress)
+        res.status(201).json(newAddress)
     } catch (error) { 
-        throw new Error(error)
+        res.status(500).json({ message: 'Error saving address', error: error.message });
     } 
 })
 
 const loadUpdateAddress= asyncHandler(async (req,res) =>{
+    const user = req.user
     const { id } = req.params
     try {
         const address = await Address.findById(id)
-        res.status(200).render('editAddress', { address })
+        res.status(200).render('editAddress', { user,address })
     } catch (error) {
         throw new Error(error)
     }
@@ -34,6 +39,10 @@ const loadUpdateAddress= asyncHandler(async (req,res) =>{
 const updateAddress = asyncHandler(async (req,res) =>{
     const {id} = req.params
     try {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({ errors: errors.mapped() });
+        }
         const updatedAddress = await Address.findByIdAndUpdate(id, req.body, {
             new: true
         })
