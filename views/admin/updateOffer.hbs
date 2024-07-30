@@ -80,29 +80,29 @@
         document.getElementById('expiryDate').value = formattedExpiryDate;
 
         function toggleTargetOptions() {
-        const offerTarget = document.getElementById('offerTarget').value;
-        const productSelect = document.getElementById('productSelect');
-        const categorySelect = document.getElementById('categorySelect');
-        const productId = document.getElementById('productId');
-        const categoryId = document.getElementById('categoryId');
+            const offerTarget = document.getElementById('offerTarget').value;
+            const productSelect = document.getElementById('productSelect');
+            const categorySelect = document.getElementById('categorySelect');
+            const productId = document.getElementById('productId');
+            const categoryId = document.getElementById('categoryId');
 
-        if (offerTarget === 'Product') {
-            productSelect.style.display = 'block';
-            categorySelect.style.display = 'none';
-            productId.disabled = false;
-            categoryId.disabled = true;
-        } else if (offerTarget === 'Category') {
-            productSelect.style.display = 'none';
-            categorySelect.style.display = 'block';
-            productId.disabled = true;
-            categoryId.disabled = false;
-        } else {
-            productSelect.style.display = 'none';
-            categorySelect.style.display = 'none';
-            productId.disabled = true;
-            categoryId.disabled = true;
+            if (offerTarget === 'Product') {
+                productSelect.style.display = 'block';
+                categorySelect.style.display = 'none';
+                productId.disabled = false;
+                categoryId.disabled = true;
+            } else if (offerTarget === 'Category') {
+                productSelect.style.display = 'none';
+                categorySelect.style.display = 'block';
+                productId.disabled = true;
+                categoryId.disabled = false;
+            } else {
+                productSelect.style.display = 'none';
+                categorySelect.style.display = 'none';
+                productId.disabled = true;
+                categoryId.disabled = true;
+            }
         }
-    }
 
     window.onload = function() {
         toggleTargetOptions();
@@ -122,6 +122,7 @@
         const today = new Date();
         const start = new Date(startDate);
         const expiry = new Date(expiryDate);
+        today.setHours(0, 0, 0, 0);
 
         if (discountPercentage < 1 || discountPercentage > 99) {
             Swal.fire({
@@ -132,7 +133,7 @@
             return false; // Prevent form submission
         }
 
-        if (start < today) {
+        if (start <= today) {
             Swal.fire({
                 icon: 'warning',
                 title: 'Invalid Start Date',

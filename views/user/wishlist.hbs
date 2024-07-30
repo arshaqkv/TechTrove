@@ -14,7 +14,7 @@
     <div class="col-md-9">
         {{#if wishlist.length}}
         <h3>My Wishlist({{count}})</h3>
-        <table class="table table-hover">
+        <table class="table table-hover table-sm ">
             
             <tbody >
                 {{#each wishlist}}
@@ -42,9 +42,15 @@
                     </td>
                     <td class="align-middle">
                         
+                        {{#if this.stock_count}}
                         <button class="btn btn-warning add-to-cart" title="Add to Cart" data-id="{{this._id}}" data-price="{{this.price}}">
                             <i class="fas fa-shopping-cart"></i>
                         </button>
+                        {{else}}
+                        <button class="btn btn-warning add-to-cart" title="Add to Cart" data-id="{{this._id}}" data-price="{{this.price}}" disabled>
+                            <i class="fas fa-shopping-cart"></i>
+                        </button>
+                        {{/if}}
                         <button class="btn toggle-wishlist-item" data-id="{{this._id}}">
                             <i class="fas fa-trash-alt"></i>
                         </button>

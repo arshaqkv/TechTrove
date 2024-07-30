@@ -1,6 +1,6 @@
 {{> user-header}}
 
-    <div class="page-content d-flex align-items-center">
+    <div class="page-content d-flex align-items-center  mb-5">
 
         <div class="container d-flex justify-content-center">
 
@@ -54,3 +54,10 @@
         </div>
     </div>
 
+<script>
+    setTimeout(() =>{
+        document.querySelectorAll('.error').forEach(elem =>{
+            elem.textContent = ''
+        })
+    },3000)
+</script>

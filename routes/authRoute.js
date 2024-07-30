@@ -41,7 +41,9 @@ const { createUser,
         loadUpdateStatus,
         returnOrder,
         getOrderInvoice,
-        loadWalletTransactions
+        loadWalletTransactions,
+        landingPage,
+        homePage
     } = require('../controllers/userController')
 const { validateSignup, validateLogin, validatePassword, validateProfile }  = require('../middlewares/validation')
 const { authMiddleware, isAdmin, redirectIfAuthenticated, redirectToAdminDashboard } = require('../middlewares/authMiddleware')
@@ -51,7 +53,8 @@ const router = express.Router()
 
 
 
-router.get('/', userSignup)
+router.get('/', landingPage)
+router.get('/home', authMiddleware, homePage)
 router.post('/register', validateSignup, createUser)
 router.get('/register', nocache(), userSignup)
 //otp verification routes
@@ -60,7 +63,7 @@ router.post('/verify-otp', verifyOtp)
 
 router.post('/login', validateLogin, loginUserCntrl)
 router.get('/login', redirectIfAuthenticated , nocache(),userLogin)
-router.get('/dashboard', authMiddleware, noCache(),loadDashboard)
+router.get('/shop', authMiddleware, noCache(),loadDashboard)
 router.get('/admin', redirectToAdminDashboard ,nocache(), loadLoginAdmin)
 router.post('/admin',validateLogin, loginAdmin)
 router.get('/admin/dashboard',authMiddleware,isAdmin, noCache(), loadAdminDashboard)

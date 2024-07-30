@@ -90,11 +90,9 @@ document.getElementById('editAddressForm').addEventListener('submit', async func
         showConfirmButton: false,
         timer: 1500
       }).then(() => {
-        if (originPage === 'checkout') {
-          window.location.href = 'user/checkout'; // Reload the checkout page
-        } else {
+        
           window.location.href = '/address/all'; // Redirect to address/all page
-        }
+        
       });
     } else {
       // Handle error response

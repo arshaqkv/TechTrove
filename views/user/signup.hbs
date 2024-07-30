@@ -95,8 +95,12 @@
             });
             const result = await response.json();
             if (response.status === 400) {
-                handleErrors(result.errors);
-            } else if (response.status === 201) {
+                if(result.error){
+                    showError('error-general', result.error);
+                }else{
+                    handleErrors(result.errors);
+                }
+            }else if (response.status === 201) {
                 $('#otpModal').modal('show');
                 startResendTimer();
                 startExpireTimer();

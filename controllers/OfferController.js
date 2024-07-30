@@ -2,6 +2,7 @@ const asyncHandler = require('express-async-handler')
 const Product = require('../models/productModel')
 const Category = require('../models/categoryModel')
 const Offer = require('../models/offerModel');
+const { validationResult } = require('express-validator')
 const validateMongoDbId = require('../utils/validateMongodbID')
 
 const loadCreateOffer = asyncHandler(async (req,res)=>{
@@ -19,7 +20,10 @@ const createOffer = asyncHandler(async (req,res) =>{
     const { offerTarget, targetId, discountPercentage, startDate, expiryDate } = req.body
     console.log(req.body)
     try {
-
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({ errors: errors.mapped() });
+        }
         const existingOffer = await Offer.findOne({targetId})
         if(existingOffer){
             return res.status(400).json({ success: false, message: 'Offer already exists.' })

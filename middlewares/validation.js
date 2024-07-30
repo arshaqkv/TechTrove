@@ -183,8 +183,15 @@ const validateProduct = [
     .isInt({ gt: 0 }).withMessage('Price must be greater than zero'),
     
     body('stock_count')
-    .notEmpty().withMessage('Price is required')
-    .isInt({ min: 0 }).withMessage('Stock should be a positive value') 
+    .notEmpty().withMessage('Stock is required')
+    .isInt({ min: 0 }).withMessage('Stock should be a positive value'),
+    
+    body('category')
+    .notEmpty().withMessage('Category is required'),   
+
+    body('brand')
+    .notEmpty().withMessage('Brand is required')
+    
 ]
 
 const validateCoupon = [
@@ -209,6 +216,18 @@ const validateCoupon = [
        
 ]
 
+const validateOffer = [
+  body('offerTarget')
+    .trim()
+    .notEmpty().withMessage('This field is required'),
+
+    body('targetId')
+    .trim()
+    .notEmpty().withMessage('This field is required')
+    
+       
+]
 
 
-module.exports = { validateSignup, validateLogin, validatePassword,validateAddress, validateProfile, validateProduct,validateCoupon }
+
+module.exports = { validateSignup, validateLogin, validatePassword,validateAddress, validateProfile, validateProduct,validateCoupon, validateOffer }

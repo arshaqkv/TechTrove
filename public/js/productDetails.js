@@ -6,7 +6,7 @@ imgContainer.addEventListener('mousemove', e =>{
     const y = e.clientY - e.target.offsetTop
     console.log(x,y)
     mainImage.style.transformOrigin = `${x}px ${y}px`
-    mainImage.style.transform = "scale(3)"
+    mainImage.style.transform = "scale(2)" 
 })
 
 imgContainer.addEventListener('mouseleave', e =>{

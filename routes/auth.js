@@ -13,7 +13,7 @@ router.get('/google/callback',
             // console.log(user)
             const token = generateToken(user._id)
             res.cookie('jwt', token, {httpOnly: true})
-            res.status(201).redirect('/dashboard')
+            res.status(201).redirect('/home')
 });
 
 

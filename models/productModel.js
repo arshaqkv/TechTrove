@@ -25,7 +25,8 @@ let productSchema = new Schema({
     },
     brand: {
         type: String,
-        enum: ["Apple", "Samsung", "Lenovo","Huawei","Oppo","Oneplus"]
+        // enum: ["Apple", "Samsung", "Lenovo","Huawei","Oppo","Oneplus"]
+        required: true 
     },
     images: {
         type: Array

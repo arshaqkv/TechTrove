@@ -1,0 +1,302 @@
+{{> user-header}}
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    header {
+        background: #000;
+        color: #fff;
+        padding: 20px 0;
+        text-align: center;
+    }
+
+    .navbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0 20px;
+    }
+
+    .logo {
+        font-size: 24px;
+        font-weight: bold;
+    }
+    
+    .icon-box {
+            text-align: center;
+            padding: 20px;
+        }
+        .icon-box i {
+            font-size: 20px;
+            margin-bottom: 10px;
+        }
+        .icon-box h5 {
+            font-size: 17px;
+            margin-bottom: 5px;
+        }
+        .icon-box p {
+            font-size: 10px;
+        }
+    nav ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        display: flex;
+    }
+
+    nav ul li {
+        margin: 0 15px;
+    }
+
+    nav ul li a {
+        color: #fff;
+        text-decoration: none;
+    }
+
+    .cart img {
+        width: 30px;
+    }
+
+    .hero {
+        padding: 50px 20px;
+        text-align: center;
+    }
+
+    .hero h1 {
+        font-size: 36px;
+        margin-bottom: 20px;
+    }
+
+    .hero img {
+        width: 200px;
+        margin-bottom: 20px;
+    }
+
+    .hero form {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .hero form input {
+        padding: 10px;
+        font-size: 16px;
+        border: none;
+        border-radius: 5px 0 0 5px;
+    }
+
+    .hero form button {
+        padding: 10px;
+        font-size: 16px;
+        border: none;
+        background: #007BFF;
+        color: #fff;
+        border-radius: 0 5px 5px 0;
+        cursor: pointer;
+    }
+
+    main {
+        padding: 50px 20px;
+        text-align: center;
+    }
+
+    .brands,
+    .latest-products,
+    .testimonials,
+    .newsletter {
+        margin-bottom: 50px;
+    }
+
+    .brand,
+    .product,
+    .testimonial {
+        display: inline-block;
+        margin: 0 20px;
+    }
+
+    .product img,
+    .testimonial img,
+    .brand img {
+        width: 100px;
+        height: 100px;
+        object-fit: cover;
+    }
+
+    .product h3,
+    .testimonial h3,
+    .brand h2 {
+        font-size: 18px;
+        margin: 10px 0;
+    }
+
+    .product p {
+        font-size: 16px;
+    }
+
+    .testimonials {
+        background: #f9f9f9;
+        padding: 50px 0;
+    }
+
+    .testimonial img {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        object-fit: cover;
+    }
+
+   
+</style>
+
+<a href="/shop">
+<div id="carouselExampleIndicators" class="carousel slide" data-ride="carousel">
+    <ol class="carousel-indicators">
+        {{#each banners}}
+        <li data-target="#carouselExampleIndicators" data-slide-to="{{@index}}" class="{{#if @first}}active{{/if}}"></li>
+        {{/each}}
+    </ol>
+    <div class="carousel-inner">
+        {{#each banners}}
+        <div class="carousel-item {{#if @first}}active{{/if}}">
+            <img class="d-block w-100" src="{{this.image}}" alt="Slide {{@index}}">
+        
+        </div>
+        {{/each}}
+    </div>
+    <a class="carousel-control-prev" href="#carouselExampleIndicators" role="button" data-slide="prev">
+        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+        <span class="sr-only">Previous</span>
+    </a>
+    <a class="carousel-control-next" href="#carouselExampleIndicators" role="button" data-slide="next">
+        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+        <span class="sr-only">Next</span>
+    </a>
+</div>
+</a>
+
+
+
+
+<main>
+    
+    <section class="brand mb-5 mt-5">
+        <h1>Shop With Popular Brands</h1>
+        <div class="brand mt-4">
+            <a href="/shop"><img src="/images/iphone-fde203ab.png" alt="Apple"></a>
+            <h2>Apple</h2>
+        </div>
+        <div class="brand">
+            <a href="/shop"><img src="/images/THUMB_GalaxyS22Ultra_MA_Thumb_1440x960.jpg" alt="Xiaomi"></a>
+            <h2>Samsung</h2>
+        </div>
+        <div class="brand">
+            <a href="/shop"><img src="/images/10T-Black-L.png" alt="Oneplus"></a>
+            <h2>One Plus</h2>
+        </div>
+        <div class="brand">
+            <a href="/shop"><img src="/images/kv@2x.webp" alt="Huawei"></a>
+            <h2>Huawei</h2>
+        </div>
+    </section>
+    <section>
+        <div class="container card mt-3">
+            <div class="row">
+                <div class="col-md-3 col-sm-4 col-6">
+                    <div class="icon-box">
+                        <i class="fas fa-shipping-fast"></i>
+                        <h5>Free Delivery</h5>
+                        <p>From all orders over ₹10000</p>
+                    </div>
+                </div>
+                <div class="col-md-3 col-sm-4 col-6">
+                    <div class="icon-box">
+                        <i class="fas fa-gift"></i>
+                        <h5>Surprise Offers</h5>
+                        <p>Save up to 25% off</p>
+                    </div>
+                </div>
+                <div class="col-md-3 col-sm-4 col-6">
+                    <div class="icon-box">
+                        <i class="fas fa-headphones-alt"></i>
+                        <h5>Support 24/7</h5>
+                        <p>Shop with an expert</p>
+                    </div>
+                </div>
+                    
+                <div class="col-md-3 col-sm-4 col-6">
+                    <div class="icon-box">
+                        <i class="fas fa-credit-card"></i>
+                        <h5>Secure Payments</h5>
+                        <p>100% protected payment</p>
+                    </div>
+                </div>
+            </div>
+        </div>  
+    </section>
+    <section class="latest-products mt-5  mb-5  ">
+        <h2>Our Latest Products</h2>
+        <div class="container card">
+            <div class="row">
+                {{#each products}}
+                <div class="col-md-3 p-4 m-auto ">
+                    <div class="product">
+                        <img src="{{this.images.[0]}}" alt="Product">
+                        <h3>{{this.title}}</h3>
+                        {{#if this.offerPrice}}
+                        <span class="text-dark fw-bold" style="font-size: 1.2rem;">₹{{this.offerPrice}}</span>
+                        
+                        <div >
+                            <small class="text-muted"><s>₹{{this.originalPrice}}</s></small>
+                            <small class="ms-1 " style="color: #388e3c; font-weight: 500">{{this.discountPercentage}}% off</small>
+                        </div>
+                        {{else}}
+                        <span class="text-dark fw-bold" style="font-size: 1.2rem;">₹{{this.originalPrice}}</span>
+                        <div>
+                            <small class="text-muted">No Offer</small>
+                        </div>
+                        {{/if}}
+                        <a class="btn btn-outline-primary mt-2" href="/product/{{this._id}}">Buy now</a>
+                    </div>
+                </div>
+                {{/each}}
+            </div>
+        </div>
+    </section>
+    <section>
+        <div class="hero">
+            <h1>Discover Most Featured Products</h1>
+            <img src="/images/lightest__boybgwifuehe_large_2x.jpg" alt="Featured Watch" class="rounded w-100">
+            
+        </div>
+
+    </section>
+    
+
+    <section class="testimonials card">
+        <h2>What People Say About Us</h2>
+        <div class="testimonial mt-5 d-flex flex-column justify-content-center align-items-center">
+            <img src="/images/images.png" alt="Customer 1">
+            <h3>Dianne Russell</h3>
+            <p class="w-50 text-muted">I'm so happy with the service from TechTrove – my order was delivered within 3 days and the thought and care they put into their products really stands out. Plus, their support is just awesome!</p>
+        </div>
+        <div class="testimonial mt-5 d-flex flex-column justify-content-center align-items-center">
+            <img src="images/young-man-in-circle-frame-on-white-background-free-vector.jpg" alt="Customer 2">
+            <h3>Courtney Henry</h3>
+            <p class="w-50 text-muted">Fabulous product bought as a gift for a friend who wears it almost every day. Smart packaging which looks exciting and special. Very good on delivery. Buy this product.</p>
+        </div>
+        <div class="testimonial mt-5 d-flex flex-column justify-content-center align-items-center">
+            <img src="/images/young-man-on-green-background-circle-vector-28862537.jpg" alt="Customer 3">
+            <h3>Darrell Steward</h3>
+            <p class="w-50 text-muted">Great service, fast shipping, and very reasonable prices for products of such quality!</p>
+        </div>
+    </section>
+
+    
+</main>
+
+
+{{> footer}}

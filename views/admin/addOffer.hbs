@@ -27,11 +27,12 @@
                         <form id="offerForm" action="/offers/add" method="post">          
                             <div class="form-group mb-3">
                                 <label for="offerTarget">Offer Target:</label>
-                                <select id="offerTarget" name="offerTarget" class="form-control form-select" onchange="toggleTargetOptions()" required>
+                                <select id="offerTarget" name="offerTarget" class="form-control form-select" onchange="toggleTargetOptions()">
                                     <option value="">Select Target</option>
                                     <option value="Product">Product</option>
                                     <option value="Category">Category</option>
                                 </select>
+                                <span class="error" id="error-offerTarget"></span>
                             </div>
                             <div class="form-group" id="productSelect" style="display: none;">
                                 <label for="productId">Product</label>
@@ -41,6 +42,7 @@
                                     <option value="{{this._id}}">{{this.title}}</option>
                                     {{/each}}
                                 </select>
+                                <span class="error" id="error-targetId"></span>
                             </div>
 
                             <div class="form-group" id="categorySelect" style="display: none;">
@@ -54,7 +56,7 @@
                             </div>
                             <div class="form-group">
                                 <label for="discountPercentage">Discount Percentage:</label>
-                                <input type="number" id="discountPercentage" name="discountPercentage" class="form-control" required>
+                                <input type="number" id="discountPercentage" name="discountPercentage" class="form-control">
                             </div>
                             
                             <div class="form-group">
@@ -75,13 +77,14 @@
 </div>
 
 <script>
-        function toggleTargetOptions() {
+
+    function toggleTargetOptions() {
         const offerTarget = document.getElementById('offerTarget').value;
         const productSelect = document.getElementById('productSelect');
         const categorySelect = document.getElementById('categorySelect');
         const productId = document.getElementById('productId');
         const categoryId = document.getElementById('categoryId');
-
+        document.querySelectorAll('.error').forEach(error => error.textContent = '');
         if (offerTarget === 'Product') {
             productSelect.style.display = 'block';
             categorySelect.style.display = 'none';
@@ -164,11 +167,7 @@
 
             if (!response.ok) {
                 const errorData = await response.json();
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: errorData.message,
-                });
+                handleErrors(errorData.errors);
             } else {
                 const successData = await response.json();
                 Swal.fire({
@@ -188,5 +187,23 @@
             });
         }
     });
+
+    function handleErrors(errors) {
+        // Clear previous error messages
+        document.querySelectorAll('.error').forEach(error => error.textContent = '');
+
+        if (errors) {
+            Object.keys(errors).forEach(key => {
+            showError(`error-${key}`, errors[key].msg);
+            }); 
+        }
+    }
+
+    function showError(elementId, message) {
+        const errorElement = document.getElementById(elementId);
+        if (errorElement) {
+            errorElement.textContent = message;
+        }
+    }
 
     </script>

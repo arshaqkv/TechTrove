@@ -66,7 +66,7 @@ const getAddress = asyncHandler(async (req,res) =>{
     const { id } = req.params
     try {
         const findAddress = await Address.findById(id)
-        res.json(findCategory)  
+        res.json(findAddress)  
     } catch (error) {
         throw new Error(error)
     } 

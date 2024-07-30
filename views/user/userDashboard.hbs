@@ -1,6 +1,29 @@
 {{> user-header}}
 
 <div class="container mt-5">
+    <div id="carouselExampleIndicators" class="carousel slide mb-5" data-ride="carousel">
+        <ol class="carousel-indicators">
+            {{#each banners}}
+            <li data-target="#carouselExampleIndicators" data-slide-to="{{@index}}" class="{{#if @first}}active{{/if}}"></li>
+            {{/each}}
+        </ol>
+        <div class="carousel-inner">
+            {{#each banners}}
+            <div class="carousel-item {{#if @first}}active{{/if}}">
+                <img class="d-block w-100" src="{{this.image}}" alt="Slide {{@index}}">
+            </div>
+            {{/each}}
+        </div>
+        <a class="carousel-control-prev" href="#carouselExampleIndicators" role="button" data-slide="prev">
+            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+            <span class="sr-only">Previous</span>
+        </a>
+        <a class="carousel-control-next" href="#carouselExampleIndicators" role="button" data-slide="next">
+            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+            <span class="sr-only">Next</span>
+        </a>
+    </div>
+
     <div class="row">
         <!-- Sidebar for Category and Price Range -->
         <div class="col-md-3">
@@ -117,6 +140,9 @@
                                     </div>
                                     {{else}}
                                     <span class="text-dark fw-bold" style="font-size: 1.2rem;">₹{{this.originalPrice}}</span>
+                                    <div>
+                                        <small class="text-muted">No Offer</small>
+                                    </div>
                                     {{/if}}
                                     <small>Free delivery by 30th July</small>
                                 </p>

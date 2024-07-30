@@ -1,12 +1,34 @@
 {{> user-header}}
-
+<style>
+  .payment-option {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+  }
+  .payment-option div {
+    text-align: center;
+    flex: 1;
+  }
+  .payment-option input {
+    margin-top: 10px;
+  }
+  .payment-option .fa {
+    font-size: 24px;
+    margin-bottom: 10px;
+  }
+</style>
 <div class="container cart-container">
   <h1 class="my-4">Checkout</h1>
   <div class="row">
     <div class="col-md-8">
       <div class="d-flex justify-content-between align-items-center mb-3">
         <h4 class="card-title">Saved Address</h4>
-        <button class="btn btn-outline-dark" id="addAddressBtn">Add Address</button>
+        <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#addAddressModal">
+          Add Address
+        </button>
       </div>
       <div id="addressList">
         {{#each address}}
@@ -24,7 +46,8 @@
                   </label>
                 </div>
                 <div>
-                  <button class="btn btn-outline-secondary btn-sm" onclick="editAddress('{{this._id}}')"><i class="fas fa-edit"></i></button>
+                  <button class="btn btn-outline-secondary btn-sm edit-address-btn" data-id="{{this._id}}" data-toggle="modal" data-target="#editAddressModal"><i class="fas fa-edit"></i></button>
+                  {{!-- <button class="btn btn-outline-secondary btn-sm" onclick="editAddress('{{this._id}}')"><i class="fas fa-edit"></i></button> --}}
                   <button class="btn btn-outline-danger btn-sm" onclick="deleteAddress('{{this._id}}')"><i class="fas fa-trash"></i></button>
                 </div>
               </div>
@@ -85,15 +108,316 @@
   </div>
 </div>
 
+{{!-- add address  --}}
+<div class="modal fade" id="addAddressModal" tabindex="-1" aria-labelledby="addAddressModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="addAddressModalLabel">Add New Address</h5>
+        <button type="button" class="close closeModalButton" id="" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div id="errorMessages" class="alert alert-danger d-none"></div>
+        <form id="shippingAddressForm">
+          <input type="hidden" name="user" value="{{user._id}}">
+          <div class="form-group">
+            <label for="name">Name</label>
+            <input type="text" class="form-control" id="name" name="name" placeholder="Name*" >
+            <span class="error" id="error-name"></span>
+          </div>
+          <div class="form-group">
+            <label for="phone">Mobile No</label>
+            <input type="number" class="form-control" id="phone" name="phone" placeholder="Mobile No*" >
+            <span class="error" id="error-phone"></span>
+          </div>
+          <div class="form-group">
+            <label for="addressLine1">Address Line 1</label>
+            <input type="text" class="form-control" id="addressLine1" name="addressLine1" placeholder="Enter your address*" >
+            <span class="error" id="error-addressLine1"></span>
+          </div>
+          <div class="form-group">
+            <label for="addressLine2">Address Line 2</label>
+            <input type="text" class="form-control" id="addressLine2" name="addressLine2" placeholder="Enter your address*">
+            <span class="error" id="error-addressLine2"></span>
+          </div>
+          <div class="form-row">
+            <div class="form-group col-md-6">
+              <label for="city">City</label>
+              <input type="text" class="form-control" id="city" name="city" placeholder="Enter your city*" >
+              <span class="error" id="error-city"></span>
+            </div>
+            <div class="form-group col-md-6">
+              <label for="state">State</label>
+              <input type="text" class="form-control" id="state" name="state" placeholder="Enter your state*" >
+              <span class="error" id="error-state"></span>
+            </div>
+            <div class="form-group col-md-6">
+              <label for="pincode">Pincode</label>
+              <input type="text" class="form-control" id="pincode" name="pinCode" placeholder="Enter your pincode*" >
+              <span class="error" id="error-pinCode"></span>
+            </div>
+          </div>
+          <button type="submit" class="btn btn-dark mt-3">Save Address</button>
+          
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Address Modal -->
+<div class="modal fade" id="editAddressModal" tabindex="-1" aria-labelledby="editAddressModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="editAddressModalLabel">Edit Address</h5>
+        <button type="button" class="close closeModalButton" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div id="editAddressErrorMessages" class="alert alert-danger d-none"></div>
+        <form id="editAddressForm">
+          <input type="hidden" id="editAddressId" name="addressId">
+          <div class="form-group">
+            <label for="editName">Name</label>
+            <input type="text" class="form-control" id="editName" name="name" placeholder="Name*">
+            <span class="error" id="error-editName"></span>
+          </div>
+          <div class="form-group">
+            <label for="editPhone">Mobile No</label>
+            <input type="number" class="form-control" id="editPhone" name="phone" placeholder="Mobile No*">
+            <span class="error" id="error-editPhone"></span>
+          </div>
+          <div class="form-group">
+            <label for="editAddressLine1">Address Line 1</label>
+            <input type="text" class="form-control" id="editAddressLine1" name="addressLine1" placeholder="Enter your address*">
+            <span class="error" id="error-editAddressLine1"></span>
+          </div>
+          <div class="form-group">
+            <label for="editAddressLine2">Address Line 2</label>
+            <input type="text" class="form-control" id="editAddressLine2" name="addressLine2" placeholder="Enter your address">
+            <span class="error" id="error-editAddressLine2"></span>
+          </div>
+          <div class="form-row">
+            <div class="form-group col-md-6">
+              <label for="editCity">City</label>
+              <input type="text" class="form-control" id="editCity" name="city" placeholder="Enter your city*">
+              <span class="error" id="error-editCity"></span>
+            </div>
+            <div class="form-group col-md-6">
+              <label for="editState">State</label>
+              <input type="text" class="form-control" id="editState" name="state" placeholder="Enter your state*">
+              <span class="error" id="error-editState"></span>
+            </div>
+            <div class="form-group col-md-6">
+              <label for="editPincode">Pincode</label>
+              <input type="text" class="form-control" id="editPincode" name="pinCode" placeholder="Enter your pincode*">
+              <span class="error" id="error-editPinCode"></span>
+            </div>
+          </div>
+          <button type="submit" class="btn btn-dark mt-3">Update Address</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
 {{> footer}}
 
 //razorpay intergration
 <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 
 <script>
-  document.getElementById('addAddressBtn').addEventListener('click', function() {
-    window.location.href = '/address/add?originPage=checkout';
+  document.getElementById('shippingAddressForm').addEventListener('submit', async function(event) {
+    event.preventDefault(); // Prevent the default form submission
+
+    const form = event.target;
+    const formData = new FormData(form);
+
+    const data = {};
+    formData.forEach((value, key) => {
+      data[key] = value;
+    });
+
+    try {
+      const response = await fetch('/address/add', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
+      });
+
+      if (response.ok) {
+        Swal.fire({
+          icon: 'success',
+          title: 'Success',
+          text: 'Address saved successfully!',
+          showConfirmButton: false,
+          timer: 1500
+        }).then(() => {
+          $('#addressModal').modal('hide'); // Hide the modal
+          location.reload(); // Reload the page
+        });
+      } else {
+        // Handle error response
+        const errorData = await response.json();
+        handleErrors(errorData.errors);
+      }
+    } catch (error) {
+      // Handle network error
+      console.error('Network error:', error);
+      Swal.fire({
+        icon: 'error',
+        title: 'Network Error',
+        text: error.message
+      });
+    }
   });
+
+  
+
+  function handleErrors(errors) {
+    // Clear previous error messages
+    document.querySelectorAll('.error').forEach(error => error.textContent = '');
+
+    if (errors) {
+      Object.keys(errors).forEach(key => {
+        showError(`error-${key}`, errors[key].msg);
+      });
+    }
+  }
+
+  function showError(elementId, message) {
+    const errorElement = document.getElementById(elementId);
+    if (errorElement) {
+      errorElement.textContent = message;
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', (event) => {
+    const closeModalButton = document.querySelectorAll('.closeModalButton');
+    const errorMessages = document.getElementById('errorMessages');
+    const shippingAddressForm = document.getElementById('shippingAddressForm');
+   
+
+    closeModalButton.forEach(closeBtn =>{
+      closeBtn.addEventListener('click', () => {
+      // Clear all error messages
+      const errorElements = document.querySelectorAll('.error');
+      errorElements.forEach(element => {
+        element.textContent = '';
+      });
+
+      // Hide the main error message box if it's visible
+      errorMessages.classList.add('d-none');
+      errorMessages.textContent = '';
+
+      // Reset the form
+      shippingAddressForm.reset();
+    });
+    })
+  });
+
+  document.addEventListener('DOMContentLoaded', ()=>{
+   document.querySelectorAll('.edit-address-btn').forEach(button => {
+      button.addEventListener('click', async function() {
+        const addressId = this.getAttribute('data-id');
+
+        try {
+          const response = await fetch(`/address/${addressId}`);
+          const address = await response.json();
+
+          if (response.ok) {
+            // Populate the modal with address details
+            document.getElementById('editAddressId').value = address._id;
+            document.getElementById('editName').value = address.name;
+            document.getElementById('editPhone').value = address.phone;
+            document.getElementById('editAddressLine1').value = address.addressLine1;
+            document.getElementById('editAddressLine2').value = address.addressLine2;
+            document.getElementById('editCity').value = address.city;
+            document.getElementById('editState').value = address.state;
+            document.getElementById('editPincode').value = address.pinCode;
+          } else {
+            console.error('Failed to fetch address:', address.message);
+          }
+        } catch (error) {
+          console.error('Error fetching address:', error);
+        }
+      });
+    });
+
+    document.getElementById('editAddressForm').addEventListener('submit', async function(event) {
+      event.preventDefault(); // Prevent the default form submission
+
+      const form = event.target;
+      const formData = new FormData(form);
+      const addressId = document.getElementById('editAddressId').value
+      const data = {};
+      formData.forEach((value, key) => {
+        data[key] = value;
+      });
+
+      try {
+        const response = await fetch(`/address/update/${addressId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(data)
+        });
+
+        if (response.ok) {
+          Swal.fire({
+            icon: 'success',
+            title: 'Success',
+            text: 'Address updated successfully!',
+            showConfirmButton: false,
+            timer: 1500
+          }).then(() => {
+            $('#editAddressModal').modal('hide'); // Hide the modal
+            location.reload(); // Reload the page
+          });
+        } else {
+          // Handle error response
+          const errorData = await response.json();
+          handleErrors(errorData.errors);
+        }
+      } catch (error) {
+        // Handle network error
+        console.error('Network error:', error);
+        Swal.fire({
+          icon: 'error',
+          title: 'Network Error',
+          text: error.message
+        });
+      }
+    });
+
+    function handleErrors(errors) {
+      // Clear previous error messages
+      document.querySelectorAll('.error').forEach(error => error.textContent = '');
+
+      if (errors) {
+        Object.keys(errors).forEach(key => {
+          showError(`error-edit${capitalizeFirstLetter(key)}`, errors[key].msg);
+        });
+      }
+    }
+
+    function showError(elementId, errorMessage) {
+      const errorElement = document.getElementById(elementId);
+      errorElement.textContent = errorMessage;
+    }
+
+    function capitalizeFirstLetter(string) {
+      return string.charAt(0).toUpperCase() + string.slice(1);
+    }
+  })
+
 
   document.querySelectorAll('input[name="defaultAddress"]').forEach(function (radio) {
     radio.addEventListener('change', function () {
@@ -139,9 +463,7 @@
     .catch(error => console.error('Error:', error));
   }
 
-  function editAddress(addressId) {
-    window.location.href = `/address/edit/${addressId}?originPage=checkout`;
-  }
+  
 
   //checkout 
  function proceedToCheckout() {
@@ -199,12 +521,12 @@
         if (data.success) {
             if (paymentMethod === 'Razorpay') {
                 const options = {
-                    key: 'rzp_test_4O98bI5B7yGQkw', // Enter the Key ID generated from the Dashboard
-                    amount: data.razorpayOrder.amount, // Amount is in currency subunits. Default currency is INR. Hence, 1000 means 1000 paise = INR 10.
+                    key: 'rzp_test_4O98bI5B7yGQkw', 
+                    amount: data.razorpayOrder.amount, 
                     currency: data.razorpayOrder.currency,
                     name: 'TechTrove',
                     description: 'Test Transaction',
-                    image: 'https://example.com/your_logo',
+                    image: '/images/logo/Techtrove (1).png',
                     order_id: data.razorpayOrder.id, // This is the order_id created in your backend.
                     handler: function (response) {
                         fetch('/user/verify-payment', {
@@ -312,24 +634,4 @@
  
 
 </script>
-<style>
-  .payment-option {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 20px;
-    border: 1px solid #e0e0e0;
-    border-radius: 8px;
-  }
-  .payment-option div {
-    text-align: center;
-    flex: 1;
-  }
-  .payment-option input {
-    margin-top: 10px;
-  }
-  .payment-option .fa {
-    font-size: 24px;
-    margin-bottom: 10px;
-  }
-</style>
+

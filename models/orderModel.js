@@ -47,6 +47,9 @@ const orderSchema = new Schema({
     razorpayOrderId: {
         type: String
     },
+    feedback: {
+        type: String     
+    }
     // paymentStatus: {
     //     type: String,
     //     default: 'Pending'

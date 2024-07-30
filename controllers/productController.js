@@ -9,6 +9,8 @@ const validateMongoDbId = require('../utils/validateMongodbID')
 const { validationResult } = require('express-validator')
 
 
+
+
 //create product page
 const loadCreateProduct = asyncHandler( async(req,res) =>{  
     try {
@@ -19,31 +21,7 @@ const loadCreateProduct = asyncHandler( async(req,res) =>{
     }
 })
 
-//create products
-// const createProduct = asyncHandler(async (req, res) => {
-//     try {
-//         let { title, slug } = req.body;
-//         if (title) {
-//             let productSlug = slug || slugify(title, { lower: true, strict: true });
-//             // Check if the slug already exists, if it does, append a number until it's unique
-//             let counter = 1;  
-//             while (await Product.findOne({ slug: productSlug })) {
-//                 productSlug = `${slug || slugify(title, { lower: true, strict: true })}-${counter}`;
-//                 counter++;
-//             }
-//             req.body.slug = productSlug;
-//         }
-        
-//         // req.body.images now contains the paths to the resized images
-//         const newProductData = {
-//             ...req.body, // Include other fields from req.body
-//         }; 
-//         const newProduct = await Product.create(newProductData);
-//         return res.redirect('/product/index');
-//     } catch (err) {
-//         throw new Error(err);
-//     }
-// });
+
 
 const createProduct = asyncHandler(async (req, res) => {
     try {
@@ -97,11 +75,7 @@ const getAllProducts = asyncHandler(async (req, res) => {
             .limit(limit)
             .exec();
 
-        products.forEach(product => {
-            if (product.images && Array.isArray(product.images)) {
-                product.images = product.images.map(img => img.replace(/public/g, ''));
-            }
-        });
+       
 
         const pagination = {
             totalPages,
@@ -129,26 +103,18 @@ const getProduct = asyncHandler(async (req,res) =>{
     try {
         const user = await User.findById(_id)
         const product = await Product.findById(prodId).populate('category')
-        // adjusting path ...correcting exact path
-        if (product.images && Array.isArray(product.images)) {
-            product.images = product.images.map(img => img.replace(/\\/g, '/').replace(/public/g, '')) // Replace backslashes with forward slashes
-        }
+        
         const recommendedProduct = await Product.find({
             category: product.category._id,
             _id: {$ne: product._id}
         }).limit(8)
         
-        recommendedProduct.forEach(product => {
-            // Adjust the path if necessary
-            if (product.images && Array.isArray(product.images)) {
-                product.images = product.images.map(img => img.replace(/\\/g, '/').replace(/public/g, '')) // Replace backslashes with forward slashes
-            }
-        });
         
         const alreadyAddedProduct = user.wishlist.find((id) => id.toString() === prodId)
 
         const breadcrumbs = [
-            { name: 'Home', url: '/dashboard'},  
+            { name: 'Home', url: '/home'},  
+            { name: 'Shop', url: '/shop'},
             { name: product.title, url: `/product/${prodId}`}
         ]
 
@@ -168,9 +134,6 @@ const loadUpdateProduct = asyncHandler( async(req,res) =>{
         const categories = await Category.find({ isDeleted: false});
         const product = await Product.findById(id); 
         
-        if (product.images && Array.isArray(product.images)) {
-            product.images = product.images.map(img => img.replace(/public/g, '')) // Replace backslashes with forward slashes
-        }
         res.status(201).render('editProduct', {product,categories});
     } catch (error) {
         console.log(error)
@@ -307,9 +270,6 @@ const loadWishlist = asyncHandler(async (req, res) => {
 
         const wishlist = await Promise.all(
             userWishlist.wishlist.slice(skip, skip + limit).map(async product => {
-                if (product.images && Array.isArray(product.images)) {
-                    product.images = product.images.map(img => img.replace(/\\/g, '/').replace(/public/g, ''));
-                }
 
                 const { originalPrice, offerPrice, discountPercentage } = await product.getEffectivePrice();
                 return {
@@ -385,9 +345,6 @@ const getTrendingItems = asyncHandler(async(req,res) =>{
         ]) 
         
         const updatedProducts = await Promise.all(trendingProducts.map(async (product) => {
-            if (product.productDetails.images && Array.isArray(product.productDetails.images)) {
-                product.productDetails.images = product.productDetails.images.map(img => img.replace(/public/g, ''));
-            }
 
             // Get the effective price using the method defined in the Product schema
             const productDoc = new Product(product.productDetails);

@@ -32,11 +32,12 @@ const categoryRouter = require('./routes/categoryRoute');
 const addressRouter = require('./routes/addressRoute')
 const couponRouter = require('./routes/couponRoute')
 const offerRouter = require('./routes/offerRoute')
+const bannerRouter = require('./routes/bannerRoute')
 
 app.use(methodOverride('_method'))
 app.use(morgan('dev'))
-app.use(express.json())
-app.use(express.urlencoded({extended: true}))
+app.use(express.json({ limit: '10mb' })); // Adjust the size as needed
+app.use(express.urlencoded({ limit: '10mb', extended: true }));
 app.use(cookieParser())
 
 // Serve static files from the public directory
@@ -74,6 +75,7 @@ app.use('/prod/category', categoryRouter)
 app.use('/address', addressRouter)
 app.use('/coupon', couponRouter)
 app.use('/offers', offerRouter)
+app.use('/banner', bannerRouter) 
 
 app.use(notFound)
 app.use(errorHandler)

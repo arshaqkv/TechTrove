@@ -1,0 +1,131 @@
+{{> admin-header}}
+<style>
+  /* Banner Card */
+  .banner-card {
+    border: none;
+    border-radius: 10px;
+    overflow: hidden;
+  }
+
+  .banner-card .btn {
+    color: rgb(88, 88, 88);
+    font-size: 20px;
+  }
+
+  .banner-card .btn:hover {
+    color: rgb(51, 47, 47);
+  }
+
+  .banner-img {
+    width: 100%;
+    
+  }
+
+  /* Banner Title */
+  .banner-title {
+    display: block;
+    text-align: center;
+    margin-top: 10px;
+    font-size: 1.25rem;
+    font-weight: bold;
+    color: #333;
+  }
+
+  /* Upload New Banner Section */
+  .upload-new-banner {
+    background-color: #f8f9fa;
+    border: 2px dashed #dee2e6;
+    border-radius: 10px;
+    padding: 20px;
+    text-align: center;
+  }
+
+  .upload-area {
+    background-color: #fff;
+    border: 2px dashed #dee2e6;
+    border-radius: 10px;
+    padding: 40px;
+  }
+
+  .upload-area i {
+    color: #3a3a3a;
+  }
+
+  .upload-area p {
+    margin-bottom: 20px;
+    color: #6c757d;
+  }
+</style>
+
+<div class="content">
+  <div class="container mt-5 mb-5">
+    <h2>Current Banner</h2>
+    <div class="row">
+      {{#each banners}}
+      <div class="col-md-4 mb-4 mt-2 " id="{{this.id}}">
+        <div class="card shadow-sm position-relative banner-card">
+          <button class="btn btn-sm position-absolute top-0 end-0 m-2" onclick="confirmDelete('{{this.id}}')"><i class="fas fa-times"></i></button>
+          <img src="{{this.image}}" class="card-img-top banner-img" alt="Banner Image">
+        </div>
+        <span class="banner-title">{{this.title}}</span>
+      </div>
+      {{/each}}
+    </div>
+
+    <div class="upload-new-banner mt-5">
+      <h2>Upload New One</h2>
+      <div class="upload-area text-center p-5 border rounded">
+        <i class="fas fa-cloud-upload-alt fa-3x text-success mb-3"></i>
+        <p></p>
+        <a href="/banner/add" class="btn btn-outline-secondary">
+          <i class="fas fa-plus me-2"></i> Create Banner
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  function confirmDelete(bannerId) {
+    Swal.fire({
+      title: 'Are you sure?',
+      text: "You won't be able to revert this!",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Yes, delete it!'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        fetch(`/banner/delete/${bannerId}`, {
+          method: 'DELETE'
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.message) {
+            Swal.fire(
+              'Deleted!',
+              'The banner has been deleted.',
+              'success'
+            );
+            // Optionally, remove the banner from the DOM
+            document.getElementById(bannerId).remove();
+          } else {
+            Swal.fire(
+              'Error!',
+              'There was an error deleting the banner.',
+              'error'
+            );
+          }
+        })
+        .catch(error => {
+          Swal.fire(
+            'Error!',
+            'There was an error deleting the banner.',
+            'error'
+          );
+        });
+      }
+    });
+  }
+</script>

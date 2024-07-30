@@ -1,89 +1,83 @@
+<style>
+  @media (max-width: 991.98px) {
+      .full-width-dropdown {
+          max-width: 400px;
+          top: 100%;
+          z-index: 1000; 
+      }
+      .dropdown-toggle::after {
+          display: none;
+      }
+
+      .navbar .dropdown .dropdown-toggle {
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          width: 100%;
+      }
+
+      .dropdown-menu a {
+          width: 100%;
+          display: block;
+      }
+  }
+</style>
+{{!-- <style>
+    @media (max-width: 991.98px) {
+    .dropdown-toggle::after {
+          display: none;
+      }
+      
+      .full-width-dropdown {
+          width: 100vw; /* Full viewport width */
+         /* Align to the left of the viewport */
+           /* Align to the right of the viewport */
+           right: 0;
+          position: absolute;
+          overflow: hidden;
+          /* Adjust as necessary to position the dropdown below the navbar */
+          z-index: 1000; /* Ensure the dropdown is above other elements */
+      }
+    }
+
+</style> --}}
 <nav class="navbar navbar-expand-lg navbar-light bg-light">
-    <div class="container d-flex justify-content-around mt-2">
+    <div class="container d-flex justify-content-between align-items-center mt-2">
         <div class="logoDiv">
-            <a href="/dashboard" class="logo" style="text-decoration: none;">
+            <a href="/home" class="logo d-flex align-items-center" style="text-decoration: none;">
                 <i class='bx bx-code-alt'></i>
                 <div class="logo-name"><span>Tech</span>Trove</div>
             </a>
         </div>
-            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-        <div class="collapse navbar-collapse d-flex justify-content-around" id="navbarNav">
-           
-        </div>
+
         <div class="d-flex align-items-center">
-                {{#if user}}
-                <a class="text-dark me-2" href="/product/wishlist"><i class="fas fa-heart"></i></a>
-                <a href="/user/cart" class="text-dark me-2"><i class="fas fa-shopping-cart"></i>{{#if cart.products.length}}{{cart.products.length}}{{/if}}</a>
-                {{/if}}
-                <div class="dropdown">
-                    <a href="#" class="d-block link-dark text-decoration-none dropdown-toggle" id="dropdownUser1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                        <i class="fas fa-user"></i>
-                    </a>
-                    <div class="dropdown-menu dropdown-menu-left" aria-labelledby="dropdownUser1">
-                        {{#if user}}
-                            <span class="dropdown-item-text">{{user.name}}</span>
-                            <span class="dropdown-item-text text-muted small">{{user.email}}</span>
-                            <div class="dropdown-divider"></div>
-                            <a class="dropdown-item" href="/user/profile"><i class="fas fa-user"></i> Profile</a>
-                            <a class="dropdown-item" href="/user/get-orders"><i class="fas fa-box"></i> Orders</a>
-                            <a class="dropdown-item" href="/user/cart"><i class="fas fa-shopping-cart"></i> Cart</a>
-                            <a class="dropdown-item" href="/user/coupons" ><i class="fa fa-bookmark"></i> Coupons</a>
-                            <a class="dropdown-item" href="/product/wishlist"><i class="fas fa-heart"></i> Wishlist</a>
-                            <a class="dropdown-item" href="/user/logout"><i class="fas fa-sign-out-alt"></i> Logout</a>
-                        {{else}}
-                            <a class="dropdown-item" href="/login"></i> Login</a>
-                            <a class="dropdown-item" href="/register"></i> Signup</a>
-                        {{/if}}
-                    </div>
-                </div>
-        </div>
-    </div>
-</nav>
- {{!-- <nav class="navbar navbar-expand-lg navbar-light bg-light"></nav>
-<header class="bg-white border-bottom shadow-sm">
-        <div class="container">
-            <div class="d-flex flex-wrap align-items-center justify-content-between py-3">
-                <a href="/" class="d-flex align-items-center mb-2 mb-lg-0 text-dark text-decoration-none">
-                    
-                    <span class="font-weight-bold">TECHTROVE</span>
+            {{#if user}}
+                <a class="text-dark me-3 d-none d-lg-block" href="/product/wishlist"><i class="fas fa-heart"></i></a>
+                <a href="/user/cart" class="text-dark me-3 d-none d-lg-block"><i class="fas fa-shopping-cart"></i>{{#if cart.products.length}}{{cart.products.length}}{{/if}}</a>
+            {{/if}}
+            <div class="dropdown">
+                <a href="#" class="d-block link-dark text-decoration-none dropdown-toggle" id="dropdownUser1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    <i class="fas fa-user d-none d-lg-inline"></i>
+                    <i class="fas fa-bars d-lg-none"></i>
                 </a>
-
-                <ul class="nav">
-                    <li class="nav-item"><a href="#" class="nav-link px-2 text-dark">HOME</a></li>
-                    <li class="nav-item"><a href="#" class="nav-link px-2 text-dark">STORE</a></li>
-                    <li class="nav-item"><a href="#" class="nav-link px-2 text-dark">BLOG</a></li>
-                    <li class="nav-item"><a href="#" class="nav-link px-2 text-dark">CONTACT</a></li>
-                </ul>
-
-                <div class="d-flex align-items-center">
-                    <a href="#" class="text-dark mr-3"><i class="fas fa-search"></i></a>
-                    <a href="#" class="text-dark mr-3"><i class="fas fa-shopping-cart"></i></a>
-
-                    <div class="dropdown">
-                        <a href="#" class="d-block link-dark text-decoration-none dropdown-toggle" id="dropdownUser1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                            <i class="fas fa-user"></i>
-                        </a>
-                        <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownUser1">
-                            {{#if user}}
-                                <span class="dropdown-item-text">{{user.name}}</span>
-                                <span class="dropdown-item-text text-muted small">{{user.email}}</span>
-                                <div class="dropdown-divider"></div>
-                                <a class="dropdown-item" href="#"><i class="fas fa-box"></i> Orders</a>
-                                <a class="dropdown-item" href="#"><i class="fas fa-shopping-cart"></i> Cart</a>
-                                <a class="dropdown-item" href="#"><i class="fas fa-heart"></i> Wishlist</a>
-                                <a class="dropdown-item" href="#"><i class="fas fa-exchange-alt"></i> Compare</a>
-                                <a class="dropdown-item" href="#"><i class="fas fa-user"></i> Profile</a>
-                                <a class="dropdown-item" href="/logout"><i class="fas fa-sign-out-alt"></i> Logout</a>
-                            {{else}}
-                                <a class="dropdown-item" href="#"><i class="fas fa-box"></i> Login</a>
-                                <a class="dropdown-item" href="#"><i class="fas fa-shopping-cart"></i> Signup</a>
-                            {{/if}}
-                        </div>
-                    </div>
+                <div class="dropdown-menu dropdown-menu-right full-width-dropdown" aria-labelledby="dropdownUser1">
+                    {{#if user}}
+                        <span class="dropdown-item-text">{{user.name}}</span>
+                        <span class="dropdown-item-text text-muted small">{{user.email}}</span>
+                        <div class="dropdown-divider"></div>
+                        <a class="dropdown-item w-100" href="/user/profile"><i class="fas fa-user"></i> Profile</a>
+                        <a class="dropdown-item w-100" href="/user/get-orders"><i class="fas fa-box"></i> Orders</a>
+                        <a class="dropdown-item w-100" href="/user/cart"><i class="fas fa-shopping-cart"></i> Cart</a>
+                        <a class="dropdown-item w-100" href="/user/coupons"><i class="fa fa-bookmark"></i> Coupons</a>
+                        <a class="dropdown-item w-100" href="/user/transactions"><i class="fas fa-wallet"></i> Wallet</a>
+                        <a class="dropdown-item w-100" href="/product/wishlist"><i class="fas fa-heart"></i> Wishlist</a>
+                        <a class="dropdown-item w-100" href="/user/logout"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                    {{else}}
+                        <a class="dropdown-item w-100" href="/login"><i class="fas fa-sign-in-alt"></i> Login</a>
+                        <a class="dropdown-item w-100" href="/register"><i class="fas fa-user-plus"></i> Signup</a>
+                    {{/if}}
                 </div>
             </div>
         </div>
-    </header>
-</nav> --}}
+    </div>
+</nav>

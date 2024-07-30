@@ -1,29 +1,29 @@
 const User = require('../models/userModel')
-const jwt = require('jsonwebtoken')
-const asyncHandler = require('express-async-handler')
+    const jwt = require('jsonwebtoken')
+    const asyncHandler = require('express-async-handler')
 
-const authMiddleware = asyncHandler(async (req,res,next) =>{
-    const token = req.cookies.jwt
-    if (!token) {
-        return res.status(401).redirect('/user/login'); // Redirect to login if not authenticated
-    }
-        
-    try {
-        if(token){
-            const decoded = jwt.verify(token,process.env.JWT_SECRET)
-            const user = await User.findById(decoded?.id)
-            if (!user) {
-                return res.status(401).redirect('/user/login'); // Redirect to login if user not found
-            }
-            req.user = user 
-            next() 
+    const authMiddleware = asyncHandler(async (req,res,next) =>{
+        const token = req.cookies.jwt
+        if (!token) {
+            return res.status(401).redirect('/user/login'); // Redirect to login if not authenticated
         }
-    } catch (error) { 
-        //console.log(error);
-        console.log("Not authorized, token expired, Please login again")
-        return res.status(401).redirect('/user/login');
-    }    
-})
+            
+        try {
+            if(token){
+                const decoded = jwt.verify(token,process.env.JWT_SECRET)
+                const user = await User.findById(decoded?.id)
+                if (!user) {
+                    return res.status(401).redirect('/user/login'); // Redirect to login if user not found
+                }
+                req.user = user 
+                next() 
+            }
+        } catch (error) { 
+            //console.log(error);
+            console.log("Not authorized, token expired, Please login again")
+            return res.status(401).redirect('/user/login');
+        }    
+    })
 
 
 const isAdmin = asyncHandler(async (req,res,next) =>{
@@ -43,7 +43,7 @@ const redirectIfAuthenticated = asyncHandler(async (req, res, next) => {
             const decoded = jwt.verify(token, process.env.JWT_SECRET);
             const user = await User.findById(decoded?.id);
             if (user) {
-                return res.redirect('/dashboard'); // Redirect to dashboard if authenticated
+                return res.redirect('/home'); // Redirect to dashboard if authenticated
             }
         } catch (error) {
             // Token might be expired or invalid, so clear the cookie

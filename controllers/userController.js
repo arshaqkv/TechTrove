@@ -3,12 +3,11 @@ const Product = require('../models/productModel')
 const Category = require('../models/categoryModel')
 const Cart = require('../models/cartModel')
 const Address = require('../models/addressModel')
-const fs = require('fs')
-const path = require('path')
 const Order = require('../models/orderModel')
 const Coupon = require('../models/couponModel')
 const Otp = require('../models/otpModel')
 const Wallet = require('../models/walletModel')
+const Banner = require('../models/bannerModel')
 const asyncHandler = require('express-async-handler')
 const { generateToken } = require('../config/jwToken')
 const { validationResult } = require('express-validator')
@@ -18,7 +17,7 @@ const mailer = require('../helpers/nodemailer')
 const { oneMinuteExpiry, fiveMinuteExpiry } = require('../helpers/otpValidate')
 const moment = require('moment')
 const PDFDocument = require('pdfkit');
-const ExcelJS = require('exceljs')
+const ExcelJS = require('exceljs') 
 const crypto = require('crypto')
 const Razorpay = require('razorpay')
 
@@ -26,6 +25,49 @@ const razorpay = new Razorpay({
     key_id: process.env.RAZORPAY_KEY_ID,
     key_secret: process.env.RAZORPAY_KEY_SECRET 
 });
+
+const fetchProductsAndBanners = async ()=>{
+    try {
+        const products = await Product.find({isDeleted: false}).limit(10)
+        const banners = await Banner.find({})
+        const processedProducts = await Promise.all(products.map(async (product) => {
+            
+            const { originalPrice, offerPrice, discountPercentage } = await product.getEffectivePrice();
+            return {
+                ...product.toObject(),
+                originalPrice,
+                offerPrice,
+                discountPercentage
+            };
+        }));
+        return { processedProducts, banners } 
+    } catch (error) {
+        console.log(error)
+    }
+}
+
+//landing page
+const landingPage = asyncHandler( async (req, res) =>{
+    try {
+        const { processedProducts, banners } = await fetchProductsAndBanners()
+        res.render('landingPage', {products: processedProducts, banners})
+        
+    } catch (error) {
+        console.log(error)   
+    } 
+})
+
+//home page
+const homePage = asyncHandler( async (req, res) =>{
+    const user = req.user
+    try {
+        const { processedProducts, banners } = await fetchProductsAndBanners()
+        res.render('userHome', {products: processedProducts, banners, user})
+        
+    } catch (error) {
+        console.log(error)
+    }
+})
 
 
 //home page
@@ -101,10 +143,9 @@ const loadDashboard = asyncHandler(async (req, res) => {
             Category.find({ isDeleted: false }).exec()
         ]);
 
+        const banners = await Banner.find({})
         const processedProducts = await Promise.all(products.map(async (product) => {
-            if (product.images && Array.isArray(product.images)) {
-                product.images = product.images.map(img => img.replace(/\\/g, '/').replace(/public/g, '')); // Replace backslashes with forward slashes
-            }
+            
             const { originalPrice, offerPrice, discountPercentage } = await product.getEffectivePrice();
             return {
                 ...product.toObject(),
@@ -113,7 +154,7 @@ const loadDashboard = asyncHandler(async (req, res) => {
                 discountPercentage
             };
         }));
-
+   
         const pagination = {
             totalPages,
             page,
@@ -123,7 +164,7 @@ const loadDashboard = asyncHandler(async (req, res) => {
             hasNextPage: page < totalPages,
             hasPrevPage: page > 1,
         };
-        return res.render('userDashboard', { user, products: processedProducts, categories, pagination });
+        return res.render('userDashboard', { user, products: processedProducts, categories, pagination, banners });
         
     } catch (error) {
         console.log(error);
@@ -235,41 +276,49 @@ const userLogin =  asyncHandler(async (req, res) => {
 })  
 
 //Login a user
-const loginUserCntrl = asyncHandler(async(req,res) =>{
+const loginUserCntrl = asyncHandler(async (req, res) => {
     try {
-        
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
-            return res.status(400).render('login',{
-                errors: errors.mapped(), email: req.body.email
-        }); 
+            return res.status(400).render('login', {
+                errors: errors.mapped(),
+                email: req.body.email
+            });
         }
-        const { email,password} = req.body
-        //Check User Exists or Not
-        const findUser = await User.findOne({email})
-        
-        if(findUser && findUser.googleId){
-            return res.status(401).render('login',{error: "Please SignIn through Google"})
-        }else if(findUser && await findUser.isPasswordMatched(password)){
-            
-            token = generateToken(findUser?._id)
-            
-            res.cookie('jwt', token, {httpOnly: true})
-            return res.status(201).redirect('/dashboard')
-            
-        }else if(!findUser){ 
-            return res.status(401).render('login',{error: "User not registered"})
-        }else if(findUser.isBlocked){
-            return res.status(401).render('login',{error: "You Are Blocked"})
-        }else {
-            console.log("************Invalid Credentials")  
-            return res.status(401).render('login',{error: "Invalid Credentials"})
+
+        const { email, password } = req.body;
+
+        // Check User Exists or Not
+        const findUser = await User.findOne({ email });
+
+        if (!findUser) {
+            return res.status(401).render('login', { error: "User not registered" });
         }
+
+        if (findUser.googleId) {
+            return res.status(401).render('login', { error: "Please SignIn through Google" });
+        }
+
+        if (findUser.isBlocked) {
+            return res.status(401).render('login', { error: "Account is Blocked" });
+        }
+
+        const isPasswordCorrect = await findUser.isPasswordMatched(password);
+
+        if (!isPasswordCorrect) {
+            return res.status(401).render('login', { error: "Invalid Credentials" });
+        }
+
+        // Generate token and set cookie
+        const token = generateToken(findUser._id);
+        res.cookie('jwt', token, { httpOnly: true });
+
+        return res.status(201).redirect('/home');
     } catch (error) {
         console.error(error);
         return res.status(500).render('login', { error: 'An error occurred during login' });
     }
-}) 
+});
 
 
 //load admin login
@@ -283,31 +332,47 @@ const loadLoginAdmin = asyncHandler(async (req,res) =>{
 
 
 //admin login
-const loginAdmin = asyncHandler(async (req,res) =>{
+const loginAdmin = asyncHandler(async (req, res) => {
     try {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
-            return res.status(400).render('adminLogin',{
-                errors: errors.mapped(), email: req.body.email
-            }); 
+            return res.status(400).render('adminLogin', {
+                errors: errors.mapped(),
+                email: req.body.email
+            });
         }
-        const { email, password} = req.body
-        const findAdmin = await User.findOne({ email })
-        if(findAdmin && await findAdmin.isPasswordMatched(password)){
-            token = generateToken(findAdmin?._id)
-                console.log(token)
-                res.cookie('jwt', token, {httpOnly: true})
-                res.status(201).redirect('/user/admin/dashboard')
-        }else {
-            console.log("************Invalid Credentials")  
-            return res.status(401).render('adminLogin',{error: "Invalid Credentials"})
+
+        const { email, password } = req.body;
+
+        // Check if admin exists
+        const findAdmin = await User.findOne({ email }); 
+        if (!findAdmin) {
+            return res.status(401).render('adminLogin', { error: "Invalid Credentials" }); 
         }
+
+        // Check if admin is blocked
+        if (findAdmin.isBlocked) {
+            return res.status(401).render('adminLogin', { error: "You are blocked" });
+        }
+
+        // Check if password matches
+        const isPasswordCorrect = await findAdmin.isPasswordMatched(password);
+        if (!isPasswordCorrect) {
+            return res.status(401).render('adminLogin', { error: "Invalid Credentials" });
+        }
+
+        // Generate token and set cookie
+        const token = generateToken(findAdmin._id);
+        console.log(token);
+        res.cookie('jwt', token, { httpOnly: true });
+
+        return res.status(201).redirect('/user/admin/dashboard');
     } catch (error) {
         console.error(error);
         return res.status(500).render('adminLogin', { error: 'An error occurred during login' });
     }
-})
-
+});
+  
 
 //admin dashboard
 
@@ -717,12 +782,12 @@ const loadAdminDashboard =  asyncHandler(async (req, res) => {
 const getExcelReport = asyncHandler(async (req, res) => {
     const { startDate, endDate, salesDuration } = req.query;
     try {
-        let start, end
-        if(startDate, endDate){
-            start = new Date(startDate)
-            end = new Date(endDate)
-        }else {
-            const today = new Date()
+        let start, end;
+        if (startDate && endDate) {
+            start = new Date(startDate);
+            end = new Date(endDate);
+        } else {
+            const today = new Date();
             const startOfDay = new Date(today.setHours(0, 0, 0, 0));
             const startOfWeek = new Date(today.setDate(today.getDate() - today.getDay()));
             const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
@@ -750,17 +815,23 @@ const getExcelReport = asyncHandler(async (req, res) => {
                     end = new Date();
             }
         }
-        const orders = await Order.find({ createdAt: { $gte: start, $lte: end } }).populate('products.product');
+
+        const orders = await Order.find({
+            orderStatus: { $nin: ['Cancelled', 'Returned'] },
+            createdAt: { $gte: start, $lte: end }
+        }).populate('products.product');
 
         const workbook = new ExcelJS.Workbook();
         const worksheet = workbook.addWorksheet('TechTrove Sales Report');
 
         worksheet.columns = [
+            { header: 'SI', key: 'si', width: 6 },
             { header: 'Order ID', key: 'orderId', width: 25 },
-            { header: 'Total Price', key: 'totalPrice', width: 15 },
+            { header: 'Products', key: 'products', width: 35 },
+            { header: 'Price', key: 'price', width: 15 },
             { header: 'Order Status', key: 'orderStatus', width: 20 },
             { header: 'Payment Method', key: 'paymentIntent', width: 25 },
-            { header: 'Products', key: 'products', width: 50 },
+            { header: 'Total Price', key: 'totalPrice', width: 15 },
             { header: 'Discount', key: 'discount', width: 20 }
         ];
 
@@ -769,32 +840,44 @@ const getExcelReport = asyncHandler(async (req, res) => {
 
         let totalSum = 0;
         let discountSum = 0;
-
+        let si = 0
         orders.forEach(order => {
-            const totalProductsPrice = order.products.reduce((acc, p) => acc + (p.count * p.product.price), 0);
-            const discount = totalProductsPrice - order.totalPrice;
-            
-            totalSum += order.totalPrice
-            discountSum += discount
+            const totalOriginalPrice = order.products.reduce((acc, p) => acc + (p.count * p.originalPrice), 0);
+            const totalProductsPrice = order.products.reduce((acc, p) => acc + (p.count * p.finalPrice), 0);
+            const discount = totalOriginalPrice - totalProductsPrice;
 
+            totalSum += totalProductsPrice;
+            discountSum += discount;
+            si++
             worksheet.addRow({
+                si: si,
                 orderId: `#${order.orderId}`,
-                totalPrice: `₹${order.totalPrice}`,
+                products: order.products.map(p => `${p.product.title}`).join('\n'),
+                price: order.products.map(p => `₹${p.finalPrice} x ${p.count}`).join('\n'), 
                 orderStatus: order.orderStatus,
                 paymentIntent: order.paymentIntent,
-                products: order.products.map(p => `${p.product.title}: ${p.count} x ₹${p.product.price}`).join(', '),
+                totalPrice: `₹${order.totalPrice}`,
                 discount: `₹${discount}`
             });
         });
 
         worksheet.addRow({
-            orderId: 'Totals',
+            orderId: '',
+            products: '',
+            price: '',
+            orderStatus: '',
+            paymentIntent: 'Total',
             totalPrice: `₹${totalSum}`,
             discount: `₹${discountSum}`
         });
 
         const totalsRow = worksheet.getRow(worksheet.lastRow.number);
         totalsRow.font = { bold: true };
+
+        // Apply wrap text to specific columns
+        worksheet.columns.forEach(column => {
+            column.alignment = { wrapText: true, vertical: 'middle', horizontal: 'left' };
+        });
 
         res.setHeader('Content-Disposition', `attachment; filename=${start.toDateString()}-${end.toDateString()}-report.xlsx`);
         res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
@@ -803,20 +886,22 @@ const getExcelReport = asyncHandler(async (req, res) => {
 
     } catch (error) {
         console.log(error);
+        res.status(500).send('Error generating report');
     }
 });
+
 
 
 
 const getPdfReport = asyncHandler(async (req, res) => {
     const { startDate, endDate, salesDuration } = req.query;
     try {
-        let start, end
-        if(startDate, endDate){
-            start = new Date(startDate)
-            end = new Date(endDate)
-        }else {
-            const today = new Date()
+        let start, end;
+        if (startDate && endDate) {
+            start = new Date(startDate);
+            end = new Date(endDate);
+        } else {
+            const today = new Date();
             const startOfDay = new Date(today.setHours(0, 0, 0, 0));
             const startOfWeek = new Date(today.setDate(today.getDate() - today.getDay()));
             const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
@@ -845,7 +930,10 @@ const getPdfReport = asyncHandler(async (req, res) => {
             }
         }
 
-        const orders = await Order.find({ createdAt: { $gte: start, $lte: end } }).populate('products.product');
+        const orders = await Order.find({
+            orderStatus: { $nin: ['Cancelled', 'Returned'] },
+            createdAt: { $gte: start, $lte: end }
+        }).populate('products.product');
 
         if (!orders || orders.length === 0) {
             return res.status(404).json({ message: 'No orders found for the specified date range' });
@@ -867,49 +955,60 @@ const getPdfReport = asyncHandler(async (req, res) => {
 
         doc.fontSize(20).text('TechTrove Sales Report', { align: 'center' });
         doc.moveDown();
-        doc.fontSize(12).text(`Date Range: ${start.toDateString()} - ${end.toDateString()}`, { align: 'center'});
+        doc.fontSize(12).text(`Date Range: ${start.toDateString()} - ${end.toDateString()}`, { align: 'center' });
         doc.moveDown();
 
-
         // Table headers
-        const headers = ['Order ID', 'Products', 'Order Status', 'Payment Method','Total Price', 'Discount'];
-        const columnWidths = [80, 180, 90, 90, 70, 70];
+        const headers = ['SI', 'Order ID', 'Products', 'Price', 'Order Status', 'Payment', 'Total Price', 'Discount'];
+        const columnWidths = [30, 80, 100, 80, 90, 70, 70, 70];
         const tableY = tableTop + tableMargin;
 
         // Draw headers
         doc.font('Helvetica-Bold').fontSize(11);
         headers.forEach((header, index) => {
-            doc.text(header, tableMargin + sumArray(columnWidths.slice(0, index)), tableY, { width: columnWidths[index], align: 'center' });
+            doc.text(header, tableMargin + sumArray(columnWidths.slice(0, index)), tableY, { width: columnWidths[index], align: 'left' });
         });
-        
+
         const headerBottomY = tableY + 15; // Adjust height of header
         doc.moveTo(tableMargin, headerBottomY)
-           .lineTo(tableMargin + sumArray(columnWidths), headerBottomY)
-           .stroke();
+            .lineTo(tableMargin + sumArray(columnWidths), headerBottomY)
+            .stroke();
 
         // Draw rows
         let currentY = headerBottomY + tableMargin / 2;
-        doc.font('Helvetica').fontSize(10);
-        orders.forEach(order => {
-            const totalProductsPrice = order.products.reduce((acc, p) => acc + (p.count * p.product.price), 0);
-            const discount = totalProductsPrice - order.totalPrice;
+        let totalSum = 0;
+        let discountSum = 0;
+        doc.font('Helvetica').fontSize(8);
+
+        orders.forEach((order, index) => {
+            const totalOriginalPrice = order.products.reduce((acc, p) => acc + (p.count * p.originalPrice), 0);
+            const totalProductsPrice = order.products.reduce((acc, p) => acc + (p.count * p.finalPrice), 0);
+            const discount = totalOriginalPrice - totalProductsPrice;
+
+            totalSum += totalProductsPrice;
+            discountSum += discount;
 
             const rowData = [
+                index + 1,  // Serial number
                 `#${order.orderId}`,
-                order.products.map(p => `${p.product.title}: ${p.count} x Rs.${p.product.price}`).join('\n'),
+                order.products.map(p => `${p.product.title}`).join('\n'),
+                order.products.map(p => `Rs.${p.finalPrice} x ${p.count}`).join('\n'),
                 order.orderStatus,
                 order.paymentIntent,
                 `Rs.${order.totalPrice}`,
-                `Rs.${discount}`,
-                  
+                `Rs.${discount}`
             ];
 
             rowData.forEach((data, index) => {
-                doc.text(data, tableMargin + sumArray(columnWidths.slice(0, index)), currentY, { width: columnWidths[index], align: 'center' });
+                doc.text(data, tableMargin + sumArray(columnWidths.slice(0, index)), currentY, { width: columnWidths[index], align: 'left' });
             });
 
-            currentY += 20 + Math.max(...rowData.map(row => row.split('\n').length - 1)) * 10;
+            currentY += 20 + Math.max(...rowData.map(row => row.toString().split('\n').length - 1)) * 10;
         });
+
+        doc.font('Helvetica-Bold').text(`Total Amount: Rs.${totalSum}`, tableMargin, currentY + 20);
+        doc.moveDown();
+        doc.font('Helvetica-Bold').text(`Discount: Rs.${discountSum}`, tableMargin, currentY + 40);
 
         doc.end();
 
@@ -919,6 +1018,9 @@ const getPdfReport = asyncHandler(async (req, res) => {
     }
 });
 
+
+
+
 // Helper function to sum an array
 function sumArray(arr) {
     return arr.reduce((acc, val) => acc + val, 0);
@@ -926,7 +1028,7 @@ function sumArray(arr) {
 
 const logout = asyncHandler(async (req, res) =>{
     res.clearCookie('jwt');
-    return res.redirect('/user/login');
+    return res.redirect('/'); 
 })
 
 
@@ -1121,6 +1223,10 @@ const userCart = asyncHandler(async (req, res) => {
 
         let cartToUpdate = await Cart.findOne({ orderby: user._id });
 
+        const couponCode = req.session.couponCode; 
+        const appliedCoupon = couponCode ? await Coupon.findOne({ code: couponCode }) : null;
+        
+
         if (cartToUpdate) {
             // Cart exists for the user, update it
             for (let i = 0; i < cart.length; i++) {
@@ -1149,7 +1255,7 @@ const userCart = asyncHandler(async (req, res) => {
                         return res.status(404).json({ message: 'Product not found' });
                     }
                 }
-            }
+            } 
 
             // Recalculate cart total
             
@@ -1162,10 +1268,17 @@ const userCart = asyncHandler(async (req, res) => {
                 const finalPrice = offerPrice !== null ? offerPrice : originalPrice;
 
                 const total = finalPrice * count;
+
                 cartToUpdate.cartTotal += total;
-                cartToUpdate.totalAfterDiscount += total; 
                 return { productId: product._id, total };
             }));
+
+            
+            if (appliedCoupon) {
+                cartToUpdate.totalAfterDiscount = cartToUpdate.cartTotal - appliedCoupon.discount
+            }else{
+                cartToUpdate.totalAfterDiscount = cartToUpdate.cartTotal;   
+            }
 
             await cartToUpdate.save();
             return res.status(200).json({
@@ -1235,9 +1348,7 @@ const loadUserCart = asyncHandler(async (req, res) => {
         const productsWithPrices = await Promise.all(cart.products.map(async productItem => {
             let product = productItem.product;
 
-            if (product.images && Array.isArray(product.images)) {
-                product.images = product.images.map(img => img.replace(/\\/g, '/').replace(/public/g, ''));
-            }
+           
 
             // Compute effective price details
             const { originalPrice, offerPrice, discountPercentage } = await product.getEffectivePrice();
@@ -1297,17 +1408,17 @@ const updateCart = asyncHandler(async (req, res) => {
         productItem.count = newQuantity;
 
         const { originalPrice, offerPrice } = await productItem.product.getEffectivePrice();
-        const finalPrice = offerPrice !== null ? offerPrice : originalPrice;
+        const totalPrice = offerPrice !== null ? offerPrice : originalPrice;
 
         const offerSavings = offerPrice !== null ? (originalPrice - offerPrice) * newQuantity : 0;
 
-        productItem.product.effectivePrice = finalPrice;
+        productItem.product.effectivePrice = totalPrice;
         productItem.product.originalPrice = originalPrice;
-        productItem.product.discountPercentage = ((originalPrice - finalPrice) / originalPrice) * 100;
+        productItem.product.discountPercentage = ((originalPrice - totalPrice) / originalPrice) * 100;
         productItem.product.offerSavings = offerSavings.toFixed(2);
 
         // Recalculate cart total
-        let updatedCartTotal = cart.products.reduce((total, product) => total + product.count * finalPrice, 0);
+        let updatedCartTotal = cart.products.reduce((total, product) => total + product.count * product.finalPrice, 0);
         let totalAfterDiscount = updatedCartTotal;
         if (appliedCoupon) {
             totalAfterDiscount -= appliedCoupon.discount
@@ -1354,7 +1465,7 @@ const removeCartItem = asyncHandler(async (req,res) =>{
                 cart.products.splice(itemIndex, 1);
 
                 // Recalculate cart total
-                cart.cartTotal = cart.products.reduce((acc, item) => acc + item.price * item.count, 0);
+                cart.cartTotal = cart.products.reduce((acc, item) => acc + item.finalPrice * item.count, 0);
                 cart.totalAfterDiscount = cart.cartTotal
                 await cart.save();
                 req.session.couponCode = null
@@ -1599,12 +1710,7 @@ const loadCreateOrder = asyncHandler(async (req,res) =>{
              // Specify the fields you want to populate
         }).exec();
         
-        cart.products.forEach(productItem => {
-            let product = productItem.product;
-            if (product.images && Array.isArray(product.images)) {
-                product.images = product.images.map(img => img.replace(/public/g, '')); // Replace backslashes with forward slashes
-            }
-        });
+        
         
         const appliedCoupon = req.session.couponCode || ''
         const coupon = await Coupon.findOne({ code: appliedCoupon })
@@ -1642,14 +1748,7 @@ const getOrder = asyncHandler(async (req,res) =>{
             .limit(limit) 
             .exec();
  
-        userOrders.forEach(order => {
-            order.products.forEach(productItem => {
-                let product = productItem.product;
-                if (product.images && Array.isArray(product.images)) {
-                    product.images = product.images.map(img => img.replace(/public/g, ''));
-                }
-            });
-        });
+        
         
 
         const pagination = {
@@ -1688,12 +1787,7 @@ const loadUpdateStatus = asyncHandler(async (req,res) =>{
         })
         
        
-        order.products.forEach(product => {
-            if (product.product && product.product.images && Array.isArray(product.product.images)) {
-                product.product.images = product.product.images.map(img => img.replace(/public/g, '')); 
-            }
-        });
-
+       
         
         console.log(order)      
         res.render('orderStatus', { user, order })
@@ -1756,8 +1850,8 @@ const getOrderInvoice = asyncHandler(async (req,res) =>{
         doc.moveDown();
 
         // Table headers
-        const headers = ['SI','Product', 'Quantity', 'Price', 'Subtotal'];
-        const columnWidths = [30,250, 90, 90, 90];
+        const headers = ['SI','Product', 'Quantity', 'Orignal Price','Discounted Price', 'Subtotal'];
+        const columnWidths = [30,180,50, 90, 100, 90];
         const tableY = tableTop + tableMargin;
 
         // Draw headers
@@ -1775,13 +1869,14 @@ const getOrderInvoice = asyncHandler(async (req,res) =>{
         let currentY = headerBottomY + tableMargin / 2;
         doc.font('Helvetica').fontSize(10);
         order.products.forEach((product, index) => {
-            const subtotal = product.count * product.product.price;
+            const subtotal = product.count * product.finalPrice;
 
             const rowData = [
                 index + 1,
                 product.product.title, 
                 product.count,
-                `Rs.${product.product.price}`,
+                `Rs.${product.originalPrice}`,
+                `Rs.${product.finalPrice}`,
                 `Rs.${subtotal}`
             ];
 
@@ -1794,8 +1889,12 @@ const getOrderInvoice = asyncHandler(async (req,res) =>{
  
         // Total amount and discount
         doc.moveDown();
-        const totalProductsPrice = order.products.reduce((acc, p) => acc + (p.count * p.product.price), 0);
-        const discount = totalProductsPrice - order.totalPrice;
+        const totalOriginalPrice = order.products.reduce((acc, p) => acc + (p.count * p.originalPrice), 0);
+        const totalProductsPrice = order.products.reduce((acc, p) => acc + (p.count * p.finalPrice), 0);
+        const discount = totalOriginalPrice - totalProductsPrice;
+
+        // const totalProductsPrice = order.products.reduce((acc, p) => acc + (p.count * p.product.price), 0);
+        // const discount = totalProductsPrice - order.totalPrice;
 
         doc.font('Helvetica-Bold').text(`Total Amount: Rs.${order.totalPrice}`, tableMargin, currentY + 20);
         doc.moveDown();
@@ -1817,7 +1916,6 @@ const updateOrderStatus = asyncHandler(async (req,res) =>{
             { orderStatus : status},
             { new: true }
         )
-        console.log(status,updateOrderStatus)
         if (!updateOrderStatus) {
             return res.status(404).json({ success: false, message: 'Order not found' });
         }
@@ -1841,6 +1939,7 @@ const updateProductStockAndSold = async (productId, count) => {
 
 const handleOrderAction = async (req, res, action) => {
     const { id } = req.params;
+    const { feedback } = req.body
     const user = req.user
     validateMongoDbId(id);
     try {
@@ -1854,6 +1953,7 @@ const handleOrderAction = async (req, res, action) => {
             order.orderStatus = 'Cancelled';
         } else if (action === 'return') {
             order.orderStatus = 'Returned';
+            order.feedback = feedback
         }
 
         await order.save(); 
@@ -1868,7 +1968,6 @@ const handleOrderAction = async (req, res, action) => {
        
         if (findUser) {
             const refundAmount = order.totalPrice;
-            console.log(refundAmount) // Assuming totalAmount is a field in the Order schema
             findUser.walletBalance += refundAmount;
 
             await findUser.save();
@@ -1915,14 +2014,7 @@ const getAllOrders = asyncHandler( async(req,res) =>{
             .limit(limit)
             .exec()
 
-        orders.forEach(order => {
-            order.products.forEach(productItem => {
-                let product = productItem.product;
-                if (product.images && Array.isArray(product.images)) {
-                    product.images = product.images.map(img => img.replace(/public/g, ''));
-                }
-            });
-        });
+        
 
         const pagination = {
             totalPages,
@@ -1996,7 +2088,7 @@ const updateUserBlockStatus = asyncHandler(async (req,res, blockStatus) =>{
         { 
             new: true
         })
-        res.redirect('/user/admin/all-users')
+        res.redirect('/admin/all-users')
     } catch (error) {
         console.log(error) 
     }
@@ -2014,6 +2106,8 @@ const unBlockUser = asyncHandler(async (req,res) =>{
 
 
 module.exports = {
+    landingPage,
+    homePage,
     loadDashboard,
     userSignup,
     userLogin,
