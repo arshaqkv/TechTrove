@@ -22,7 +22,8 @@ const sendVerificationMail = async (email, subject, content) =>{
         }
         transporter.sendMail(mailOptions, (error,info) =>{
             if(error){ 
-                return res.render('signup', { error: 'Failed to send OTP. Try again.' });
+                // return res.render('signup', { error: 'Failed to send OTP. Try again.' });
+                console.log('Failed to send OTP. Try again.')
             }else {
                 console.log("Email has been send to " + info.response)
             }
