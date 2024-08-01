@@ -3,6 +3,7 @@ const Category = require('../models/categoryModel')
 const User = require('../models/userModel')
 const Offer = require('../models/offerModel')
 const Order = require('../models/orderModel')
+const Cart = require('../models/cartModel')
 const asyncHandler = require('express-async-handler')
 const slugify = require('slugify')
 const validateMongoDbId = require('../utils/validateMongodbID')
@@ -103,7 +104,7 @@ const getProduct = asyncHandler(async (req,res) =>{
     try {
         const user = await User.findById(_id)
         const product = await Product.findById(prodId).populate('category')
-        
+        let cart = await Cart.findOne({ orderby: user._id }).populate('products.product').exec() || null
         const recommendedProduct = await Product.find({
             category: product.category._id,
             _id: {$ne: product._id}
@@ -120,7 +121,7 @@ const getProduct = asyncHandler(async (req,res) =>{
 
         const { originalPrice, offerPrice, discountPercentage } = await product.getEffectivePrice();
 
-        res.status(201).render('productDetails', { user, product, recommendedProduct, breadcrumbs, alreadyAddedProduct, originalPrice, offerPrice,
+        res.status(201).render('productDetails', { user, cart, product, recommendedProduct, breadcrumbs, alreadyAddedProduct, originalPrice, offerPrice,
             discountPercentage })
     } catch (error) {
         console.log(error)
@@ -264,6 +265,7 @@ const loadWishlist = asyncHandler(async (req, res) => {
     const limit = 5;
     try {
         const userWishlist = await User.findById(_id).populate('wishlist');
+        let cart = await Cart.findOne({ orderby: user._id }).populate('products.product').exec() || null
         const count = userWishlist.wishlist.length;
         const totalPages = Math.ceil(count / limit);
         const skip = (page - 1) * limit;
@@ -290,7 +292,7 @@ const loadWishlist = asyncHandler(async (req, res) => {
             hasPrevPage: page > 1,
         };
 
-        res.render('wishlist', { user, wishlist, pagination,count });
+        res.render('wishlist', { user, cart, wishlist, pagination,count });
     } catch (error) {  
         console.log(error);
     }

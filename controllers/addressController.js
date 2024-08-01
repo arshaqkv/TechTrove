@@ -1,12 +1,14 @@
 const Address = require('../models/addressModel')
 const asyncHandler = require('express-async-handler')
 const User = require('../models/userModel')
+const Cart = require('../models/cartModel')
 const { validationResult } = require('express-validator')
 
 const loadCreateAddress = asyncHandler(async (req,res) =>{
     const user = req.user
     try {
-        res.status(201).render('addAddress', { user })
+        let cart = await Cart.findOne({ orderby: user._id }).populate('products.product').exec() || null
+        res.status(201).render('addAddress', { user, cart })
     } catch (error) {
         throw new Error(error)
     }
@@ -29,8 +31,9 @@ const loadUpdateAddress= asyncHandler(async (req,res) =>{
     const user = req.user
     const { id } = req.params
     try {
+        let cart = await Cart.findOne({ orderby: user._id }).populate('products.product').exec() || null
         const address = await Address.findById(id)
-        res.status(200).render('editAddress', { user,address })
+        res.status(200).render('editAddress', { user,address,cart })
     } catch (error) {
         throw new Error(error)
     }
@@ -76,8 +79,9 @@ const getAllAddress = asyncHandler(async (req,res) =>{
     const user = req.user
     const { id } = user
     try {
+        let cart = await Cart.findOne({ orderby: user._id }).populate('products.product').exec() || null
         const findAllAddress = await Address.find({ user: id })
-        res.status(201).render('all-address', { address: findAllAddress, user })
+        res.status(201).render('all-address', { address: findAllAddress, user, cart })
     } catch (error) {
         throw new Error(error)
     } 

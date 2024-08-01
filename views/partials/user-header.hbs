@@ -1,26 +1,37 @@
 <style>
-  @media (max-width: 991.98px) {
-      .full-width-dropdown {
-          max-width: 400px;
-          top: 100%;
-          z-index: 1000; 
-      }
-      .dropdown-toggle::after {
-          display: none;
-      }
+    .cart-count{
+        position: absolute;
+        top: -10px;
+        right: -10px;
+        background-color: red;
+        color: white;
+        border-radius: 50%;
+        padding: 4px 8px;
+        font-size: 0.5rem;
+    }
 
-      .navbar .dropdown .dropdown-toggle {
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          width: 100%;
-      }
+    @media (max-width: 991.98px) {
+        .full-width-dropdown {
+            max-width: 400px;
+            top: 100%;
+            z-index: 1000; 
+        }
+        .dropdown-toggle::after {
+            display: none;
+        }
 
-      .dropdown-menu a {
-          width: 100%;
-          display: block;
-      }
-  }
+        .navbar .dropdown .dropdown-toggle {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+        }
+
+        .dropdown-menu a {
+            width: 100%;
+            display: block;
+        }
+    }
 </style>
 
 <nav class="navbar navbar-expand-lg navbar-light bg-light">
@@ -34,8 +45,13 @@
 
         <div class="d-flex align-items-center">
             {{#if user}}
-                <a class="text-dark me-3 d-none d-lg-block" href="/product/wishlist"><i class="fas fa-heart"></i></a>
-                <a href="/user/cart" class="text-dark me-3 d-none d-lg-block"><i class="fas fa-shopping-cart"></i>{{#if cart.products.length}}{{cart.products.length}}{{/if}}</a>
+                <a class="text-dark me-3 d-lg-block" href="/product/wishlist"><i class="fas fa-heart"></i></a>
+                <a href="/user/cart" class="text-dark me-3 d-lg-block position-relative">
+                    <i class="fas fa-shopping-cart"></i>
+                    {{#if cart.products.length}}
+                        <span class="cart-count">{{cart.products.length}}</span>
+                    {{/if}}
+                </a>
             {{/if}}
             <div class="dropdown">
                 <a href="#" class="d-block link-dark text-decoration-none dropdown-toggle" id="dropdownUser1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">

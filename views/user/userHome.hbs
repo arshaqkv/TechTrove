@@ -186,13 +186,13 @@
 </style>
 
 <a href="/shop">
-<div id="carouselExampleIndicators" class="carousel slide" data-ride="carousel">
+<div id="carouselExampleIndicators" class="carousel slide carousel-fade" data-ride="carousel">
     <ol class="carousel-indicators">
         {{#each banners}}
         <li data-target="#carouselExampleIndicators" data-slide-to="{{@index}}" class="{{#if @first}}active{{/if}}"></li>
         {{/each}}
     </ol>
-    <div class="carousel-inner">
+    <div class="carousel-inner ">
         {{#each banners}}
         <div class="carousel-item {{#if @first}}active{{/if}}">
             <img class="d-block w-100" src="{{this.image}}" alt="Slide {{@index}}">

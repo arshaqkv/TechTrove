@@ -61,8 +61,9 @@ const landingPage = asyncHandler( async (req, res) =>{
 const homePage = asyncHandler( async (req, res) =>{
     const user = req.user
     try {
+        let cart = await Cart.findOne({ orderby: user._id }).populate('products.product').exec() || null
         const { processedProducts, banners } = await fetchProductsAndBanners()
-        res.render('userHome', {products: processedProducts, banners, user})
+        res.render('userHome', {products: processedProducts, banners, user,cart})
         
     } catch (error) {
         console.log(error)
@@ -133,7 +134,7 @@ const loadDashboard = asyncHandler(async (req, res) => {
         const count = await Product.countDocuments();
         const totalPages = Math.ceil(count / limit);
         const skip = (page - 1) * limit;
-
+        let cart = await Cart.findOne({ orderby: user._id }).populate('products.product').exec() || null
         const [products, categories] = await Promise.all([
             Product.find(filter).populate('category')
             .sort(sort)
@@ -164,7 +165,7 @@ const loadDashboard = asyncHandler(async (req, res) => {
             hasNextPage: page < totalPages,
             hasPrevPage: page > 1,
         };
-        return res.render('userDashboard', { user, products: processedProducts, categories, pagination, banners });
+        return res.render('userDashboard', { user, products: processedProducts, categories, pagination, banners,cart });
         
     } catch (error) {
         console.log(error);
@@ -1033,10 +1034,10 @@ const logout = asyncHandler(async (req, res) =>{
 
 
 const loadUpdateUser = asyncHandler(async (req,res) =>{
-    const { _id } = req.user
+    const user = req.user
     try {
-        const user = await User.findById(_id)
-        res.render('updateUser', { user })
+        let cart = await Cart.findOne({ orderby: user._id }).populate('products.product').exec() || null
+        res.render('updateUser', { user,cart })
     } catch (error) {
         console.log(error) 
     }
@@ -1121,7 +1122,8 @@ const updateAUser = asyncHandler(async (req,res) =>{
 const loadPassword = asyncHandler(async (req,res) =>{
     const user = req.user
     try {
-        res.render('changePassword', {user})
+        let cart = await Cart.findOne({ orderby: user._id }).populate('products.product').exec() || null
+        res.render('changePassword', {user, cart})
     } catch (error) {
         console.log(error)
     }
@@ -1200,8 +1202,9 @@ const getAUser = asyncHandler(async (req,res) =>{
         const totalOrder = await Order.countDocuments({orderby: _id})
         const totalDelivered = await Order.countDocuments({orderby: _id, orderStatus: 'Delivered'})
         const totalCancelled = await Order.countDocuments({orderby: _id, orderStatus: 'Cancelled'})
+        let cart = await Cart.findOne({ orderby: _id }).populate('products.product').exec() || null
         const user = await User.findById(_id).populate('defaultAddress').exec()
-        res.status(200).render('profile.hbs', {user,totalOrder, totalDelivered, totalCancelled})
+        res.status(200).render('profile.hbs', {user, cart, totalOrder, totalDelivered, totalCancelled})
     }catch(error){
         throw new Error(error)
     }
@@ -1541,6 +1544,7 @@ const userRemoveCoupon = asyncHandler(async (req,res) =>{
 const userCoupons = asyncHandler(async (req,res) =>{
     const user = req.user
     try {
+        let cart = await Cart.findOne({ orderby: user._id }).populate('products.product').exec() || null
         const allCoupons = await Coupon.find({}).exec();
         const currentDate = moment();
 
@@ -1548,7 +1552,7 @@ const userCoupons = asyncHandler(async (req,res) =>{
         const isExpired = moment(coupon.expiry).isBefore(currentDate);
         return { ...coupon._doc, isExpired };
         });
-        res.render('user-coupons', { coupons, user })
+        res.render('user-coupons', { coupons, user, cart })
     } catch (error) {
         console.log(error)
     }
@@ -1730,6 +1734,7 @@ const getOrder = asyncHandler(async (req,res) =>{
     const page = parseInt(req.query.page) || 1;
     const limit = 5;
     try {
+        let cart = await Cart.findOne({ orderby: user._id }).populate('products.product').exec() || null
         const count = await Order.countDocuments({ orderby: _id });
         const totalPages = Math.ceil(count / limit);
         const skip = (page - 1) * limit;
@@ -1760,7 +1765,7 @@ const getOrder = asyncHandler(async (req,res) =>{
             hasPrevPage: page > 1,
         };
         console.log(userOrders)
-        res.render('product-orders', { user,orders: userOrders, pagination, count})
+        res.render('product-orders', { user, cart, orders: userOrders, pagination, count})
     } catch (error) {
         console.log(error)
     }
@@ -2037,6 +2042,7 @@ const loadWalletTransactions = asyncHandler(async (req,res) =>{
     const page = parseInt(req.query.page) || 1;
     const limit = 10  
     try {
+        let cart = await Cart.findOne({ orderby: user._id }).populate('products.product').exec() || null
         const count = await Wallet.countDocuments({userId: user._id}); 
         const totalPages = Math.ceil(count / limit);
         const skip = (page - 1) * limit;
@@ -2059,7 +2065,7 @@ const loadWalletTransactions = asyncHandler(async (req,res) =>{
             };
 
         console.log(pagination)
-        res.render('transaction', {user, wallet, pagination}) 
+        res.render('transaction', {user,cart, wallet, pagination}) 
     } catch (error) {
         console.log(error)
     }
