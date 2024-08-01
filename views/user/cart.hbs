@@ -1,4 +1,49 @@
 {{> user-header}}
+<style>
+
+   .card img {
+    max-width: 70px;
+    max-height: 70px;
+   }
+    @media (max-width: 570px){
+
+      .card img{
+        max-width: 50px;
+        max-height: 50px;
+        
+      }
+      .card h5{
+        font-size: 15px;
+      }
+
+      .card .card-text, .stock{
+        font-size: 12px;
+      }
+      .details {
+        font-size: 10px;
+      }
+
+      .prod-count .btn, .count-input{
+        font-size: 6px;
+        
+      }
+      .order-summary{
+        font-size: 14px;
+      }
+
+      .order-summary h5{
+        font-size: 17px;
+      }
+
+      .empty a{
+        font-size: 13px;
+      }
+
+      .empty p{
+        font-size: 11px;
+      }
+    }
+</style>
 
 <div class="container cart-container mb-5">
   {{#if cart.products.length}}
@@ -8,28 +53,28 @@
       {{#each cart.products}}
       <div class="card cart-item" data-product-id="{{this.product._id}}">
         <div class="card-body d-flex align-items-center justify-content-between">
-          <img src="{{this.product.images.[0]}}" class="img-fluid" style="max-width: 70px; height:70px" alt="Product Image">
+          <img src="{{this.product.images.[0]}}" class="img-fluid" alt="Product Image">
           <div class="ml-3">
             <div>
               <h5 class="card-title">{{this.product.title}}</h5>
               <span class="card-text">{{this.product.brand}}</span>
               {{#ifCond this.product.stock_count '===' 0}}
-                  <p class="text-danger">Out of Stock</p>
+                  <p class="text-danger stock">Out of Stock</p>
               {{else ifCond this.product.stock_count '<' 10}}
-                  <p class="low-stock badge badge-danger">Only {{this.product.stock_count}} left</p>
+                  <p class="low-stock badge badge-danger stock">Only {{this.product.stock_count}} left</p>
               {{else}}
-                  <p class="text-success">In Stock</p>
+                  <p class="text-success stock">In Stock</p>
               {{/ifCond}}
               <span class="stock-count" style="display: none;">{{this.product.stock_count}}</span>
             </div>
-            <div class="d-flex align-items-center">
+            <div class="d-flex align-items-center prod-count">
               <button class="btn btn-outline-secondary btn-sm" onclick="decreaseQuantity('{{this.product._id}}')">-</button>
               <input type="number" class="form-control count-input mx-2" style="width: 50px; text-align:center" value="{{this.count}}" min="1" max="10" data-product-id="{{this.product._id}}" readonly>
               <button class="btn btn-outline-secondary btn-sm" onclick="increaseQuantity('{{this.product._id}}')">+</button>
               <button class="btn btn-outline-danger btn-sm ms-3" onclick="removeCartItem('{{this.product._id}}')"><i class="fas fa-trash"></i></button>
             </div>
           </div>
-          <div class="ml-auto">
+          <div class="ml-auto details">
             <p class="text-right">
               <strong>{{this.count}}</strong> x  
               {{#if this.product.discountPercentage}}
@@ -68,10 +113,10 @@
         <p>Shipping: Free</p>
         <hr>
         <h5>Total: Rs.{{cart.totalAfterDiscount}}</h5>
-        <p>Estimated Delivery by <strong>30 July, 2024</strong></p>
+        <p>Estimated Delivery by <strong>12 August, 2024</strong></p>
         <hr>
         <a href="/user/checkout" class="btn btn-primary btn-block mt-3">Proceed to Checkout</a>
-        <a href="/user/dashboard" class="btn btn-outline-secondary btn-block mt-1">Add More Items</a>
+        <a href="/user/shop" class="btn btn-outline-secondary btn-block mt-1">Add More Items</a>
       </div>
     </div>
   </div>
@@ -108,7 +153,7 @@
 
 {{> footer}}
 {{else}}
-<div class="container">
+<div class="container empty">
   <div class="d-flex justify-content-center align-items-center" style="height:80vh;">
     <div class="card col-md d-flex justify-content-center align-items-center" style="height: 200px;">
       <h4>Hey, it feels so light!</h4>

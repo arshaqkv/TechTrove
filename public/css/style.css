@@ -425,3 +425,44 @@ footer .subscribe button {
     box-shadow: none;
 }
 
+/* responsive */
+@media (max-width: 570px){
+  footer {
+    font-size: 11px;
+  }
+
+  .auth-card h3{
+    font-size: larger;
+  }
+
+  .auth-card h5{
+    font-size: small;
+  }
+
+  .auth-card a{
+    font-size: small;
+  }
+
+  .service-btn {
+    
+    height: 32px;
+   
+  }
+
+  .auth-card p{
+    font-size: small;
+  }
+
+  .auth-input::placeholder{
+    font-size: 12px;
+  }
+
+  .auth-input, .auth-btn{
+    height: 35px;
+
+  }
+
+  .auth-btn{
+    font-size: medium;
+  }
+}

@@ -1,4 +1,50 @@
 {{> user-header}}
+<style>
+    /* Custom styles for the table */
+    .table {
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+    }
+    .table th, .table td {
+        vertical-align: middle;
+    }
+    .table thead th {
+        background-color: #f8f9fa;
+        border-bottom: none;
+    }
+    .table tbody tr:nth-child(even) {
+        background-color: #f8f9fa;
+    }
+    .table-hover tbody tr:hover {
+        background-color: #f1f1f1;
+    }
+    /* Custom styles for the wallet balance display */
+    .wallet-balance {
+        background-color: #3791e0; /* Bootstrap primary color */
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+    .balance-amount {
+        font-weight: bold;
+    }
+
+
+
+    @media (max-width: 570px){
+        .container h2{
+            font-size: 23px;
+        }
+
+        .wallet-balance h4{
+            font-size: 20px;
+        }
+
+        .table{
+            font-size: 10px;
+        }
+    }
+</style>
+
 <div class="container mt-5 mb-5">
     <div class="row">
         <div class="col-md-3">
@@ -76,32 +122,4 @@
     </div>
 </div>
 
-<style>
-    /* Custom styles for the table */
-    .table {
-        border-radius: 10px;
-        overflow: hidden;
-        box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
-    }
-    .table th, .table td {
-        vertical-align: middle;
-    }
-    .table thead th {
-        background-color: #f8f9fa;
-        border-bottom: none;
-    }
-    .table tbody tr:nth-child(even) {
-        background-color: #f8f9fa;
-    }
-    .table-hover tbody tr:hover {
-        background-color: #f1f1f1;
-    }
-    /* Custom styles for the wallet balance display */
-    .wallet-balance {
-        background-color: #3791e0; /* Bootstrap primary color */
-        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    }
-    .balance-amount {
-        font-weight: bold;
-    }
-</style>
+
