@@ -19,7 +19,7 @@ passport.use(new GoogleStrategy({
     try {
         let user = await User.findOne({ email: profile.emails[0].value });
         if (user && user.isBlocked) {
-            return done(null, false, { error: 'Your account has been blocked.' });
+            return done(null, false, { error: 'Your account has been blocked.' }); 
         }
         if (user) {
             done(null, user);
