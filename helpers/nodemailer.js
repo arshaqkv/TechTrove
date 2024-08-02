@@ -3,8 +3,7 @@ const nodemailer = require('nodemailer')
 const transporter = nodemailer.createTransport({
     host: process.env.SMTP_HOST,
     port: process.env.SMTP_PORT,
-    secure: false,
-    requireTLS: true,
+    secure: true, 
     auth: {
         user: process.env.USER,
         pass: process.env.PASS
@@ -23,7 +22,7 @@ const sendVerificationMail = async (email, subject, content) =>{
         transporter.sendMail(mailOptions, (error,info) =>{
             if(error){ 
                 // return res.render('signup', { error: 'Failed to send OTP. Try again.' });
-                console.log('Failed to send OTP. Try again.')
+                console.log('Failed to send OTP. Try again.', error)
             }else {
                 console.log("Email has been send to " + info.response)
             }
