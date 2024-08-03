@@ -425,6 +425,24 @@ footer .subscribe button {
     box-shadow: none;
 }
 
+.carousel-indicators {
+  bottom: -20px; /* Position the indicators 30px below the carousel */
+}
+
+.carousel-indicators li {
+  background-color: #000; /* Change background color */
+  width: 8px; /* Custom width */
+  height: 8px; /* Custom height */
+  border-radius: 50%; /* Make them circular */
+  margin: 0 5px; /* Spacing between indicators */
+  opacity: 0.5; /* Transparency */
+}
+
+.carousel-indicators .active {
+  background-color: #fff; /* Change active indicator color */
+  opacity: 1; /* Full opacity for active indicator */
+}
+
 /* responsive */
 @media (max-width: 570px){
   footer {

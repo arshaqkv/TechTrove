@@ -73,7 +73,6 @@ const homePage = asyncHandler( async (req, res) =>{
 
 //home page
 const loadDashboard = asyncHandler(async (req, res) => {
-
     try {
         const filterParams = req.query.filter || {};
         const sortParam = req.query.sort || '';
@@ -98,55 +97,19 @@ const loadDashboard = asyncHandler(async (req, res) => {
             filter.title = { $regex: filterParams.search, $options: 'i' };
         }
 
-        let sort = {};
-
-        switch (sortParam) {
-            case 'price-asc':
-                sort.price = 1;
-                break;
-            case 'price-desc':
-                sort.price = -1;
-                break;
-            case 'rating':
-                sort.rating = -1;
-                break;
-            case 'featured':
-                sort.featured = -1; 
-                break;
-            case 'new-arrivals':
-                sort.createdAt = -1; 
-                break;
-            case 'a-z':
-                sort.title = 1;
-                break;
-            case 'z-a':
-                sort.title = -1;
-                break;
-            default:
-                sort.popularity = -1; 
-                break;
-        }
-
-        const user = req.user
+        const user = req.user;
         const page = parseInt(req.query.page) || 1;
-        const limit = 10 
+        const limit = 10;
 
-        const count = await Product.countDocuments();
-        const totalPages = Math.ceil(count / limit);
-        const skip = (page - 1) * limit;
-        let cart = await Cart.findOne({ orderby: user._id }).populate('products.product').exec() || null
-        const [products, categories] = await Promise.all([
-            Product.find(filter).populate('category')
-            .sort(sort)
-            .skip(skip) 
-            .limit(limit)
-            .exec(),
-            Category.find({ isDeleted: false }).exec()
+        let cart = await Cart.findOne({ orderby: user._id }).populate('products.product').exec() || null;
+        const [products, categories, banners] = await Promise.all([
+            Product.find(filter).populate('category').exec(),
+            Category.find({ isDeleted: false }).exec(),
+            Banner.find({}).exec()
         ]);
 
-        const banners = await Banner.find({})
+        // Calculate effective prices for each product
         const processedProducts = await Promise.all(products.map(async (product) => {
-            
             const { originalPrice, offerPrice, discountPercentage } = await product.getEffectivePrice();
             return {
                 ...product.toObject(),
@@ -155,7 +118,58 @@ const loadDashboard = asyncHandler(async (req, res) => {
                 discountPercentage
             };
         }));
-   
+
+        // Sort products based on the effective price if needed
+        if (sortParam === 'price-asc' || sortParam === 'price-desc') {
+            processedProducts.sort((a, b) => {
+                const priceA = a.offerPrice || a.originalPrice;
+                const priceB = b.offerPrice || b.originalPrice;
+                return sortParam === 'price-asc' ? priceA - priceB : priceB - priceA;
+            });
+        } else {
+            let sort = {};
+
+            switch (sortParam) {
+                case 'rating':
+                    sort = { totalRating: -1 };
+                    break;
+                case 'featured':
+                    sort = { featured: -1 };
+                    break;
+                case 'new-arrivals':
+                    sort = { createdAt: -1 };
+                    break;
+                case 'a-z':
+                    sort = { title: 1 };
+                    break;
+                case 'z-a':
+                    sort = { title: -1 };
+                    break;
+                default:
+                    sort = { popularity: -1 };
+                    break;
+            }
+
+            processedProducts.sort((a, b) => {
+                for (const key in sort) {
+                    if (sort[key] === 1) {
+                        if (a[key] > b[key]) return 1;
+                        if (a[key] < b[key]) return -1;
+                    } else {
+                        if (a[key] < b[key]) return 1;
+                        if (a[key] > b[key]) return -1;
+                    }
+                }
+                return 0;
+            });
+        }
+
+        // Pagination on the sorted products
+        const count = processedProducts.length;
+        const totalPages = Math.ceil(count / limit);
+        const skip = (page - 1) * limit;
+        const paginatedProducts = processedProducts.slice(skip, skip + limit);
+
         const pagination = {
             totalPages,
             page,
@@ -165,12 +179,14 @@ const loadDashboard = asyncHandler(async (req, res) => {
             hasNextPage: page < totalPages,
             hasPrevPage: page > 1,
         };
-        return res.render('userDashboard', { user, products: processedProducts, categories, pagination, banners,cart });
-        
+
+        return res.render('userDashboard', { user, products: paginatedProducts, categories, pagination, banners, cart });
+
     } catch (error) {
         console.log(error);
     }
 });
+  
 
 
 
@@ -1342,12 +1358,8 @@ const loadUserCart = asyncHandler(async (req, res) => {
 
         // Fetch cart with populated products
         let cart = await Cart.findOne({ orderby: _id }).populate('products.product').exec();
-
-        if (!cart) {   
-            throw new Error('Cart not found');
-        }
- 
-        // Transform products with prices
+        if(cart){
+            // Transform products with prices
         const productsWithPrices = await Promise.all(cart.products.map(async productItem => {
             let product = productItem.product;
 
@@ -1373,6 +1385,7 @@ const loadUserCart = asyncHandler(async (req, res) => {
 
         // Update cart's products with transformed products
         cart.products = productsWithPrices;
+        }
         res.render('cart', { cart, user, coupons, appliedCoupon }); 
     } catch (error) {
         console.error('Error loading user cart:', error);
@@ -1456,34 +1469,42 @@ const updateCart = asyncHandler(async (req, res) => {
 
 
 //remove item form cart
-const removeCartItem = asyncHandler(async (req,res) =>{
-    const { productId } = req.body
-    const { _id } = req.user
-    validateMongoDbId(_id)
+const removeCartItem = asyncHandler(async (req, res) => {
+    const { productId } = req.body;
+    const { _id } = req.user;
+    validateMongoDbId(_id);
     try {
-        const cart = await Cart.findOne({ orderby: _id}).populate('products.product').exec()
-        if(cart){
-            const itemIndex = cart.products.findIndex(p=> p.product._id.toString() === productId);
+        const cart = await Cart.findOne({ orderby: _id }).populate('products.product').exec();
+        if (cart) {
+            const itemIndex = cart.products.findIndex(p => p.product._id.toString() === productId);
             if (itemIndex !== -1) {
                 cart.products.splice(itemIndex, 1);
 
+                // Check if the cart is empty after removing the item
+                if (cart.products.length === 0) {
+                    await Cart.deleteOne({ orderby: _id });
+                    req.session.couponCode = null;
+                    return res.status(200).json({ message: 'Cart deleted as it was empty' });
+                }
+
                 // Recalculate cart total
                 cart.cartTotal = cart.products.reduce((acc, item) => acc + item.finalPrice * item.count, 0);
-                cart.totalAfterDiscount = cart.cartTotal
+                cart.totalAfterDiscount = cart.cartTotal;
                 await cart.save();
-                req.session.couponCode = null
+                req.session.couponCode = null;
                 return res.status(200).json(cart);
             } else {
                 return res.status(404).json({ message: 'Product not found in cart' });
             }
         } else {
             return res.status(404).json({ message: 'Cart not found' });
-        }  
-        
+        }
     } catch (error) {
-        console.log(error) 
+        console.log(error);
+        return res.status(500).json({ message: 'Internal Server Error' });
     }
-})
+});
+
 
 //apply coupon
 const userApplyCoupon = asyncHandler(async (req,res) =>{
@@ -1566,14 +1587,15 @@ function generateOrderId() {
 }
 
 const createOrder = asyncHandler(async (req, res) => {
-    const { _id } = req.user;
+    const { _id } = req.user;   
     validateMongoDbId(_id);
     const { paymentIntent } = req.body;
     couponCode = req.session.couponCode
     try {
         const cart = await Cart.findOne({ orderby: _id }).populate('products.product');
+        console.log(cart)
         if (!cart) {
-            return res.status(404).json({ success: false, message: 'Cart not found' });
+            return res.status(401).json({ success: false, message: 'Cart not found' });
         }
 
         
@@ -1764,7 +1786,6 @@ const getOrder = asyncHandler(async (req,res) =>{
             hasNextPage: page < totalPages,
             hasPrevPage: page > 1,
         };
-        console.log(userOrders)
         res.render('product-orders', { user, cart, orders: userOrders, pagination, count})
     } catch (error) {
         console.log(error)
