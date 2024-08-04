@@ -1,5 +1,19 @@
 {{> user-header}}
+<style>
+    @media (max-width: 570px){
+        .card-title{
+            font-size: 17px;
+        }
 
+        .card-text span{
+            font-size: 12px;
+        }
+
+        .btn{
+            
+        }
+    }
+</style>
 <div class="container mt-5">
     <div id="carouselExampleIndicators" class="carousel slide mb-5" data-ride="carousel">
         <ol class="carousel-indicators">
@@ -130,7 +144,7 @@
             <div class="row" id="productList">
                 {{#if products.length}}
                     {{#each products}}
-                    <div class="col-md-4 mb-4">
+                    <div class="col-lg-4 col-6 mb-4">
                         <div class="card">
                             <img src="{{this.images.[0]}}" class="card-img-top" alt="{{this.title}}">
                             <div class="card-body">
@@ -156,7 +170,7 @@
                                     {{/if}}
                                     <small>Free delivery by 30th July</small>
                                 </p>
-                                <a href="/product/{{this._id}}" class="btn btn-primary">Buy Product</a>
+                                <a href="/product/{{this._id}}" class="btn btn-primary btn-sm">Buy Product</a>
                                 
                             </div>
                             
