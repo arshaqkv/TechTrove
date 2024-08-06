@@ -37,7 +37,7 @@
 <nav class="navbar navbar-expand-lg navbar-light bg-light">
     <div class="container d-flex justify-content-between align-items-center mt-2">
         <div class="logoDiv">
-            <a href="/home" class="logo d-flex align-items-center" style="text-decoration: none;">
+            <a {{#if user}}href="/home"{{else}}href="/"{{/if}} class="logo d-flex align-items-center" style="text-decoration: none;">
                 <i class='bx bx-code-alt'></i>
                 <div class="logo-name"><span>Tech</span>Trove</div>
             </a>

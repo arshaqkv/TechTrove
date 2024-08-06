@@ -3,7 +3,7 @@
   .payment-option {
     display: flex;
     justify-content: space-between;
-    align-items: center;
+    align-items: start;
     padding: 20px;
     border: 1px solid #e0e0e0;
     border-radius: 8px;
@@ -13,11 +13,33 @@
     flex: 1;
   }
   .payment-option input {
-    margin-top: 10px;
+    margin-top: 15px;
   }
   .payment-option .fa {
     font-size: 24px;
     margin-bottom: 10px;
+  }
+
+  
+
+  @media (max-width: 600px){
+
+      .payment-option{
+        margin-bottom: 1.5rem;
+      }
+
+      .payment-option p, .wallet-balance{
+        font-size: 11px;
+        
+      }
+
+      .payment-option .fa-credit-card, .fa-wallet {
+        margin-bottom: 20px;
+      }
+
+      .edit-address-btn{
+        margin-bottom: 7px;
+      }
   }
 </style>
 <div class="container cart-container">
@@ -79,7 +101,7 @@
             <p>My Wallet</p>
             <input type="radio" name="paymentMethod" value="Wallet">
             <div>
-              <small class="{{#if user.walletBalance}}text-success mt-2{{else}}text-danger mt-2{{/if}}">{{#if user.walletBalance}}₹ {{user.walletBalance}} Available{{else}}Insufficient Balance{{/if}}</small>
+              <small class="wallet-balance {{#if user.walletBalance}}text-success mt-2{{else}}text-danger mt-2{{/if}}">{{#if user.walletBalance}}₹ {{user.walletBalance}} Available{{else}}Insufficient Balance{{/if}}</small>
             </div>
           </div>
           
@@ -232,7 +254,6 @@
 
 {{> footer}}
 
-//razorpay intergration
 <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 
 <script>

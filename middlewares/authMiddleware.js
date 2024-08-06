@@ -1,6 +1,6 @@
 const User = require('../models/userModel')
-    const jwt = require('jsonwebtoken')
-    const asyncHandler = require('express-async-handler')
+const jwt = require('jsonwebtoken')
+const asyncHandler = require('express-async-handler')
 
     const authMiddleware = asyncHandler(async (req,res,next) =>{
         const token = req.cookies.jwt
@@ -15,6 +15,13 @@ const User = require('../models/userModel')
                 if (!user) {
                     return res.status(401).redirect('/user/login'); // Redirect to login if user not found
                 }
+
+                if (user.isBlocked) {
+                    // Clear the JWT cookie
+                    res.cookie('jwt', '', { expires: new Date(0), httpOnly: true });
+                    return res.status(403).redirect('/user/login'); // Forbidden status, redirect to login
+                }           
+
                 req.user = user 
                 next() 
             }

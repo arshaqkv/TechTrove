@@ -9,8 +9,8 @@
             font-size: 12px;
         }
 
-        .btn{
-            
+        .prod{
+            margin: 0;
         }
     }
 </style>
@@ -144,7 +144,7 @@
             <div class="row" id="productList">
                 {{#if products.length}}
                     {{#each products}}
-                    <div class="col-lg-4 col-6 mb-4">
+                    <div class="col-lg-4 col-6 mb-4 ">
                         <div class="card">
                             <img src="{{this.images.[0]}}" class="card-img-top" alt="{{this.title}}">
                             <div class="card-body">
@@ -168,7 +168,7 @@
                                         <small class="text-muted">No Offer</small>
                                     </div>
                                     {{/if}}
-                                    <small>Free delivery by 30th July</small>
+                                    <small>Free delivery by 12th August</small>
                                 </p>
                                 <a href="/product/{{this._id}}" class="btn btn-primary btn-sm">Buy Product</a>
                                 
