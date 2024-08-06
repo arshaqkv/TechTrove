@@ -1678,10 +1678,7 @@ const finalizeOrder = async (cart, userId, paymentIntent, totalPrice,orderId, ra
     }
 
     // Clear the cart after order creation
-    cart.products = [];
-    cart.cartTotal = 0;
-    cart.totalAfterDiscount = 0;
-    await cart.save();
+    await Cart.deleteOne({ orderby: userId });
 
     return order;
 };
@@ -1718,11 +1715,7 @@ const verifyRazorpayPayment = asyncHandler(async (req, res) => {
     }
 
     // Clear the cart after order creation
-    const cart = await Cart.findOne({ orderby: orderData.orderby });
-    cart.products = [];
-    cart.cartTotal = 0;
-    cart.totalAfterDiscount = 0;
-    await cart.save();  
+    await Cart.deleteOne({ orderby: orderData.orderby });
 
     res.status(201).json({ success: true, orderId: order._id });
 });
