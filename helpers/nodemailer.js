@@ -19,7 +19,7 @@ const sendVerificationMail = async (email, subject, content) =>{
             subject: subject,
             html: content
         }
-        transporter.sendMail(mailOptions, (error,info) =>{
+        await transporter.sendMail(mailOptions, (error,info) =>{
             if(error){  
                 console.log('Failed to send OTP. Try again.', error)
             }else {
