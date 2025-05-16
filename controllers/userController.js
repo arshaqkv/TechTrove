@@ -94,8 +94,14 @@ const loadDashboard = asyncHandler(async (req, res) => {
         }
 
         if (filterParams.search) {
-            filter.title = { $regex: filterParams.search, $options: 'i' };
+            const cleanedSearch = filterParams.search.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            const searchRegex = new RegExp(cleanedSearch, 'i');
+            filter.$or = [
+                { title: searchRegex },
+                { brand: searchRegex }
+            ];
         }
+
 
         const user = req.user;
         const page = parseInt(req.query.page) || 1;

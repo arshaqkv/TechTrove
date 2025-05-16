@@ -98,20 +98,26 @@ const getAllProducts = asyncHandler(async (req, res) => {
 
 const getProduct = asyncHandler(async (req,res) =>{
     const user = req.user
-    const { _id } = user
+    console.log(user)
     const { prodId } = req.params
     validateMongoDbId(prodId)
+    let cart
+    let alreadyAddedProduct
     try {
-        const user = await User.findById(_id)
+        if(user){
+            const user = await User.findById(user?._id)
+            cart = await Cart.findOne({ orderby: user._id }).populate('products.product').exec() || null
+            alreadyAddedProduct = user.wishlist.find((id) => id.toString() === prodId)
+        }
         const product = await Product.findById(prodId).populate('category')
-        let cart = await Cart.findOne({ orderby: user._id }).populate('products.product').exec() || null
+        
         const recommendedProduct = await Product.find({
             category: product.category._id,
             _id: {$ne: product._id}
         }).limit(8)
         
         
-        const alreadyAddedProduct = user.wishlist.find((id) => id.toString() === prodId)
+        
 
         const breadcrumbs = [
             { name: 'Home', url: '/home'},  

@@ -23,7 +23,7 @@ router.get('/add', authMiddleware, isAdmin, loadCreateProduct)
 router.get('/index', authMiddleware, isAdmin, getAllProducts)
 router.get('/edit/:id', authMiddleware, isAdmin, loadUpdateProduct)
 router.get('/trending-items', authMiddleware, isAdmin, getTrendingItems)
-router.get('/:prodId', authMiddleware, incrementPopularity,getProduct) 
+router.get('/:prodId', incrementPopularity,getProduct) 
 
 router.post('/add', authMiddleware, isAdmin, uploadImg.array('images', 5), validateProduct, productImgResize, createProduct) 
 router.put('/update/:id', authMiddleware, isAdmin, uploadImg.array('images', 5), validateProduct, productImgResize, updateProduct)
