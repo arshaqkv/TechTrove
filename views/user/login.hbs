@@ -19,7 +19,7 @@
                     <h5 class="auth-title">Sign in</h5>
                                   
                     <!-- Login-Form -->
-                    <form action="/user/login" method="POST">
+                    <form action="/login" method="POST">
                         <div class="mb-2 mt-5">
                             <input type="email" class="form-control auth-input" id="email" name="email" placeholder="Enter your email" value="{{email}}">
                             {{#if errors.email}}
@@ -47,7 +47,7 @@
                     Sign in with Google</a>
 
 
-                    <p class="text mb-4">Don't Have An Account? <a href="/user/register" class="text-link">Sign Up</a></p>
+                    <p class="text mb-4">Don't Have An Account? <a href="/signup" class="text-link">Sign Up</a></p>
 
                 </div>
             </div>

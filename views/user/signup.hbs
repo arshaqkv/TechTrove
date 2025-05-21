@@ -37,7 +37,7 @@
                 <hr class="separator">
                 <a class="btn service-btn mt-5 mb-3" href="/auth/google" class="google-signin"><img src="/images/logo/7123025_logo_google_g_icon.png" alt="" style="width: 30px; height:30px">
                 Sign in with Google</a>
-                <p class="text mb-4">Already Have An Account? <a href="/user/login" class="text-link">Login</a></p>
+                <p class="text mb-4">Already Have An Account? <a href="/login" class="text-link">Login</a></p>
             </div>
         </div>
     </div>
@@ -86,7 +86,7 @@
             formObject[key] = value;
         });
         try {
-            const response = await fetch('/user/register', {
+            const response = await fetch('/signup', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -161,7 +161,7 @@
         const password = document.getElementById('password').value;
         const phone = document.getElementById('phone').value; 
         try {
-            const response = await fetch('/user/verify-otp', {
+            const response = await fetch('/verify-otp', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -170,7 +170,7 @@
             });
             const result = await response.json();
             if (response.status === 200) {
-                window.location.href = '/user/login';
+                window.location.href = '/login';
             } else {
                 throw new Error(result.error || 'Invalid OTP');
             }
@@ -183,7 +183,7 @@
     async function resendOtp() {
         const email = document.getElementById('email').value;
         try {
-            const response = await fetch('/user/resend-otp', {
+            const response = await fetch('/resend-otp', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'

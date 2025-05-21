@@ -1,76 +1,180 @@
 {{> admin-header}}
-    
-    <div class="content">
-        <div class="container mt-5">
-            <h2>User Management</h2>
-            <table class="table table-bordered table-hover">
-                <thead class="thead-light">
-                    <tr>
-                        <th scope="col">SI</th>
-                        <th scope="col">Name</th>
-                        <th scope="col">Email</th>
-                        <th scope="col">Phone No</th>
-                        <th scope="col">Status</th>
-                        <th scope="col">Action</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {{#each users}}
-                    <tr>
-                        <td>{{paginationIndex @index ../pagination.page ../pagination.limit}}</td>
-                        <td>{{this.name}}</td>
-                        <td>{{this.email}}</td>
-                        <td>{{this.phone}}</td>
-                        <td>
-                            {{#if this.isBlocked}}
-                            <span class="badge badge-danger">Blocked</span>
-                            {{else}}
-                            <span class="badge badge-success">Active</span>
-                            {{/if}}
-                        </td>
-                        
-                        <td>
-                            {{#if this.isBlocked}}
-                            <form action="/admin/unblock-user/{{this._id}}" method="POST" class="d-inline">
-                                <button type="submit" class="btn btn-sm"><i class='bx bx-lock-open'></i></button>
-                            </form>
-                            {{else}}
-                            <form action="/admin/block-user/{{this._id}}" method="POST" class="d-inline">
-                                <button type="submit" class="btn btn-sm"><i class='bx bx-lock'></i></button>
-                            </form>
-                            {{/if}}
-                        </td>
-                    </tr>
-                    {{/each}}
-                </tbody>
-            </table>
-        </div>
-        <div class="d-flex justify-content-center">
-            <nav aria-label="Page navigation">
-                <ul class="pagination mt-3">
-                    {{#if pagination.hasPrevPage}}
-                    <li class="page-item">
-                        <a class="page-link" href="?page={{subtract pagination.page 1}}">&lt;</a>
-                    </li>
-                    {{/if}}
 
-                    {{#each pagination.pages}}
-                    <li class="page-item {{#if this.active}}active{{/if}}">
-                        <a class="page-link" href="?page={{this.page}}">{{this.page}}</a>
-                    </li>
-                    {{/each}}
-
-                    {{#if pagination.hasNextPage}}
-                    <li class="page-item">
-                        <a class="page-link" href="?page={{add pagination.page 1}}">&gt;</a>
-                    </li>
-                    {{/if}}
-                </ul>
-            </nav>
-        </div>
+<div class="content">
+  <div class="container mt-5">
+    <h2>User Management</h2>
+    <div class="mb-4">
+      <input type="text" style="width: 50%;" id="user-search" class="form-control" placeholder="Search by name...">
+      <button id="submit-btn">Search</button>
     </div>
-    
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    
+
+    <table class="table table-bordered table-hover">
+      <thead class="thead-light">
+        <tr>
+          <th scope="col">SI</th>
+          <th scope="col">Name</th>
+          <th scope="col">Email</th>
+          <th scope="col">Phone No</th>
+          <th scope="col">Status</th>
+          <th scope="col">Action</th>
+        </tr>
+      </thead>
+      <tbody  id="user-table-body">
+        {{#each users}}
+        <tr data-user-id="{{this._id}}">
+          <td>{{paginationIndex @index ../pagination.page ../pagination.limit}}</td>
+          <td>{{this.name}}</td>
+          <td>{{this.email}}</td>
+          <td>{{this.phone}}</td>
+          <td class="user-status">
+            {{#if this.isBlocked}}
+            <span class="badge badge-danger">Blocked</span>
+            {{else}}
+            <span class="badge badge-success">Active</span>
+            {{/if}}
+          </td>
+          <td>
+            <button class="btn btn-sm toggle-status" 
+                    data-user-id="{{this._id}}" 
+                    data-is-blocked="{{this.isBlocked}}">
+              {{#if this.isBlocked}}
+              <i class='bx bx-lock-open'></i>
+              {{else}}
+              <i class='bx bx-lock'></i>
+              {{/if}}
+            </button>
+          </td>
+        </tr>
+        {{/each}}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="d-flex justify-content-center">
+    <nav aria-label="Page navigation">
+      <ul class="pagination mt-3">
+        {{#if pagination.hasPrevPage}}
+        <li class="page-item">
+          <a class="page-link" href="?page={{subtract pagination.page 1}}">&lt;</a>
+        </li>
+        {{/if}}
+
+        {{#each pagination.pages}}
+        <li class="page-item {{#if this.active}}active{{/if}}">
+          <a class="page-link" href="?page={{this.page}}">{{this.page}}</a>
+        </li>
+        {{/each}}
+
+        {{#if pagination.hasNextPage}}
+        <li class="page-item">
+          <a class="page-link" href="?page={{add pagination.page 1}}">&gt;</a>
+        </li>
+        {{/if}}
+      </ul>
+    </nav>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+
+  const searchInput = document.getElementById('user-search');
+  const tableBody = document.getElementById('user-table-body');
+  const submitButton = document.getElementById('submit-btn')
+
+  submitButton.addEventListener('click', async () => {
+    const name = searchInput.value.trim();
+
+    try {
+      const res = await fetch(`/admin/all-users?name=${encodeURIComponent(name)}`);
+      const data = await res.json();
+
+      if (data.success) {
+        const users = data.users;
+
+        if (users.length === 0) {
+          tableBody.innerHTML = `<tr><td colspan="6" class="text-center">No users found</td></tr>`;
+          return;
+        }
+
+        tableBody.innerHTML = users.map((user, index) => {
+          return `
+            <tr data-user-id="${user._id}">
+              <td>${index + 1}</td>
+              <td>${user.name}</td>
+              <td>${user.email}</td>
+              <td>${user.phone}</td>
+              <td class="user-status">
+                ${user.isBlocked
+                  ? `<span class="badge badge-danger">Blocked</span>`
+                  : `<span class="badge badge-success">Active</span>`}
+              </td>
+              <td>
+                <button class="btn btn-sm toggle-status" data-user-id="${user._id}" data-is-blocked="${user.isBlocked}">
+                  ${user.isBlocked
+                    ? `<i class='bx bx-lock-open'></i>`
+                    : `<i class='bx bx-lock'></i>`}
+                </button>
+              </td>
+            </tr>
+          `;
+        }).join('');
+
+      } else {
+        Swal.fire('Error', data.message, 'error');
+      }
+    } catch (err) {
+      console.error(err);
+      Swal.fire('Error', 'Something went wrong', 'error');
+    }
+  });
+
+  document.querySelectorAll(".toggle-status").forEach(button => {
+    button.addEventListener("click", async () => {
+      const userId = button.dataset.userId;
+      const isBlocked = button.dataset.isBlocked === "true";
+
+      try {
+        const response = await fetch(`/admin/toggle-user-status/${userId}`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ block: !isBlocked })
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+         
+
+          // Update UI without reload
+          const row = document.querySelector(`tr[data-user-id="${userId}"]`);
+          const statusCell = row.querySelector('.user-status');
+          const icon = button.querySelector('i');
+
+          if (!isBlocked) {
+            button.dataset.isBlocked = "true";
+            statusCell.innerHTML = '<span class="badge badge-danger">Blocked</span>';
+            icon.className = 'bx bx-lock-open';
+          } else {
+            button.dataset.isBlocked = "false";
+            statusCell.innerHTML = '<span class="badge badge-success">Active</span>';
+            icon.className = 'bx bx-lock';
+          }
+
+        } else {
+          Swal.fire('Error', result.message, 'error');
+        }
+      } catch (err) {
+        console.error(err);
+        Swal.fire('Error', 'Something went wrong', 'error');
+      }
+    });
+  });
+</script>
+
 </body>
 </html>

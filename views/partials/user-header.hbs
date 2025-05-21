@@ -37,7 +37,7 @@
 <nav class="navbar navbar-expand-lg navbar-light bg-light">
     <div class="container d-flex justify-content-between align-items-center mt-2">
         <div class="logoDiv">
-            <a {{#if user}}href="/home"{{else}}href="/"{{/if}} class="logo d-flex align-items-center" style="text-decoration: none;">
+            <a {{#if user}}href="/"{{else}}href="/"{{/if}} class="logo d-flex align-items-center" style="text-decoration: none;">
                 <i class='bx bx-code-alt'></i>
                 <div class="logo-name"><span>Tech</span>Trove</div>
             </a>
@@ -46,7 +46,7 @@
         <div class="d-flex align-items-center">
             {{#if user}}
                 <a class="text-dark me-3 d-lg-block" href="/product/wishlist"><i class="fas fa-heart"></i></a>
-                <a href="/user/cart" class="text-dark me-3 d-lg-block position-relative">
+                <a href="/cart" class="text-dark me-3 d-lg-block position-relative">
                     <i class="fas fa-shopping-cart"></i>
                     {{#if cart.products.length}}
                         <span class="cart-count">{{cart.products.length}}</span>
@@ -63,16 +63,16 @@
                         <span class="dropdown-item-text">{{user.name}}</span>
                         <span class="dropdown-item-text text-muted small">{{user.email}}</span>
                         <div class="dropdown-divider"></div>
-                        <a class="dropdown-item w-100" href="/user/profile"><i class="fas fa-user"></i> Profile</a>
-                        <a class="dropdown-item w-100" href="/user/get-orders"><i class="fas fa-box"></i> Orders</a>
-                        <a class="dropdown-item w-100" href="/user/cart"><i class="fas fa-shopping-cart"></i> Cart</a>
-                        <a class="dropdown-item w-100" href="/user/coupons"><i class="fa fa-bookmark"></i> Coupons</a>
-                        <a class="dropdown-item w-100" href="/user/transactions"><i class="fas fa-wallet"></i> Wallet</a>
+                        <a class="dropdown-item w-100" href="/profile"><i class="fas fa-user"></i> Profile</a>
+                        <a class="dropdown-item w-100" href="/get-orders"><i class="fas fa-box"></i> Orders</a>
+                        <a class="dropdown-item w-100" href="/cart"><i class="fas fa-shopping-cart"></i> Cart</a>
+                        <a class="dropdown-item w-100" href="/coupons"><i class="fa fa-bookmark"></i> Coupons</a>
+                        <a class="dropdown-item w-100" href="/transactions"><i class="fas fa-wallet"></i> Wallet</a>
                         <a class="dropdown-item w-100" href="/product/wishlist"><i class="fas fa-heart"></i> Wishlist</a>
-                        <a class="dropdown-item w-100" href="/user/logout"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                        <a class="dropdown-item w-100" href="/logout"><i class="fas fa-sign-out-alt"></i> Logout</a>
                     {{else}}
                         <a class="dropdown-item w-100" href="/login"><i class="fas fa-sign-in-alt"></i> Login</a>
-                        <a class="dropdown-item w-100" href="/register"><i class="fas fa-user-plus"></i> Signup</a>
+                        <a class="dropdown-item w-100" href="/signup"><i class="fas fa-user-plus"></i> Signup</a>
                     {{/if}}
                 </div>
             </div>
