@@ -1,19 +1,34 @@
-const express = require('express')
-const { validateLogin }  = require('../middlewares/validation')
-const { authMiddleware, isAdmin } = require('../middlewares/authMiddleware')
-const router = express.Router()
-const { getPaymentMethodData, getSalesReport } = require('../controllers/adminController');
+const express = require("express");
+const { validateLogin } = require("../middlewares/validation");
+const {
+  authMiddleware,
+  isAdmin,
+  redirectToAdminDashboard,
+} = require("../middlewares/authMiddleware");
+const router = express.Router();
+const {
+  loadLoginAdmin,
+  loginAdmin,
+  loadAdminDashboard,
+  getExcelReport,
+  getPdfReport,
+  getAllUsers,
+  updateUserBlockStatus,
+} = require("../controllers/adminController");
+const nocache = require("nocache");
 
-router.get('/dashboard', authMiddleware. isAdmin, renderAdminDashboar)
-router.get('/sales-report', authMiddleware,isAdmin,getSalesReport);
+router.get("/login", redirectToAdminDashboard, nocache(), loadLoginAdmin);
+router.post("/login", validateLogin, loginAdmin);
+router.get("/dashboard", authMiddleware, isAdmin, loadAdminDashboard);
+router.get("/dashboard/report/excel", authMiddleware, isAdmin, getExcelReport);
+router.get("/dashboard/report/pdf", authMiddleware, isAdmin, getPdfReport);
+router.get("/all-users", authMiddleware, isAdmin, getAllUsers);
 
-// router.get('/', loadLoginAdmin)
-// router.post('/',validateLogin, loginAdmin)
-// router.get('/dashboard',authMiddleware,isAdmin,loadAdminDashboard)
-// router.get('/all_users', authMiddleware, isAdmin, getAllUsers)
-// router.get('/:id', authMiddleware, isAdmin, getAUser)
+router.post(
+  "/toggle-user-status/:id",
+  authMiddleware,
+  isAdmin,
+  updateUserBlockStatus
+);
 
-// // router.post('/block-user', )
-// router.put('/block-user/:id', authMiddleware, isAdmin, blockUser)
-// router.put('/unblock-user/:id', authMiddleware, isAdmin, unBlockUser)
-
+module.exports = router;

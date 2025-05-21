@@ -7,13 +7,13 @@ router.get('/google', passport.authenticate('google', {
     scope: ['profile', 'email'] 
 }));
 router.get('/google/callback', 
-    passport.authenticate('google', { failureRedirect: '/user/login'}), 
+    passport.authenticate('google', { failureRedirect: '/login'}), 
        async (req, res) => {
             const user = req.user
             // console.log(user)
             const token = generateToken(user._id)
             res.cookie('jwt', token, {httpOnly: true})
-            res.status(201).redirect('/home')
+            res.status(201).redirect('/')
 });
 
 
