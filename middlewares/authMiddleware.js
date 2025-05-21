@@ -5,7 +5,7 @@ const asyncHandler = require('express-async-handler')
     const authMiddleware = asyncHandler(async (req,res,next) =>{
         const token = req.cookies.jwt
         if (!token) {
-            return res.status(401).redirect('/user/login'); // Redirect to login if not authenticated
+            return res.status(401).redirect('/login'); // Redirect to login if not authenticated
         }
             
         try {
@@ -13,13 +13,13 @@ const asyncHandler = require('express-async-handler')
                 const decoded = jwt.verify(token,process.env.JWT_SECRET)
                 const user = await User.findById(decoded?.id)
                 if (!user) {
-                    return res.status(401).redirect('/user/login'); // Redirect to login if user not found
+                    return res.status(401).redirect('/login'); // Redirect to login if user not found
                 }
 
                 if (user.isBlocked) {
                     // Clear the JWT cookie
                     res.cookie('jwt', '', { expires: new Date(0), httpOnly: true });
-                    return res.status(403).redirect('/user/login'); // Forbidden status, redirect to login
+                    return res.status(403).redirect('/login'); // Forbidden status, redirect to login
                 }           
 
                 req.user = user 
@@ -28,7 +28,7 @@ const asyncHandler = require('express-async-handler')
         } catch (error) { 
             //console.log(error);
             console.log("Not authorized, token expired, Please login again")
-            return res.status(401).redirect('/user/login');
+            return res.status(401).redirect('/login');
         }    
     })
 
@@ -50,7 +50,7 @@ const redirectIfAuthenticated = asyncHandler(async (req, res, next) => {
             const decoded = jwt.verify(token, process.env.JWT_SECRET);
             const user = await User.findById(decoded?.id);
             if (user) {
-                return res.redirect('/home'); // Redirect to dashboard if authenticated
+                return res.redirect('/'); // Redirect to dashboard if authenticated
             }
         } catch (error) {
             // Token might be expired or invalid, so clear the cookie

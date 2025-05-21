@@ -27,6 +27,7 @@ const hbs = require('express-handlebars').create({
 
 const authRouter = require('./routes/authRoute')
 const auth = require('./routes/auth'); 
+const adminRouter = require("./routes/adminRoute")
 const productRouter = require('./routes/productRoute')
 const categoryRouter = require('./routes/categoryRoute');
 const addressRouter = require('./routes/addressRoute')
@@ -67,8 +68,7 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 app.use('/', authRouter)
-app.use('/admin', authRouter)
-app.use('/user', authRouter)
+app.use('/admin', adminRouter)
 app.use('/product', productRouter)
 app.use('/auth', auth);
 app.use('/prod/category', categoryRouter)
@@ -76,6 +76,11 @@ app.use('/address', addressRouter)
 app.use('/coupon', couponRouter)
 app.use('/offers', offerRouter)
 app.use('/banner', bannerRouter) 
+
+app.use("*", (req, res) => {
+  res.status(404).render("404", { title: "404 - Not Found" });
+});
+
 
 app.use(notFound)
 app.use(errorHandler)

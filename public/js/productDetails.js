@@ -73,7 +73,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         try {
-            const response = await fetch('/user/cart', {
+            const response = await fetch('/cart', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
