@@ -780,6 +780,28 @@ const getPdfReport = async (req, res) => {
   }
 };
 
+const getAllUsersJson = async (req, res) => {
+  const page = parseInt(req.query.page) || 1;
+  const { name } = req.query;
+
+  const limit = 5;
+  try {
+    const query = { isAdmin: false };
+    if (name) {
+      query.name = { $regex: name, $options: "i" };
+    }
+
+    const count = await User.countDocuments(query);
+    const skip = (page - 1) * limit;
+    const users = await User.find(query).skip(skip).limit(limit);
+
+    res.json({ success: true, users });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+
 //Get all users
 const getAllUsers = async (req, res) => {
   const page = parseInt(req.query.page) || 1;
@@ -795,7 +817,6 @@ const getAllUsers = async (req, res) => {
     const totalPages = Math.ceil(count / limit);
     const skip = (page - 1) * limit;
     const users = await User.find(query).skip(skip).limit(limit);
-    console.log(users);
     const pagination = {
       totalPages,
       page,
@@ -838,5 +859,6 @@ module.exports = {
   getExcelReport,
   getPdfReport,
   getAllUsers,
+  getAllUsersJson,
   updateUserBlockStatus,
 };

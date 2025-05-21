@@ -3,9 +3,9 @@
 <div class="content">
   <div class="container mt-5">
     <h2>User Management</h2>
-    <div class="mb-4">
+    <div class="mb-4 d-flex gap-1">
       <input type="text" style="width: 50%;" id="user-search" class="form-control" placeholder="Search by name...">
-      <button id="submit-btn">Search</button>
+      <button id="submit-btn" class="btn btn-outline-secondary"><i class="fas fa-search"></i>Search</button>
     </div>
 
     <table class="table table-bordered table-hover">
@@ -88,7 +88,7 @@
     const name = searchInput.value.trim();
 
     try {
-      const res = await fetch(`/admin/all-users?name=${encodeURIComponent(name)}`);
+      const res = await fetch(`/admin/users?name=${encodeURIComponent(name)}`);
       const data = await res.json();
 
       if (data.success) {
@@ -105,7 +105,7 @@
               <td>${index + 1}</td>
               <td>${user.name}</td>
               <td>${user.email}</td>
-              <td>${user.phone}</td>
+              <td>${user?.phone}</td>
               <td class="user-status">
                 ${user.isBlocked
                   ? `<span class="badge badge-danger">Blocked</span>`

@@ -14,6 +14,7 @@ const {
   getPdfReport,
   getAllUsers,
   updateUserBlockStatus,
+  getAllUsersJson,
 } = require("../controllers/adminController");
 const nocache = require("nocache");
 
@@ -23,6 +24,7 @@ router.get("/dashboard", authMiddleware, isAdmin, loadAdminDashboard);
 router.get("/dashboard/report/excel", authMiddleware, isAdmin, getExcelReport);
 router.get("/dashboard/report/pdf", authMiddleware, isAdmin, getPdfReport);
 router.get("/all-users", authMiddleware, isAdmin, getAllUsers);
+router.get("/users", authMiddleware, isAdmin, getAllUsersJson);
 
 router.post(
   "/toggle-user-status/:id",
