@@ -201,7 +201,7 @@
     const otp = document.getElementById('otp').value;
     const email = document.getElementById('new-email').value;
 
-    fetch('/user/profile/verify-otp', {
+    fetch('/profile/verify-otp', {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json'

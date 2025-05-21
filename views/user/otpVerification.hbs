@@ -10,7 +10,7 @@
                     
                     <div class="mb-2 mt-5">
                         <!-- Verify OTP Form -->
-                        <form action="/user/verify-otp" method="POST" onsubmit="combineOtpValues()">
+                        <form action="/verify-otp" method="POST" onsubmit="combineOtpValues()">
                             <input type="hidden" name="email" value="{{email}}">
                             <input type="hidden" name="name" value="{{name}}">
                             <input type="hidden" name="password" value="{{password}}">
@@ -27,7 +27,7 @@
                             <button class="btn auth-btn mt-2 mb-4" id="validate-otp" type="submit">Verify OTP</button>
                         </form>
                         
-                        <form action="/user/resend-otp" method="POST" onsubmit="handleResendOtp()">
+                        <form action="/resend-otp" method="POST" onsubmit="handleResendOtp()">
                             <input type="hidden" name="email" value="{{email}}">
                             <input type="hidden" name="name" value="{{name}}">
                             <input type="hidden" name="password" value="{{password}}">
@@ -47,7 +47,7 @@
                             <div class="alert alert-success">{{success}}</div>
                             <script>
                                 setTimeout(function() {
-                                    window.location.href = '/user/login';
+                                    window.location.href = '/login';
                                 }, 900); // Redirect to login after 1 seconds
                             </script>
                         {{/if}}

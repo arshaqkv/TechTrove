@@ -129,7 +129,7 @@
         <h5>Total: Rs.{{cart.totalAfterDiscount}}</h5>
         <p>Estimated Delivery by <strong>31 May, 2025</strong></p>
         <button class="btn btn-outline-primary btn-block mt-3 mb-1" onclick="proceedToCheckout()">Place Order</button>
-        <a href="/user/cart" class="btn btn-outline-secondary btn-block">Go back</a>
+        <a href="/cart" class="btn btn-outline-secondary btn-block">Go back</a>
       </div>
     </div>
   </div>
@@ -481,7 +481,7 @@
     .then(response => response.json())
     .then(data => {
       if (data.success) {
-        location.href = '/user/checkout'; // Reload the page to reflect changeswindow.
+        location.href = '/checkout'; // Reload the page to reflect changeswindow.
       } else {
         alert('Failed to delete address');
       }
@@ -535,7 +535,7 @@
 
     const orderData = { paymentIntent: paymentMethod };
 
-    fetch('/user/checkout', {
+    fetch('/checkout', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
@@ -555,7 +555,7 @@
                     image: '/images/logo/Techtrove (1).png',
                     order_id: data.razorpayOrder.id, // This is the order_id created in your backend.
                     handler: function (response) {
-                        fetch('/user/verify-payment', {
+                        fetch('/verify-payment', {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json'
@@ -582,7 +582,7 @@
                                     icon: 'success',
                                     confirmButtonText: 'Okay'
                                 }).then(() => {
-                                    window.location.href = '/user/get-orders'; // Redirect to order summary page
+                                    window.location.href = '/get-orders'; // Redirect to order summary page
                                 });
                             } else {
                                 Swal.fire({
@@ -633,7 +633,7 @@
                     icon: 'success',
                     confirmButtonText: 'Okay'
                 }).then(() => {
-                    window.location.href = '/user/get-orders'; // Redirect to order summary page
+                    window.location.href = '/get-orders'; // Redirect to order summary page
                 });
             }
         } else {
